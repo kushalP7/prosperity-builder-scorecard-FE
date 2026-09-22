@@ -43,27 +43,42 @@ export function LowestPerformingModulesChart() {
           {/* 01 Historic */}
           <line x1="237" y1="73" x2="252" y2="58" stroke="#7F1D1D" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
           <circle cx="252" cy="58" r="3.5" fill="#7F1D1D" />
-          <text x="260" y="62" className="text-xs font-black fill-slate-900 font-sans" textAnchor="start">01 Historic <tspan className="fill-red-600 font-black">(4.1)</tspan></text>
+          <text x="260" y="56" className="text-xs font-medium fill-slate-700 font-sans" textAnchor="start">
+            <tspan x="260" dy="0">01 Historic</tspan>
+            <tspan x="260" dy="14" className="fill-red-600 font-medium">(4.1)</tspan>
+          </text>
 
           {/* 02 Culture */}
           <line x1="256" y1="120" x2="274" y2="120" stroke="#B91C1C" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
           <circle cx="274" cy="120" r="3.5" fill="#B91C1C" />
-          <text x="282" y="124" className="text-xs font-black fill-slate-900 font-sans" textAnchor="start">02 Culture <tspan className="fill-red-600 font-black">(4.5)</tspan></text>
+          <text x="282" y="118" className="text-xs font-medium fill-slate-700 font-sans" textAnchor="start">
+            <tspan x="282" dy="0">02 Culture</tspan>
+            <tspan x="282" dy="14" className="fill-red-600 font-medium">(4.5)</tspan>
+          </text>
 
           {/* 03 Land Use */}
           <line x1="190" y1="186" x2="190" y2="204" stroke="#DC2626" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
           <circle cx="190" cy="204" r="3.5" fill="#DC2626" />
-          <text x="190" y="220" className="text-xs font-black fill-slate-900 font-sans" textAnchor="middle">03 Land Use <tspan className="fill-red-600 font-black">(4.9)</tspan></text>
+          <text x="190" y="218" className="text-xs font-medium fill-slate-700 font-sans" textAnchor="middle">
+            <tspan x="190" dy="0">03 Land Use</tspan>
+            <tspan x="190" dy="14" className="fill-red-600 font-medium">(4.9)</tspan>
+          </text>
 
           {/* 04 Transport */}
           <line x1="124" y1="120" x2="106" y2="120" stroke="#EF4444" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
           <circle cx="106" cy="120" r="3.5" fill="#EF4444" />
-          <text x="98" y="124" className="text-xs font-black fill-slate-900 font-sans" textAnchor="end">04 Transport <tspan className="fill-red-600 font-black">(5.2)</tspan></text>
+          <text x="98" y="118" className="text-xs font-medium fill-slate-700 font-sans" textAnchor="end">
+            <tspan x="98" dy="0">04 Transport</tspan>
+            <tspan x="98" dy="14" className="fill-red-600 font-medium">(5.2)</tspan>
+          </text>
 
           {/* 05 Infra */}
           <line x1="143" y1="73" x2="128" y2="58" stroke="#F87171" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
           <circle cx="128" cy="58" r="3.5" fill="#F87171" />
-          <text x="120" y="62" className="text-xs font-black fill-slate-900 font-sans" textAnchor="end">05 Infra <tspan className="fill-red-600 font-black">(5.6)</tspan></text>
+          <text x="120" y="56" className="text-xs font-medium fill-slate-700 font-sans" textAnchor="end">
+            <tspan x="120" dy="0">05 Infra</tspan>
+            <tspan x="120" dy="14" className="fill-red-600 font-medium">(5.6)</tspan>
+          </text>
         </svg>
       </div>
 

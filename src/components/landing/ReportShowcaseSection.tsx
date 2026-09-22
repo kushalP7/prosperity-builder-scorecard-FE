@@ -2,49 +2,13 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, ShieldCheck, Layers, Activity, Sparkles, FileText, ExternalLink, Download, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, ShieldCheck, Layers, Activity, Sparkles, Download } from "lucide-react"
 
 export function ReportShowcaseSection() {
   const [activeFannedPage, setActiveFannedPage] = React.useState<number>(2)
-  const [isSectionVisible, setIsSectionVisible] = React.useState<boolean>(false)
-  const [isPdfModalOpen, setIsPdfModalOpen] = React.useState<boolean>(false)
-  const sectionRef = React.useRef<HTMLElement | null>(null)
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsSectionVisible(entry.isIntersecting)
-      },
-      { threshold: 0.05 }
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [])
-
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsPdfModalOpen(false)
-      }
-    }
-    if (isPdfModalOpen) {
-      document.body.style.overflow = "hidden"
-      window.addEventListener("keydown", handleKeyDown)
-    } else {
-      document.body.style.overflow = ""
-    }
-    return () => {
-      document.body.style.overflow = ""
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [isPdfModalOpen])
 
   return (
-    <section ref={sectionRef} id="report-showcase" className="scroll-mt-20 py-12 sm:py-16 bg-gradient-to-b from-slate-100 via-white to-slate-50 text-slate-900 border-b border-slate-200/90 relative overflow-hidden">
+    <section id="report-showcase" className="scroll-mt-20 py-12 sm:py-16 bg-gradient-to-b from-slate-100 via-white to-slate-50 text-slate-900 border-b border-slate-200/90 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 relative z-10">
         
         {/* Header */}
@@ -770,90 +734,6 @@ export function ReportShowcaseSection() {
           </Link>
         </div>
       </div>
-
-      {/* Floating Sample Report PDF Button (Triggers Modal Popup) */}
-      {isSectionVisible && (
-        <button
-          onClick={() => setIsPdfModalOpen(true)}
-          className="fixed bottom-24 right-8 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-[#B5111B] hover:bg-[#8F0D15] text-white shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border border-white/30 font-extrabold text-xs group cursor-pointer"
-          title="Preview Sample PDF Report"
-          aria-label="Preview Sample PDF Report"
-        >
-          <FileText className="w-4.5 h-4.5 text-white group-hover:scale-110 transition-transform" />
-          <span className="font-extrabold tracking-wide">Preview Sample Report</span>
-          <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-        </button>
-      )}
-
-      {/* PDF Modal Viewer Popup */}
-      {isPdfModalOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
-          onClick={() => setIsPdfModalOpen(false)}
-        >
-          <div 
-            className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-6xl h-[88vh] flex flex-col overflow-hidden shadow-2xl relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 bg-slate-950 border-b border-slate-800 text-white shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-[#B5111B]/20 border border-[#B5111B]/40 text-[#E11D48]">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-extrabold text-white tracking-tight">
-                    Sample Municipal Dossier: Lee County, NC 2025
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    31-Page Prosperity Builder Executive Report Book
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href="/sample-report/Prosperity%20Building%20Book.Lee%20County2025.pdf"
-                  download="Lee_County_NC_2025_Prosperity_Building_Book.pdf"
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors inline-flex items-center gap-1.5"
-                  title="Download PDF"
-                >
-                  <Download className="w-3.5 h-3.5 text-slate-300" />
-                  <span className="hidden sm:inline">Download</span>
-                </a>
-
-                <a
-                  href="/sample-report/Prosperity%20Building%20Book.Lee%20County2025.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
-                  title="Open in new tab"
-                >
-                  <ExternalLink className="w-4 h-4 text-slate-300" />
-                </a>
-
-                <button
-                  onClick={() => setIsPdfModalOpen(false)}
-                  className="p-2 rounded-xl bg-red-600/20 hover:bg-[#B5111B] text-rose-200 hover:text-white transition-colors cursor-pointer ml-1"
-                  title="Close Modal"
-                  aria-label="Close Modal"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* PDF Viewer Body */}
-            <div className="flex-1 bg-slate-950 relative overflow-hidden">
-              <iframe
-                src="/sample-report/Prosperity%20Building%20Book.Lee%20County2025.pdf#toolbar=1"
-                className="w-full h-full border-0 bg-slate-950"
-                title="Sample Municipal Dossier PDF Viewer"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   )
 }

@@ -5,8 +5,6 @@ import { Activity, PieChart, Zap, ShieldCheck } from "lucide-react"
 import { GaugeSpeedometerChart } from "./GaugeSpeedometerChart"
 import { TopPerformingModulesChart } from "./TopPerformingModulesChart"
 import { LowestPerformingModulesChart } from "./LowestPerformingModulesChart"
-import { ComboBarLineChart } from "./ComboBarLineChart"
-import { MultiCurveAreaChart } from "./MultiCurveAreaChart"
 
 export function AnalyticsShowcaseSection() {
   return (
@@ -28,12 +26,6 @@ export function AnalyticsShowcaseSection() {
           <GaugeSpeedometerChart score={6.4} max={10} percentage="64%" />
           <TopPerformingModulesChart />
           <LowestPerformingModulesChart />
-        </div>
-
-        {/* Middle Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          <ComboBarLineChart />
-          <MultiCurveAreaChart />
         </div>
 
         {/* Bottom Row */}

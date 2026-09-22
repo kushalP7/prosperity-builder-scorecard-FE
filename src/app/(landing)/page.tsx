@@ -9,6 +9,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader"
 import { HeroSection } from "@/components/landing/HeroSection"
 import { PartnersSection } from "@/components/landing/PartnersSection"
 import { ReportShowcaseDetailedSection } from "@/components/landing/ReportShowcaseDetailedSection"
+import { AnalyticsShowcaseSection } from "@/components/landing/AnalyticsShowcaseSection"
 import { AdvisoryServicesSection } from "@/components/landing/AdvisoryServicesSection"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 
@@ -75,6 +76,7 @@ export default function LandingPage() {
         <HeroSection />
         <PartnersSection />
         <ReportShowcaseDetailedSection />
+        <AnalyticsShowcaseSection />
         <AdvisoryServicesSection />
       </main>
       <LandingFooter />
