@@ -29,13 +29,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false)
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
+  const PUBLIC_ROUTES = [
+    "/",
+    "/login",
+    "/about",
+    "/pricing",
+    "/categories",
+    "/services",
+    "/videos",
+    "/videos/all",
+    "/report-showcase",
+    "/reports",
+    "/report",
+    "/project-portfolio",
+    "/projects-portfolio",
+  ]
+  const isPublicPage =
+    PUBLIC_ROUTES.includes(pathname) ||
+    pathname.startsWith("/videos") ||
+    pathname.startsWith("/report/") ||
+    pathname.startsWith("/project-portfolio") ||
+    pathname.startsWith("/projects-portfolio")
+
   React.useEffect(() => {
     setMounted(true)
-    initialize()
-  }, [initialize])
-
-  const PUBLIC_ROUTES = ["/", "/login", "/about", "/pricing", "/process", "/framework", "/glossary", "/categories", "/executive-analytics", "/services", "/videos", "/report-showcase"]
-  const isPublicPage = PUBLIC_ROUTES.includes(pathname)
+    if (!isPublicPage) {
+      initialize()
+    }
+  }, [initialize, isPublicPage])
 
   React.useEffect(() => {
     if (mounted && !isAuthenticated && !isPublicPage) {
@@ -71,6 +92,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/payments", label: "Payments", icon: DollarSign },
     { href: "/users", label: "Users", icon: Users },
     { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/landing-cms", label: "Landing CMS", icon: FileSpreadsheet },
+
   ]
 
   const handleLogout = () => {
@@ -177,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div id="app-header-title" className="flex flex-col justify-center">
               {pathname !== '/section-maker' && !pathname.startsWith('/projects') && pathname !== '/analytics-maker' && (
                 <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                  {navItems.find(i => i.href === pathname)?.label || "Overview"}
+                  {navItems.find(i => i.href === pathname || (i.href !== "/" && pathname.startsWith(i.href)))?.label || "Overview"}
                 </h1>
               )}
             </div>

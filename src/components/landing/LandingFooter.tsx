@@ -238,15 +238,7 @@ export function LandingFooter() {
                   <span>Report Showcase</span>
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/executive-analytics"
-                  className="hover:text-white transition-colors flex items-center gap-2 group"
-                >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  <span>Executive Analytics</span>
-                </Link>
-              </li>
+
               <li>
                 <Link
                   href="/categories"

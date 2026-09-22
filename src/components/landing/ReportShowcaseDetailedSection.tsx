@@ -15,6 +15,7 @@ import {
   ExternalLink
 } from "lucide-react"
 import { ReportShowcaseSection } from "./ReportShowcaseSection"
+import { PublishedReportsCardsSection } from "./PublishedReportsCardsSection"
 
 export function ReportShowcaseDetailedSection() {
   return (
@@ -22,6 +23,9 @@ export function ReportShowcaseDetailedSection() {
       
       {/* 1. HERO & 3D REPORT SHOWCASE PREVIEW */}
       <ReportShowcaseSection />
+
+      {/* 2. DYNAMIC PUBLISHED REPORTS & DOSSIERS CARDS */}
+      <PublishedReportsCardsSection />
 
       {/* 2. CLEAN REPORT STRUCTURE & ANATOMY SECTION */}
       <section className="py-16 sm:py-24 bg-white border-t border-b border-slate-200">

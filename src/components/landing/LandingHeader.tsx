@@ -12,7 +12,8 @@ export function LandingHeader() {
   const navItems = [
     { name: "Services", href: "/#services" },
     { name: "Report Showcase", href: "/#report-showcase" },
-    { name: "Analytics", href: "/executive-analytics" },
+    { name: "Projects", href: "/project-portfolio" },
+    { name: "Media Sphere", href: "/videos" },
     { name: "Categories", href: "/categories" },
     { name: "About Us", href: "/about" },
     { name: "Pricing Plans", href: "/pricing" },
@@ -35,12 +36,14 @@ export function LandingHeader() {
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
     if (href.startsWith("/#")) return false
-    if (href === "/categories" && (pathname === "/categories" || pathname === "/framework" || pathname === "/process" || pathname === "/glossary")) return true
+    if (href === "/project-portfolio" && pathname.startsWith("/project-portfolio")) return true
+    if (href === "/categories" && pathname.startsWith("/categories")) return true
+    if (href === "/videos" && pathname.startsWith("/videos")) return true
     return pathname === href
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-2xs">
+    <header className="sticky top-0 z-[1000] bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-2xs">
       <div className="h-0.5 bg-gradient-to-r from-[#5C090E] via-[#B5111B] to-[#E11D48]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">

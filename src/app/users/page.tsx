@@ -35,6 +35,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { Dropdown } from "@/components/ui/dropdown"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 
@@ -300,62 +301,18 @@ interface BrandRedSelectProps {
 }
 
 function BrandRedSelect({ value, onChange, options, disabled, className }: BrandRedSelectProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const selectedOption = options.find(o => o.value === value) || options[0];
-
   return (
-    <div className={cn("relative w-full text-left", isOpen && "z-50")}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "w-full rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] cursor-pointer transition-all flex items-center justify-between shadow-2xs group disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100",
-          isOpen && "ring-2 ring-[#B5111B]/20 border-[#B5111B]",
-          className
-        )}
-      >
-        <span className="truncate">{selectedOption?.label}</span>
-        <ChevronDown className={cn(
-          "w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform shrink-0 ml-2",
-          isOpen && "rotate-180 text-[#B5111B]"
-        )} />
-      </button>
-
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-transparent"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1 max-h-48 overflow-y-auto">
-          {options.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer",
-                  isSelected
-                    ? "bg-[#B5111B] text-white shadow-xs font-extrabold"
-                    : "text-slate-700 hover:bg-red-50 hover:text-[#B5111B]"
-                )}
-              >
-                <span>{option.label}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0 ml-2" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <Dropdown
+      value={value}
+      onChange={onChange}
+      options={options}
+      disabled={disabled}
+      fullWidth
+      size="md"
+      align="left"
+      highlightSelected={false}
+      className={className}
+    />
   );
 }
 
@@ -386,7 +343,6 @@ export default function UsersPage() {
 
   // Menu & Modal States
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = React.useState<boolean>(false);
   const [isAddUserOpen, setIsAddUserOpen] = React.useState<boolean>(false);
   const [editingUser, setEditingUser] = React.useState<UserData | null>(null);
   const [deletingUser, setDeletingUser] = React.useState<UserData | null>(null);
@@ -662,13 +618,12 @@ export default function UsersPage() {
 
 
 
-      {/* Backdrop overlay for closing dropdown menus */}
-      {(activeMenuUserId || isStatusDropdownOpen) && (
+      {/* Backdrop overlay for closing action menu */}
+      {activeMenuUserId && (
         <div
           className="fixed inset-0 z-20 bg-transparent"
           onClick={() => {
             setActiveMenuUserId(null);
-            setIsStatusDropdownOpen(false);
           }}
         />
       )}
@@ -726,69 +681,19 @@ export default function UsersPage() {
 
           {/* Status Filter & Add User Button */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Custom Brand Red Status Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                className={cn(
-                  "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50",
-                  (isStatusDropdownOpen || selectedStatus !== "all")
-                    ? "border-[#B5111B] text-[#B5111B] ring-2 ring-[#B5111B]/20 bg-red-50/30 font-extrabold"
-                    : "border-slate-200"
-                )}
-              >
-                <span>
-                  {selectedStatus === "all"
-                    ? "All Statuses"
-                    : selectedStatus === "active"
-                      ? "Active"
-                      : selectedStatus === "pending"
-                        ? "Pending"
-                        : "Block"}
-                </span>
-                <ChevronDown className={cn(
-                  "w-3.5 h-3.5 text-slate-400 transition-transform shrink-0",
-                  isStatusDropdownOpen && "rotate-180 text-[#B5111B]"
-                )} />
-              </button>
-
-              {isStatusDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-30 animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                  <div className="px-2.5 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
-                    FILTER BY STATUS:
-                  </div>
-
-                  {[
-                    { id: "all", label: "All Statuses" },
-                    { id: "active", label: "Active" },
-                    { id: "pending", label: "Pending" },
-                    { id: "suspended", label: "Block" },
-                  ].map((option) => {
-                    const isSelected = selectedStatus === option.id;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedStatus(option.id);
-                          setIsStatusDropdownOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer",
-                          isSelected
-                            ? "bg-[#B5111B] text-white shadow-xs font-extrabold"
-                            : "text-slate-700 hover:bg-red-50 hover:text-[#B5111B]"
-                        )}
-                      >
-                        <span>{option.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0 ml-2" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* Common Status Filter Dropdown */}
+            <Dropdown
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              align="right"
+              title="FILTER BY STATUS:"
+              options={[
+                { value: "all", label: "All Statuses" },
+                { value: "active", label: "Active" },
+                { value: "pending", label: "Pending" },
+                { value: "suspended", label: "Block" },
+              ]}
+            />
 
             <Button
               onClick={handleOpenAddUser}
