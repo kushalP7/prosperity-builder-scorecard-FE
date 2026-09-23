@@ -9,7 +9,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <LandingHeader />
-      <main className="flex-1 py-6">
+      <main className="flex-1">
         <PricingSection />
       </main>
       <LandingFooter />

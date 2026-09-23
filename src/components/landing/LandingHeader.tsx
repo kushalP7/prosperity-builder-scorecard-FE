@@ -12,8 +12,8 @@ export function LandingHeader() {
   const navItems = [
     { name: "Services", href: "/#services" },
     { name: "Report Showcase", href: "/#report-showcase" },
-    { name: "Projects", href: "/project-portfolio" },
-    { name: "Media Sphere", href: "/videos" },
+    // { name: "Projects", href: "/project-portfolio" }, // need to comment
+    // { name: "Media Sphere", href: "/videos" }, // need to comment
     { name: "Categories", href: "/categories" },
     { name: "About Us", href: "/about" },
     { name: "Pricing Plans", href: "/pricing" },

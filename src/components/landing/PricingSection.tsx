@@ -5,170 +5,225 @@ import Link from "next/link"
 import { Check } from "lucide-react"
 
 export function PricingSection() {
-  const reportPrice = 1000
-  const subscriptionPrice = 800
-  const totalPlanPrice = reportPrice + subscriptionPrice
+  const plans = [
+    {
+      id: "scorecard-only",
+      name: "Scorecard Only",
+      subtitle: "1x Report",
+      price: "$18,000",
+      cents: ".00",
+      billingNote: "One-time comprehensive assessment",
+      description:
+        "A full standalone diagnostic audit, baseline evaluation, and certified executive PDF report delivery for municipal and project leaders.",
+      features: [
+        "Initial virtual alignment & scoping call",
+        "Diagnostic intake questionnaire (90+ data points)",
+        "Certified Scorecard Report (Executive PDF & digital matrix)",
+        "Presentation & consultation visit by Kathleen Rose, CCIM, CRE",
+        "Action vs. Inaction economic projection models",
+        "Official advisory seal & cryptographic verification stamp",
+      ],
+      ctaText: "Select Scorecard Only",
+      ctaHref: "/login",
+      featured: false,
+    },
+    {
+      id: "scorecard-subscription",
+      name: "Scorecard Subscription",
+      subtitle: "2 or 5-Yr Update × 3",
+      price: "$36,000",
+      cents: ".00",
+      billingNote: "$12,000.00 each update • 3 scheduled cycles",
+      description:
+        "Structured multi-year milestone evaluation providing 3 periodic update reports across a 2-year or 5-year community planning horizon.",
+      features: [
+        "3 milestone update scorecard reports",
+        "Initial virtual alignment call for each update cycle",
+        "Recalibrated questionnaires tracking community shifts",
+        "Presentation & consultation visit for each update milestone",
+        "Longitudinal progress benchmarking & trend gauges",
+        "Ongoing indicator monitoring and advisory check-ins",
+      ],
+      ctaText: "Select Subscription Plan",
+      ctaHref: "/login",
+      featured: false,
+    },
+    {
+      id: "combined",
+      name: "Combined Package",
+      subtitle: "(Scorecard Only + Scorecard Subscription)",
+      price: "$45,000",
+      cents: ".00",
+      billingNote: "Complete 4-report bundled lifecycle",
+      description:
+        "Our complete turnkey advisory partnership combining the initial baseline scorecard assessment with the full 3-cycle multi-year subscription program.",
+        features: [
+        "Covers all deliverable points included in Scorecard Only & Scorecard Subscription.",
+        "Full Baseline 1x Scorecard Report ($18,000 Value)",
+        "Full 3-Cycle Subscription Series ($36,000 Value)",
+      ],
+      ctaText: "Select Combined Package",
+      ctaHref: "/login",
+      featured: true,
+      badge: "Best Value • Save $9,000",
+    },
+  ]
 
   return (
-    <section id="pricing-section" className="scroll-mt-20 py-12 sm:py-16 bg-slate-50/50 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section id="pricing-section" className="scroll-mt-20 py-14 sm:py-20 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-            Billing Plan Options
+        {/* Section Header */}
+        <div className="text-center max-w-5xl mx-auto mb-14 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+            Scorecard Investment &amp; <span className="text-[#B5111B]">Pricing</span>
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            Select between a single scorecard audit report payment or our full All-In-One platform subscription package.
+          <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed max-w-none lg:whitespace-nowrap">
+            Every engagement includes an initial virtual call, comprehensive questionnaire, certified scorecard report, and dedicated presentation / consultation visit.
           </p>
         </div>
 
-        {/* 2 Real Plans Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch pt-2 w-full">
-          
-          {/* PLAN 1: Single Report Plan ($1,000 / Report) */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-2xs hover:shadow-md transition-shadow">
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <div className="text-xs font-black text-[#B5111B] uppercase tracking-wider">Single Report Option</div>
-                <h3 className="text-xl font-bold text-slate-900">Single Report Plan</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">Official scorecard audit calculation, single project assessment PDF delivery & verified stamp.</p>
+        {/* 3 Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-4">
+          {plans.map((plan) => {
+            const isFeatured = plan.featured
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative flex flex-col justify-between rounded-2xl h-full transition-all duration-200 ${
+                  isFeatured
+                    ? "bg-white border-2 border-[#B5111B] shadow-lg z-10"
+                    : "bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-slate-300"
+                }`}
+              >
+                {/* Featured Badge - Floating Pill so content starts at identical top baseline */}
+                {isFeatured && plan.badge && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#B5111B] text-white text-[11px] font-bold text-center py-1 px-4 rounded-full uppercase tracking-wider shadow-sm z-20 whitespace-nowrap">
+                    {plan.badge}
+                  </div>
+                )}
+
+                <div className="p-6 sm:p-8 flex-1 flex flex-col">
+                  {/* Header info */}
+                  <div className="border-b border-slate-100 pb-6 mb-6">
+                    <div className="flex items-center justify-between gap-2 mb-1.5 h-[28px]">
+                      <h3 className="text-xl font-bold text-slate-900 leading-tight">
+                        {plan.name}
+                      </h3>
+                    </div>
+
+                    {/* Subtitle row - aligned across cards */}
+                    <div className="h-[52px] mb-3 flex flex-col justify-start">
+                      {plan.id === "combined" ? (
+                        <>
+                          <p className="text-xs font-semibold text-slate-700">
+                            (Scorecard Only + Scorecard Subscription)
+                          </p>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs">
+                            <span className="text-slate-400 line-through font-medium">
+                              $54,000 Total Value
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 rounded-full text-[11px]">
+                              Save $9,000.00
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-xs font-semibold text-[#B5111B]">
+                          {plan.subtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-500 leading-relaxed h-[56px] overflow-hidden">
+                      {plan.description}
+                    </p>
+
+                    {/* Price Block - exactly aligned across cards */}
+                    <div className="mt-5 pt-5 border-t border-slate-100">
+                      <div className="flex items-baseline text-slate-900 h-[48px]">
+                        <span className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+                          {plan.price}
+                        </span>
+                        <span className="text-lg font-bold text-slate-400">
+                          {plan.cents}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs font-medium text-slate-600">
+                        {plan.billingNote}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Deliverables List */}
+                  <div className="flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3.5">
+                      Included Deliverables
+                    </p>
+                    <ul className="space-y-3 text-xs sm:text-[13px] text-slate-700">
+                      {plan.features.map((feature, idx) => {
+                        const isHighValue = feature.includes("($")
+
+                        return (
+                          <li
+                            key={idx}
+                            className={`flex items-start gap-2.5 leading-snug ${
+                              isHighValue
+                                ? "font-semibold text-slate-900"
+                                : "text-slate-700"
+                            }`}
+                          >
+                            <Check
+                              className={`w-4 h-4 shrink-0 mt-0.5 ${
+                                isHighValue
+                                  ? "text-[#B5111B] stroke-[2.5]"
+                                  : "text-[#B5111B]"
+                              }`}
+                            />
+                            <span>
+                              {isHighValue ? (
+                                <>
+                                  <span>{feature.split("($")[0]}</span>
+                                  <span className="font-bold text-[#B5111B]">
+                                    (${feature.split("($")[1]}
+                                  </span>
+                                </>
+                              ) : feature.includes("Scorecard Only") && feature.includes("Scorecard Subscription") ? (
+                                <span className="font-medium text-slate-800">
+                                  Covers all deliverable points included in{" "}
+                                  <strong className="font-bold text-slate-900">Scorecard Only</strong> &amp;{" "}
+                                  <strong className="font-bold text-slate-900">Scorecard Subscription</strong>.
+                                </span>
+                              ) : (
+                                feature
+                              )}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+
+                  {/* Action CTA */}
+                  <div className="pt-8 mt-auto">
+                    <Link
+                      href={plan.ctaHref}
+                      className={`w-full block py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
+                        isFeatured
+                          ? "bg-[#B5111B] text-white hover:bg-[#960E16] shadow-sm hover:shadow"
+                          : "bg-slate-900 text-white hover:bg-slate-800"
+                      }`}
+                    >
+                      {plan.ctaText}
+                    </Link>
+                  </div>
+                </div>
               </div>
-
-              <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                <div className="text-4xl font-black text-slate-900">
-                  ${reportPrice}
-                  <span className="text-xs font-semibold text-slate-400"> /Report</span>
-                </div>
-                <span className="inline-block text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
-                  Single Report One-Time Payment
-                </span>
-              </div>
-
-              <ul className="space-y-3 pt-2 text-xs text-slate-700 font-medium">
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Single Certified Audit Calculation</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Executive PDF Export Download</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Kathleen Rose, CCIM/CRE Advisory Seal</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Action vs Inaction Projections</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Official Audit Timestamp & Cryptographic Hash</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              href="/login"
-              className="w-full bg-[#0A101D] hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm py-3.5 rounded-xl shadow-xs transition-all text-center block cursor-pointer mt-4"
-            >
-              Buy Single Report (${reportPrice})
-            </Link>
-          </div>
-
-          {/* PLAN 2: All-In-One Solution ($1,800 / Year) */}
-          <div className="bg-white rounded-2xl border-2 border-[#B5111B] p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-lg relative overflow-hidden ring-4 ring-[#B5111B]/10">
-            <div className="absolute top-0 right-0 bg-[#B5111B] text-white text-[10px] font-black uppercase tracking-wider py-1 px-3.5 rounded-bl-xl shadow-xs flex items-center gap-1.5">
-              <span>All-In-One Solution</span>
-              <span className="bg-white text-[#B5111B] text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">Save 20%</span>
-            </div>
-
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-[#B5111B] uppercase tracking-wider">Complete Package</span>
-                  <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm border border-emerald-200">
-                    20% OFF Subscription
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900">Total All-In-One Plan</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Includes Single Report Plan ($1,000) + Platform Subscription ($1,000 value with 20% OFF = $800). Clients get updated reports as project data changes.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-red-50/90 border border-red-200 rounded-xl space-y-1.5 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-[#B5111B] uppercase tracking-wider">
-                    Plan Calculation Formula
-                  </span>
-                  <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-sm border border-emerald-200/80">
-                    Save $200 (20% OFF)
-                  </span>
-                </div>
-                <div className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
-                  <span>$1,000 Report +</span>
-                  <span className="line-through text-slate-400 font-semibold">$1,000</span>
-                  <span className="text-emerald-700 font-bold">$800 Subscription</span>
-                  <span className="text-[#B5111B] font-black text-xs sm:text-sm whitespace-nowrap">= $1,800 / Year</span>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-[#B5111B]">${totalPlanPrice}</span>
-                  <span className="text-xs font-semibold text-slate-400"> /Year</span>
-                  <span className="text-xs font-bold text-slate-400 line-through ml-1">$2,000</span>
-                  <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Save 20%</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-block text-[11px] font-bold text-[#B5111B] bg-red-50 px-3 py-1 rounded-lg border border-red-200/80">
-                    $1,000 (Report Plan) + $800 (Subscription)
-                  </span>
-                </div>
-              </div>
-
-              <ul className="space-y-3 pt-2 text-xs text-slate-700 font-medium">
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>
-                    Full Annual Platform Access <span className="line-through text-slate-400 font-normal">$1,000</span> <span className="text-emerald-700 font-bold">($800 with 20% OFF)</span>
-                  </span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Single Certified Report Plan ($1,000 Value)</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span className="font-bold text-slate-900">Receive Continuous Updated Reports as Data Evolves</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Unlimited Certified Scorecard Reports</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Custom Section Maker & Schema Engine</span>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Check className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  <span>Priority Advisory Review & Support SLA</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              href="/login"
-              className="w-full bg-[#B5111B] hover:bg-[#8F0D15] text-white font-extrabold text-xs sm:text-sm py-3.5 rounded-xl shadow-md transition-all text-center block cursor-pointer mt-4"
-            >
-              Buy All-In-One Solution ($1,800/yr)
-            </Link>
-          </div>
-
+            )
+          })}
         </div>
-
       </div>
     </section>
   )

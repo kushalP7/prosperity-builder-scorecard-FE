@@ -108,7 +108,7 @@ export function LandingFooter() {
             {/* Social Icons */}
             <div className="flex items-center gap-2.5 pt-1">
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/company/roseassociatessoutheastinc/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-xl border border-slate-800 bg-slate-900 hover:bg-[#B5111B] hover:border-[#B5111B] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-xs"
@@ -130,7 +130,7 @@ export function LandingFooter() {
                 </svg>
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@RoseAssociatesNC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-xl border border-slate-800 bg-slate-900 hover:bg-[#B5111B] hover:border-[#B5111B] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-xs"

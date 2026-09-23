@@ -25,7 +25,7 @@ export function ReportShowcaseDetailedSection() {
       <ReportShowcaseSection />
 
       {/* 2. DYNAMIC PUBLISHED REPORTS & DOSSIERS CARDS */}
-      <PublishedReportsCardsSection />
+      {/* <PublishedReportsCardsSection />  need to comment  */}
 
       {/* 2. CLEAN REPORT STRUCTURE & ANATOMY SECTION */}
       <section className="py-16 sm:py-24 bg-white border-t border-b border-slate-200">
