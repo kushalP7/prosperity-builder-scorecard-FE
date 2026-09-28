@@ -46,7 +46,8 @@ export function LandingFooter() {
                   TRUSTED SOURCES
                 </h4>
                 <p className="text-[11.5px] text-rose-100/90 leading-relaxed font-medium">
-                  Data from authoritative public, proprietary and government providers you can rely on.
+                  Data from authoritative public, proprietary and government
+                  providers you can rely on.
                 </p>
               </div>
             </div>
@@ -246,7 +247,8 @@ export function LandingFooter() {
                   <span>Executive Analytics</span>
                 </Link>
               </li>
-              <li>
+              {/* need to uncomment */}
+              {/* <li>
                 <Link
                   href="/project-portfolio"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
@@ -263,7 +265,7 @@ export function LandingFooter() {
                   <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Media Sphere</span>
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   href="/about"

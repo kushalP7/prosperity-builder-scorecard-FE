@@ -18,11 +18,15 @@ export default function ProsperityBuilderScorecardPage() {
         <section className="bg-white border-b border-slate-200 py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-              Prosperity Builder <span className="text-[#B5111B]">Scorecard®</span>
+              Prosperity Builder{" "}
+              <span className="text-[#B5111B]">Scorecard®</span>
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-3xl mx-auto">
-              A comprehensive quantitative and qualitative audit designed to provide municipal leaders, economic developers, and planning boards with clear policy direction and high-impact capital allocation insights.
+              A comprehensive quantitative and qualitative audit designed to
+              provide municipal leaders, economic developers, and planning
+              boards with clear policy direction and high-impact capital
+              allocation insights.
             </p>
 
             {/* Clean Navigation Links */}
@@ -47,11 +51,12 @@ export default function ProsperityBuilderScorecardPage() {
         <ReportShowcaseSection />
 
         {/* 2. Published Real Estate & Community Dossiers */}
-        <PublishedReportsCardsSection />
+        {/* need to uncomment */}
+        {/* <PublishedReportsCardsSection /> */}
       </main>
 
       {/* Global Footer */}
       <LandingFooter />
     </div>
-  )
+  );
 }

@@ -11,7 +11,8 @@ export function ReportShowcaseDetailedSection() {
       <ReportShowcaseSection />
 
       {/* 2. DYNAMIC PUBLISHED REPORTS & DOSSIERS CARDS */}
-      <PublishedReportsCardsSection />
+      {/* need to uncomment */}
+      {/* <PublishedReportsCardsSection /> */}
 
       {/* 3. CLEAN REPORT STRUCTURE & ANATOMY SECTION */}
       <ScorecardAnatomySection />

@@ -39,8 +39,8 @@ export function LandingHeader() {
       isDropdown: true,
     },
     { name: "Executive Analytics", href: "/executive-analytics" },
-    { name: "Projects", href: "/project-portfolio" },
-    { name: "Media Sphere", href: "/videos" },
+    // { name: "Projects", href: "/project-portfolio" }, // need to uncomment
+    // { name: "Media Sphere", href: "/videos" }, // need to uncomment
     { name: "About Us", href: "/about" },
   ]
 
@@ -119,7 +119,9 @@ export function LandingHeader() {
                     <span>{item.name}</span>
                     <ChevronDown
                       className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        scorecardDropdownOpen ? "rotate-180 text-[#B5111B]" : "text-slate-400 group-hover:text-[#B5111B]"
+                        scorecardDropdownOpen
+                          ? "rotate-180 text-[#B5111B]"
+                          : "text-slate-400 group-hover:text-[#B5111B]"
                       }`}
                     />
                   </Link>
@@ -132,8 +134,8 @@ export function LandingHeader() {
                           Scorecard Navigation
                         </div>
                         {scorecardSubItems.map((sub) => {
-                          const isSubActive = pathname === sub.href
-                          const IconComponent = sub.icon
+                          const isSubActive = pathname === sub.href;
+                          const IconComponent = sub.icon;
                           return (
                             <Link
                               key={sub.href}
@@ -163,13 +165,13 @@ export function LandingHeader() {
                                 </div>
                               </div>
                             </Link>
-                          )
+                          );
                         })}
                       </div>
                     </div>
                   )}
                 </div>
-              )
+              );
             }
 
             return (
@@ -185,7 +187,7 @@ export function LandingHeader() {
               >
                 {item.name}
               </Link>
-            )
+            );
           })}
         </nav>
 
@@ -205,7 +207,11 @@ export function LandingHeader() {
           className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           aria-label="Toggle navigation menu"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
       </div>
 
@@ -217,8 +223,8 @@ export function LandingHeader() {
             <Link
               href="/#services"
               onClick={(e) => {
-                handleNavClick(e, "/#services")
-                setMobileMenuOpen(false)
+                handleNavClick(e, "/#services");
+                setMobileMenuOpen(false);
               }}
               className="p-2.5 rounded-lg hover:bg-red-50 hover:text-[#B5111B] transition-colors"
             >
@@ -256,7 +262,7 @@ export function LandingHeader() {
               {mobileScorecardOpen && (
                 <div className="pl-4 space-y-1 border-l-2 border-red-200 ml-3 py-1">
                   {scorecardSubItems.map((sub) => {
-                    const isSubActive = pathname === sub.href
+                    const isSubActive = pathname === sub.href;
                     return (
                       <Link
                         key={sub.href}
@@ -270,7 +276,7 @@ export function LandingHeader() {
                       >
                         {sub.name}
                       </Link>
-                    )
+                    );
                   })}
                 </div>
               )}
@@ -288,9 +294,9 @@ export function LandingHeader() {
             >
               Executive Analytics
             </Link>
-
+            {/* need to uncomment */}
             {/* Projects */}
-            <Link
+            {/* <Link
               href="/project-portfolio"
               onClick={() => setMobileMenuOpen(false)}
               className={`p-2.5 rounded-lg transition-colors ${
@@ -300,10 +306,10 @@ export function LandingHeader() {
               }`}
             >
               Projects
-            </Link>
+            </Link> */}
 
             {/* Media Sphere */}
-            <Link
+            {/* <Link
               href="/videos"
               onClick={() => setMobileMenuOpen(false)}
               className={`p-2.5 rounded-lg transition-colors ${
@@ -313,7 +319,7 @@ export function LandingHeader() {
               }`}
             >
               Media Sphere
-            </Link>
+            </Link> */}
 
             {/* About Us */}
             <Link
@@ -341,5 +347,5 @@ export function LandingHeader() {
         </div>
       )}
     </header>
-  )
+  );
 }
