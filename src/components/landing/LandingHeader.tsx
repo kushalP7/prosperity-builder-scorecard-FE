@@ -39,8 +39,8 @@ export function LandingHeader() {
       isDropdown: true,
     },
     { name: "Executive Analytics", href: "/executive-analytics" },
-    { name: "Projects", href: "/project-portfolio" }, // need to uncomment
-    { name: "Media Sphere", href: "/videos" }, // need to uncomment
+    // { name: "Projects", href: "/project-portfolio" }, // need to uncomment
+    // { name: "Media Sphere", href: "/videos" }, // need to uncomment
     { name: "About Us", href: "/about" },
   ]
 
