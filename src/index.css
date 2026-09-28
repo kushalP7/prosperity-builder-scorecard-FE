@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
+@theme inline {
+  --color-primary: #B5111B;
+  --color-primary-dark: #8C0C14;
+  --color-primary-light: #D93A44;
+  --color-ink: #221F20;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-inter);
+}
+
+:root {
+  --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --background: #F4F4F5;
+  --foreground: #221F20;
+  --surface: #ffffff;
+  --radius: 0.5rem;
+}
+
+/* Global Browser Scrollbar & Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Firefox standard scrollbars */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #B5111B #0F172A;
+  }
+}
+
+/* Custom Webkit Scrollbar for all elements (Chrome, Safari, Edge, Opera) */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+*::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #F1F5F9 !important;
+}
+
+*::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1 !important;
+  border-radius: 9999px !important;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8 !important;
+}
+
+*::-webkit-scrollbar-thumb:active,
+::-webkit-scrollbar-thumb:active {
+  background-color: #64748B !important;
+}
+
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* React Grid Layout Overrides */
+.react-resizable-handle {
+  z-index: 50 !important;
+  bottom: 0px !important;
+  right: 0px !important;
+  width: 24px !important;
+  height: 24px !important;
+  cursor: se-resize !important;
+  background-image: none !important;
+}
+
+.react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom-right-radius: 2px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Sleek Inner Container Scrollbar */
+@supports not selector(::-webkit-scrollbar) {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8;
+}
+
+/* Infinite Marquee Animation for Project Partners */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Prevent image dragging across all browsers */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
+/* Custom Leaflet Map Popups */
+.rose-custom-leaflet-popup {
+  bottom: 0 !important;
+}
+.rose-custom-leaflet-popup .leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.22), 0 4px 10px -2px rgba(0, 0, 0, 0.08) !important;
+  padding: 4px !important;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+.rose-custom-leaflet-popup .leaflet-popup-content {
+  margin: 6px !important;
+  line-height: 1.4 !important;
+}
+.rose-custom-leaflet-popup .leaflet-popup-tip {
+  background: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+.rose-custom-leaflet-popup a.leaflet-popup-close-button {
+  top: 6px !important;
+  right: 6px !important;
+  color: #94a3b8 !important;
+  padding: 2px !important;
+  font-size: 14px !important;
+}
+.rose-custom-leaflet-popup a.leaflet-popup-close-button:hover {
+  color: #b5111b !important;
+}
