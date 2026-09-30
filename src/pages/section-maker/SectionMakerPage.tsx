@@ -11,10 +11,13 @@ import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
 export default function SectionMakerPage() {
-  const { templates, createTemplateSection, updateTemplateSection, deleteTemplateSection, createTemplateCategory, updateTemplateCategory, deleteTemplateCategory, createTemplateGroup, updateTemplateGroup, deleteTemplateGroup } = useAppStore()
+  const { templates, fetchTemplates, isLoadingTemplates, createTemplateSection, updateTemplateSection, deleteTemplateSection, createTemplateCategory, updateTemplateCategory, deleteTemplateCategory, createTemplateGroup, updateTemplateGroup, deleteTemplateGroup } = useAppStore()
   const [mounted, setMounted] = React.useState(false)
 
-  React.useEffect(() => setMounted(true), [])
+  React.useEffect(() => {
+    setMounted(true)
+    fetchTemplates()
+  }, [fetchTemplates])
 
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)
   const [isSectionModalOpen, setIsSectionModalOpen] = React.useState(false)

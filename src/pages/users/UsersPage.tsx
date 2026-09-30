@@ -30,7 +30,7 @@ import {
   FolderOpen,
   Calendar,
   Sparkles,
-  Lock
+  Database
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,8 +38,10 @@ import { Modal } from "@/components/ui/modal"
 import { Dropdown } from "@/components/ui/dropdown"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
+import { apiClient } from "@/lib/api"
+import { useAppStore } from "@/store"
 
-export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
+export type UserRole = 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
 export type UserStatus = 'active' | 'pending' | 'suspended';
 
 export interface UserData {
@@ -57,224 +59,7 @@ export interface UserData {
 
 const ITEMS_PER_PAGE = 10;
 
-const INITIAL_USERS: UserData[] = [
-  {
-    id: "usr-001",
-    name: "Alexander Rose",
-    email: "arose@roseassociates.com",
-    role: "admin",
-    department: "Executive Board",
-    status: "active",
-    lastActive: "Just now",
-    avatarBg: "bg-[#7c0d15] text-white",
-    assignedProjectsCount: 12,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "usr-002",
-    name: "Samantha Vance",
-    email: "svance@roseassociates.com",
-    role: "manager",
-    department: "Real Estate Development",
-    status: "active",
-    lastActive: "12 mins ago",
-    avatarBg: "bg-blue-600 text-white",
-    assignedProjectsCount: 8,
-    createdAt: "2024-03-10",
-  },
-  {
-    id: "usr-003",
-    name: "Marcus Chen",
-    email: "mchen@roseassociates.com",
-    role: "analyst",
-    department: "Urban Analytics",
-    status: "active",
-    lastActive: "1 hour ago",
-    avatarBg: "bg-emerald-600 text-white",
-    assignedProjectsCount: 5,
-    createdAt: "2024-05-20",
-  },
-  {
-    id: "usr-004",
-    name: "Elena Rodriguez",
-    email: "erodriguez@roseassociates.com",
-    role: "admin",
-    department: "Infrastructure Planning",
-    status: "active",
-    lastActive: "3 hours ago",
-    avatarBg: "bg-[#b5111b] text-white",
-    assignedProjectsCount: 10,
-    createdAt: "2024-02-01",
-  },
-  {
-    id: "usr-005",
-    name: "David Kim",
-    email: "dkim@roseassociates.com",
-    role: "analyst",
-    department: "Finance & Accounting",
-    status: "pending",
-    lastActive: "Yesterday",
-    avatarBg: "bg-amber-600 text-white",
-    assignedProjectsCount: 3,
-    createdAt: "2024-07-12",
-  },
-  {
-    id: "usr-006",
-    name: "Sophia Martinez",
-    email: "smartinez@roseassociates.com",
-    role: "viewer",
-    department: "Community Relations",
-    status: "active",
-    lastActive: "2 days ago",
-    avatarBg: "bg-purple-600 text-white",
-    assignedProjectsCount: 2,
-    createdAt: "2024-06-05",
-  },
-  {
-    id: "usr-007",
-    name: "Jonathan Wright",
-    email: "jwright@roseassociates.com",
-    role: "manager",
-    department: "Housing & Land Use",
-    status: "active",
-    lastActive: "4 hours ago",
-    avatarBg: "bg-indigo-600 text-white",
-    assignedProjectsCount: 6,
-    createdAt: "2024-04-18",
-  },
-  {
-    id: "usr-008",
-    name: "Rachel Green",
-    email: "rgreen@roseassociates.com",
-    role: "viewer",
-    department: "External Audit",
-    status: "suspended",
-    lastActive: "1 week ago",
-    avatarBg: "bg-slate-600 text-white",
-    assignedProjectsCount: 0,
-    createdAt: "2024-01-20",
-  },
-  {
-    id: "usr-009",
-    name: "Benjamin Taylor",
-    email: "btaylor@roseassociates.com",
-    role: "manager",
-    department: "Urban Analytics",
-    status: "active",
-    lastActive: "15 mins ago",
-    avatarBg: "bg-teal-600 text-white",
-    assignedProjectsCount: 7,
-    createdAt: "2024-03-22",
-  },
-  {
-    id: "usr-010",
-    name: "Victoria Sterling",
-    email: "vsterling@roseassociates.com",
-    role: "admin",
-    department: "Executive Board",
-    status: "active",
-    lastActive: "30 mins ago",
-    avatarBg: "bg-rose-700 text-white",
-    assignedProjectsCount: 11,
-    createdAt: "2024-01-08",
-  },
-  {
-    id: "usr-011",
-    name: "Lucas Davenport",
-    email: "ldavenport@roseassociates.com",
-    role: "analyst",
-    department: "Real Estate Development",
-    status: "active",
-    lastActive: "2 hours ago",
-    avatarBg: "bg-cyan-600 text-white",
-    assignedProjectsCount: 4,
-    createdAt: "2024-08-01",
-  },
-  {
-    id: "usr-012",
-    name: "Amara Okafor",
-    email: "aokafor@roseassociates.com",
-    role: "manager",
-    department: "Infrastructure Planning",
-    status: "active",
-    lastActive: "5 hours ago",
-    avatarBg: "bg-amber-700 text-white",
-    assignedProjectsCount: 9,
-    createdAt: "2024-02-14",
-  },
-  {
-    id: "usr-013",
-    name: "Gabriel Rossi",
-    email: "grossi@roseassociates.com",
-    role: "analyst",
-    department: "Finance & Accounting",
-    status: "pending",
-    lastActive: "Yesterday",
-    avatarBg: "bg-orange-600 text-white",
-    assignedProjectsCount: 2,
-    createdAt: "2024-08-10",
-  },
-  {
-    id: "usr-014",
-    name: "Chloe Bennett",
-    email: "cbennett@roseassociates.com",
-    role: "viewer",
-    department: "Community Relations",
-    status: "active",
-    lastActive: "3 days ago",
-    avatarBg: "bg-violet-600 text-white",
-    assignedProjectsCount: 1,
-    createdAt: "2024-06-19",
-  },
-  {
-    id: "usr-015",
-    name: "Harrison Ford",
-    email: "hford@roseassociates.com",
-    role: "analyst",
-    department: "Housing & Land Use",
-    status: "active",
-    lastActive: "6 hours ago",
-    avatarBg: "bg-sky-600 text-white",
-    assignedProjectsCount: 5,
-    createdAt: "2024-04-29",
-  },
-  {
-    id: "usr-016",
-    name: "Isabella Gomez",
-    email: "igomez@roseassociates.com",
-    role: "manager",
-    department: "Urban Analytics",
-    status: "active",
-    lastActive: "1 day ago",
-    avatarBg: "bg-emerald-700 text-white",
-    assignedProjectsCount: 8,
-    createdAt: "2024-05-11",
-  },
-  {
-    id: "usr-017",
-    name: "Zachary Patel",
-    email: "zpatel@roseassociates.com",
-    role: "viewer",
-    department: "External Audit",
-    status: "suspended",
-    lastActive: "2 weeks ago",
-    avatarBg: "bg-[#7c0d15] text-white",
-    assignedProjectsCount: 0,
-    createdAt: "2024-02-28",
-  },
-  {
-    id: "usr-018",
-    name: "Olivia Sinclair",
-    email: "osinclair@roseassociates.com",
-    role: "admin",
-    department: "Real Estate Development",
-    status: "active",
-    lastActive: "45 mins ago",
-    avatarBg: "bg-blue-700 text-white",
-    assignedProjectsCount: 14,
-    createdAt: "2024-01-25",
-  },
-];
+
 
 const DEPARTMENTS = [
   "Executive Board",
@@ -317,10 +102,10 @@ function BrandRedSelect({ value, onChange, options, disabled, className }: Brand
 }
 
 const ROLE_OPTIONS: BrandRedSelectOption[] = [
-  { value: "admin", label: "Admin" },
-  { value: "manager", label: "Manager" },
-  { value: "analyst", label: "Analyst" },
-  { value: "viewer", label: "Viewer" },
+  { value: "super_admin", label: "Super Admin" },
+  { value: "project_lead", label: "Project Lead" },
+  { value: "assessment_specialist", label: "Assessment Specialist" },
+  { value: "client_viewer", label: "Client Representative" },
 ];
 
 const STATUS_OPTIONS: BrandRedSelectOption[] = [
@@ -332,14 +117,46 @@ const STATUS_OPTIONS: BrandRedSelectOption[] = [
 const DEPARTMENT_OPTIONS: BrandRedSelectOption[] = DEPARTMENTS.map(d => ({ value: d, label: d }));
 
 export default function UsersPage() {
-  const [users, setUsers] = React.useState<UserData[]>(INITIAL_USERS);
+  const { currentUser } = useAppStore();
+  const [users, setUsers] = React.useState<UserData[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(true);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [selectedRole, setSelectedRole] = React.useState<string>("all");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState<number>(1);
 
-  // Current Active Viewer Role (Interactive RBAC Role Switcher)
-  const [currentViewerRole, setCurrentViewerRole] = React.useState<UserRole>('admin');
+  // Current user's authenticated role
+  const userRole = (currentUser?.role as UserRole) || 'client_viewer';
+
+  // Load live users from backend database
+  const fetchUsers = React.useCallback(async () => {
+    setIsLoadingUsers(true);
+    try {
+      const apiUsers = await apiClient.getUsers();
+      if (Array.isArray(apiUsers)) {
+        setUsers(apiUsers.map((u: any) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role || 'client_viewer',
+          department: u.department || 'Planning Board',
+          status: u.status || 'active',
+          lastActive: u.lastActive ? new Date(u.lastActive).toLocaleDateString() : 'Just now',
+          avatarBg: u.avatarBg || 'bg-slate-700 text-white',
+          assignedProjectsCount: u.assignedProjectsCount || 0,
+          createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '2026-01-01',
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load users from backend:', err);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // Menu & Modal States
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
@@ -351,7 +168,8 @@ export default function UsersPage() {
   // Form States for Add/Edit
   const [formName, setFormName] = React.useState<string>("");
   const [formEmail, setFormEmail] = React.useState<string>("");
-  const [formRole, setFormRole] = React.useState<UserRole>("analyst");
+  const [formPassword, setFormPassword] = React.useState<string>("TempSecret123!");
+  const [formRole, setFormRole] = React.useState<UserRole>("assessment_specialist");
   const [formDepartment, setFormDepartment] = React.useState<string>(DEPARTMENTS[0]);
   const [formStatus, setFormStatus] = React.useState<UserStatus>("active");
 
@@ -361,26 +179,27 @@ export default function UsersPage() {
   }, [searchQuery, selectedRole, selectedStatus]);
 
   // RBAC Permission Check Helpers
-  const canAddUser = currentViewerRole === 'admin' || currentViewerRole === 'manager';
+  const isSuperAdmin = userRole === 'super_admin';
+  const canAddUser = isSuperAdmin || userRole === 'project_lead';
 
   const canEditUser = (targetUser: UserData) => {
-    if (currentViewerRole === 'admin') return true;
-    if (currentViewerRole === 'manager') return targetUser.role !== 'admin';
+    if (isSuperAdmin) return true;
+    if (userRole === 'project_lead') return targetUser.role !== 'super_admin';
     return false;
   };
 
   const canChangeRole = (targetUser: UserData) => {
-    return currentViewerRole === 'admin';
+    return isSuperAdmin;
   };
 
   const canDeleteUser = (targetUser: UserData) => {
-    if (currentViewerRole !== 'admin') return false;
-    return targetUser.id !== 'usr-001';
+    if (!isSuperAdmin) return false;
+    return targetUser.email !== 'admin@roseassociates.com' && targetUser.id !== 'usr-001';
   };
 
   const canToggleStatus = (targetUser: UserData) => {
-    if (currentViewerRole === 'admin') return targetUser.id !== 'usr-001';
-    if (currentViewerRole === 'manager') return targetUser.role !== 'admin';
+    if (isSuperAdmin) return targetUser.email !== 'admin@roseassociates.com' && targetUser.id !== 'usr-001';
+    if (userRole === 'project_lead') return targetUser.role !== 'super_admin';
     return false;
   };
 
@@ -408,52 +227,54 @@ export default function UsersPage() {
 
   // Metrics
   const totalCount = users.length;
-  const adminCount = users.filter(u => u.role === 'admin').length;
-  const managerAnalystCount = users.filter(u => u.role === 'manager' || u.role === 'analyst').length;
-  const viewerCount = users.filter(u => u.role === 'viewer').length;
+  const superAdminCount = users.filter(u => u.role === 'super_admin').length;
+  const projectLeadCount = users.filter(u => u.role === 'project_lead').length;
+  const specialistCount = users.filter(u => u.role === 'assessment_specialist').length;
+  const clientViewerCount = users.filter(u => u.role === 'client_viewer').length;
 
   // Form Handlers
   const handleOpenAddUser = () => {
     if (!canAddUser) {
-      toast.error(`Permission Denied: Your current role (${currentViewerRole.toUpperCase()}) cannot add new users.`);
+      toast.error(`Permission Denied: Your current role (${userRole.toUpperCase()}) cannot add new users. Super Admin privilege required.`);
       return;
     }
     setFormName("");
     setFormEmail("");
-    setFormRole("analyst");
+    setFormPassword("SecurePass123!");
+    setFormRole("assessment_specialist");
     setFormDepartment(DEPARTMENTS[0]);
     setFormStatus("active");
     setIsAddUserOpen(true);
   };
 
-  const handleSaveAddUser = (e: React.FormEvent) => {
+  const handleSaveAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formEmail.trim()) {
       toast.error("Please fill in all required fields.");
       return;
     }
 
-    const newUser: UserData = {
-      id: `usr-${Date.now()}`,
+    const res = await apiClient.createUser({
       name: formName.trim(),
       email: formEmail.trim(),
+      password: formPassword || "RoseAssociates123!",
       role: formRole,
       department: formDepartment,
       status: formStatus,
-      lastActive: "Just created",
-      avatarBg: formRole === 'admin' ? "bg-[#b5111b] text-white" : formRole === 'manager' ? "bg-blue-600 text-white" : formRole === 'analyst' ? "bg-emerald-600 text-white" : "bg-purple-600 text-white",
-      assignedProjectsCount: 1,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
+    });
 
-    setUsers(prev => [newUser, ...prev]);
-    setIsAddUserOpen(false);
-    toast.success(`User ${newUser.name} created successfully!`);
+    if (res.success) {
+      await fetchUsers();
+      setIsAddUserOpen(false);
+      toast.success(`User ${formName.trim()} created successfully with Argon2 hashing!`);
+    } else {
+      toast.error(res.message || "Failed to create user");
+    }
   };
 
   const handleOpenEditUser = (user: UserData) => {
     if (!canEditUser(user)) {
-      toast.error(`Permission Denied: Your role (${currentViewerRole.toUpperCase()}) cannot edit this user.`);
+      toast.error(`Permission Denied: Your role (${userRole.toUpperCase()}) cannot edit this user.`);
       return;
     }
     setEditingUser(user);
@@ -464,47 +285,55 @@ export default function UsersPage() {
     setFormStatus(user.status);
   };
 
-  const handleSaveEditUser = (e: React.FormEvent) => {
+  const handleSaveEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
 
-    setUsers(prev => prev.map(u => {
-      if (u.id === editingUser.id) {
-        return {
-          ...u,
-          name: formName.trim(),
-          email: formEmail.trim(),
-          role: canChangeRole(editingUser) ? formRole : u.role,
-          department: formDepartment,
-          status: canToggleStatus(editingUser) ? formStatus : u.status,
-        };
-      }
-      return u;
-    }));
+    const res = await apiClient.updateUser(editingUser.id, {
+      name: formName.trim(),
+      role: canChangeRole(editingUser) ? formRole : editingUser.role,
+      department: formDepartment,
+      status: canToggleStatus(editingUser) ? formStatus : editingUser.status,
+    });
 
-    setEditingUser(null);
-    toast.success(`User ${formName} updated successfully!`);
+    if (res.success) {
+      await fetchUsers();
+      setEditingUser(null);
+      toast.success(`User ${formName} updated successfully!`);
+    } else {
+      toast.error(res.message || "Failed to update user");
+    }
   };
 
-  const handleToggleUserStatus = (user: UserData) => {
+  const handleToggleUserStatus = async (user: UserData) => {
     if (!canToggleStatus(user)) {
       toast.error(`Permission Denied: Cannot modify status for ${user.name}.`);
       return;
     }
     const newStatus: UserStatus = user.status === 'active' ? 'suspended' : 'active';
-    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
-    toast.success(`User ${user.name} is now ${newStatus.toUpperCase()}`);
+    const res = await apiClient.updateUser(user.id, { status: newStatus });
+    if (res.success) {
+      await fetchUsers();
+      toast.success(`User ${user.name} is now ${newStatus.toUpperCase()}`);
+    } else {
+      toast.error(res.message || "Failed to update user status");
+    }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!deletingUser) return;
     if (!canDeleteUser(deletingUser)) {
       toast.error(`Permission Denied: Cannot delete ${deletingUser.name}.`);
       setDeletingUser(null);
       return;
     }
-    setUsers(prev => prev.filter(u => u.id !== deletingUser.id));
-    toast.success(`User ${deletingUser.name} deleted.`);
+    const res = await apiClient.deleteUser(deletingUser.id);
+    if (res.success) {
+      await fetchUsers();
+      toast.success(`User ${deletingUser.name} deleted.`);
+    } else {
+      toast.error(res.message || "Failed to delete user");
+    }
     setDeletingUser(null);
   };
 
@@ -513,35 +342,35 @@ export default function UsersPage() {
       toast.error(`Permission Denied: Cannot reset password for ${user.name}.`);
       return;
     }
-    toast.success(`Password reset email sent to ${user.email}`);
+    toast.success(`Password reset link generated for ${user.email}`);
   };
 
   // Helper Badge Renderers
-  const renderRoleBadge = (role: UserRole) => {
+  const renderRoleBadge = (role: UserRole | string) => {
     switch (role) {
-      case 'admin':
+      case 'super_admin':
         return (
           <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-[#7c0d15]/15 text-[#7c0d15] border border-[#7c0d15]/30 inline-block w-fit">
-            Admin
+            Super Admin
           </span>
         );
-      case 'manager':
+      case 'project_lead':
         return (
-          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-red-50 text-[#b5111b] border border-red-200 inline-block w-fit">
-            Manager
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 inline-block w-fit">
+            Project Lead
           </span>
         );
-      case 'analyst':
+      case 'assessment_specialist':
         return (
-          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-slate-200 text-slate-800 border border-slate-300 inline-block w-fit">
-            Analyst
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block w-fit">
+            Assessment Specialist
           </span>
         );
-      case 'viewer':
+      case 'client_viewer':
       default:
         return (
-          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200 inline-block w-fit">
-            Viewer
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 inline-block w-fit">
+            Client Rep
           </span>
         );
     }
@@ -588,48 +417,21 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {/* Interactive Viewer Role Switcher (Simulate RBAC) */}
-        <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200 shrink-0">
-          <div className="flex items-center gap-1 text-xs font-bold text-slate-600 px-1.5">
-            <Lock className="w-3.5 h-3.5 text-slate-500" />
-            <span>Role:</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {(['admin', 'manager', 'analyst', 'viewer'] as UserRole[]).map(role => (
-              <button
-                key={role}
-                onClick={() => {
-                  setCurrentViewerRole(role);
-                  toast.info(`Switched active viewer mode to: ${role.toUpperCase()}`);
-                }}
-                className={cn(
-                  "px-2 py-0.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer capitalize",
-                  currentViewerRole === role
-                    ? "bg-slate-900 text-white shadow-2xs scale-105"
-                    : "text-slate-600 hover:bg-slate-200/70"
-                )}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
-
-
       {/* Backdrop overlay for closing action menu */}
-      {activeMenuUserId && (
-        <div
-          className="fixed inset-0 z-20 bg-transparent"
-          onClick={() => {
-            setActiveMenuUserId(null);
-          }}
-        />
-      )}
+          {activeMenuUserId && (
+            <div
+              className="fixed inset-0 z-20 bg-transparent"
+              onClick={() => {
+                setActiveMenuUserId(null);
+              }}
+            />
+          )}
 
-      {/* Main Table Card Container */}
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
+          {/* Main Table Card Container */}
+          <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
         {/* Controls Toolbar */}
         <div className="p-3 bg-slate-50/70 border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
 
@@ -658,10 +460,10 @@ export default function UsersPage() {
             <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shrink-0 overflow-x-auto">
               {[
                 { id: "all", label: "All Roles" },
-                { id: "admin", label: "Admins" },
-                { id: "manager", label: "Managers" },
-                { id: "analyst", label: "Analysts" },
-                { id: "viewer", label: "Viewers" },
+                { id: "super_admin", label: "Super Admins" },
+                { id: "project_lead", label: "Project Leads" },
+                { id: "assessment_specialist", label: "Specialists" },
+                { id: "client_viewer", label: "Client Reps" },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -704,7 +506,7 @@ export default function UsersPage() {
                   ? "bg-[#7c0d15] hover:bg-[#b5111b] text-white"
                   : "bg-slate-200 text-slate-400 cursor-not-allowed"
               )}
-              title={canAddUser ? "Add New User" : `Restricted to Admin/Manager role (Current: ${currentViewerRole.toUpperCase()})`}
+              title={canAddUser ? "Add New User" : `Restricted to Super Admin / Project Lead (Current: ${userRole.toUpperCase()})`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add New User</span>
@@ -726,7 +528,16 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-              {paginatedUsers.length === 0 ? (
+              {isLoadingUsers ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 font-medium">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-6 h-6 border-2 border-[#b5111b] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs">Loading team members...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-10 text-center text-slate-400 font-medium">
                     No users matching your filters found.

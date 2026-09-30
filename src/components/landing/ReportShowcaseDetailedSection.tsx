@@ -12,7 +12,7 @@ export function ReportShowcaseDetailedSection() {
 
       {/* 2. DYNAMIC PUBLISHED REPORTS & DOSSIERS CARDS */}
       {/* need to uncomment */}
-      {/* <PublishedReportsCardsSection /> */}
+      <PublishedReportsCardsSection />
 
       {/* 3. CLEAN REPORT STRUCTURE & ANATOMY SECTION */}
       <ScorecardAnatomySection />

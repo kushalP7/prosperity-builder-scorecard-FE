@@ -9,9 +9,15 @@ import { Modal } from "@/components/ui/modal"
 import { AnalyticsWidget } from "@/lib/types"
 
 export default function AnalyticsMakerPage() {
-  const { templates, widgets, createWidget, updateWidget, deleteWidget } = useAppStore()
+  const { templates, widgets, fetchTemplates, fetchWidgets, createWidget, updateWidget, deleteWidget } = useAppStore()
   
   const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+    fetchTemplates()
+    fetchWidgets()
+  }, [fetchTemplates, fetchWidgets])
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [editingWidgetId, setEditingWidgetId] = React.useState<string | null>(null)
   

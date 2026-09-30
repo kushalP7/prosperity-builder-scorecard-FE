@@ -52,7 +52,7 @@ export default function ProsperityBuilderScorecardPage() {
 
         {/* 2. Published Real Estate & Community Dossiers */}
         {/* need to uncomment */}
-        {/* <PublishedReportsCardsSection /> */}
+        <PublishedReportsCardsSection />
       </main>
 
       {/* Global Footer */}

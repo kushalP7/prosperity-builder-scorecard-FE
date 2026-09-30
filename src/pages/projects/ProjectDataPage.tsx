@@ -31,7 +31,11 @@ const getSectionIcon = (label: string, iconName?: string) => {
 export default function ProjectDataPage() {
   const routeParams = useParams<{ id: string }>()
   const id = routeParams.id || ""
-  const { projects, updateProjectData } = useAppStore()
+  const { projects, updateProjectData, fetchProjects } = useAppStore()
+
+  React.useEffect(() => {
+    fetchProjects()
+  }, [fetchProjects])
 
   const project = projects.find(p => p.id === id)
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)

@@ -2,15 +2,15 @@
 
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
-import { 
-  ShieldCheck, 
-  CheckCircle2, 
-  Award, 
-  RefreshCw, 
-  ChevronRight, 
-  MapPin, 
-  Mail, 
-  Globe 
+import {
+  ShieldCheck,
+  CheckCircle2,
+  Award,
+  RefreshCw,
+  ChevronRight,
+  MapPin,
+  Mail,
+  Globe
 } from "lucide-react"
 
 export function LandingFooter() {
@@ -248,7 +248,7 @@ export function LandingFooter() {
                 </Link>
               </li>
               {/* need to uncomment */}
-              {/* <li>
+              <li>
                 <Link
                   href="/project-portfolio"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
@@ -265,7 +265,7 @@ export function LandingFooter() {
                   <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Media Sphere</span>
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link
                   href="/about"

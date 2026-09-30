@@ -289,8 +289,12 @@ function BrandRedDatePicker({ value, onChange, className }: BrandRedDatePickerPr
 }
 
 export default function SettingsPage() {
-  const { settings, updateSettings } = useAppStore()
+  const { settings, updateSettings, fetchSettings } = useAppStore()
   const [isSaving, setIsSaving] = React.useState(false)
+
+  React.useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
 
   // Admin Plan Price Configuration State (Matches Scorecard Pricing: $18,000 Scorecard, $36,000 Subscription, $45,000 Combined)
   const [reportPrice, setReportPrice] = React.useState<number>(18000)

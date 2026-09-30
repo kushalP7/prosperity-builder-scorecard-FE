@@ -4,9 +4,14 @@ import { apiClient } from '../lib/api';
 import { toast } from '../components/ui/toast';
 
 export interface User {
+  id?: string;
   email: string;
   name: string;
-  role: string;
+  role: 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
+  department?: string;
+  status?: 'active' | 'pending' | 'suspended';
+  avatarBg?: string;
+  lastActive?: string;
 }
 
 interface AppState {
@@ -16,14 +21,29 @@ interface AppState {
   settings: AppSettings;
   widgets: AnalyticsWidget[];
   isLoading: boolean;
+  isLoadingProjects: boolean;
+  isLoadingTemplates: boolean;
+  isLoadingWidgets: boolean;
+  isLoadingSettings: boolean;
+  projectsLoaded: boolean;
+  templatesLoaded: boolean;
+  widgetsLoaded: boolean;
+  settingsLoaded: boolean;
   isSyncing: boolean;
 
   // Auth State & Actions
   isAuthenticated: boolean;
   currentUser: User | null;
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (data: { name: string; email: string; password: string; department?: string }) => Promise<boolean>;
   logout: () => void;
   
+  // Module-Wise On-Demand Fetchers
+  fetchProjects: (force?: boolean) => Promise<void>;
+  fetchTemplates: (force?: boolean) => Promise<void>;
+  fetchWidgets: (force?: boolean) => Promise<void>;
+  fetchSettings: (force?: boolean) => Promise<void>;
+
   // App Actions
   initialize: () => Promise<void>;
   updateSettings: (settings: AppSettings) => Promise<void>;
@@ -125,41 +145,138 @@ export const useAppStore = create<AppState>((set, get) => {
     settings: defaultSettings,
     widgets: [],
     isLoading: false,
+    isLoadingProjects: false,
+    isLoadingTemplates: false,
+    isLoadingWidgets: false,
+    isLoadingSettings: false,
+    projectsLoaded: false,
+    templatesLoaded: false,
+    widgetsLoaded: false,
+    settingsLoaded: false,
     isSyncing: false,
 
     // Auth State & Actions
     isAuthenticated: initialAuth,
     currentUser: initialUser,
 
-    login: (email: string, password: string) => {
-      // Dummy credential check
-      const dummyEmail = 'admin@roseassociates.com';
-      const dummyPassword = 'admin123';
-
-      if (email.trim().toLowerCase() === dummyEmail.toLowerCase() && password === dummyPassword) {
-        const user: User = {
-          email: dummyEmail,
-          name: 'Rose Admin',
-          role: 'Administrator',
-        };
+    login: async (email: string, password: string) => {
+      const res = await apiClient.login(email, password);
+      if (res.success && res.user) {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('rose_auth_user', JSON.stringify(user));
+          localStorage.setItem('rose_auth_user', JSON.stringify(res.user));
         }
-        set({ isAuthenticated: true, currentUser: user });
-        toast.success('Logged in successfully!');
+        set({ isAuthenticated: true, currentUser: res.user as User });
+        toast.success(`Welcome back, ${res.user.name}!`);
         return true;
       } else {
-        toast.error('Invalid email or password. Use admin@roseassociates.com / admin123');
+        toast.error(res.message || 'Invalid email or password.');
         return false;
       }
     },
 
-    logout: () => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('rose_auth_user');
+    register: async (data: { name: string; email: string; password: string; department?: string }) => {
+      const res = await apiClient.register(data);
+      if (res.success && res.user) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('rose_auth_user', JSON.stringify(res.user));
+        }
+        set({ isAuthenticated: true, currentUser: res.user as User });
+        toast.success(res.message || 'Registration successful! Welcome to Rose Associates.');
+        return true;
+      } else {
+        toast.error(res.message || 'Registration failed.');
+        return false;
       }
+    },
+
+    logout: async () => {
+      await apiClient.logout();
       set({ isAuthenticated: false, currentUser: null });
       toast.info('Logged out successfully.');
+    },
+
+    // Module-Wise On-Demand Data Loaders
+    fetchProjects: async (force = false) => {
+      if (get().projectsLoaded && !force) return;
+      set({ isLoadingProjects: true });
+      try {
+        const apiProjects = await apiClient.getProjects();
+        if (apiProjects) {
+          set({ projects: apiProjects, projectsLoaded: true });
+          if (apiProjects.length > 0 && !get().activeProject) {
+            set({ activeProject: apiProjects[0] });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+      } finally {
+        set({ isLoadingProjects: false, isLoading: false });
+      }
+    },
+
+    fetchTemplates: async (force = false) => {
+      if (get().templatesLoaded && !force) return;
+      set({ isLoadingTemplates: true });
+      try {
+        const apiTemplates = await apiClient.getTemplates();
+        if (apiTemplates) {
+          apiTemplates.forEach(t => {
+            t.categories?.forEach(c => {
+              c.columns?.forEach(col => {
+                if (col.name === 'Client Total Score' || col.name === 'Highest Score') {
+                  if (col.isReadOnly) col.isReadOnly = false;
+                }
+                col.conditionalRules?.forEach(rule => {
+                  if (rule.ifColumnId === col.id) rule.ifColumnId = '';
+                });
+              });
+            });
+          });
+          set({ templates: apiTemplates, templatesLoaded: true });
+        }
+      } catch (err) {
+        console.error('Failed to fetch templates:', err);
+      } finally {
+        set({ isLoadingTemplates: false });
+      }
+    },
+
+    fetchWidgets: async (force = false) => {
+      if (get().widgetsLoaded && !force) return;
+      set({ isLoadingWidgets: true });
+      try {
+        const apiWidgets = await apiClient.getWidgets();
+        if (apiWidgets) {
+          set({ widgets: apiWidgets, widgetsLoaded: true });
+        }
+      } catch (err) {
+        console.error('Failed to fetch widgets:', err);
+      } finally {
+        set({ isLoadingWidgets: false });
+      }
+    },
+
+    fetchSettings: async (force = false) => {
+      if (get().settingsLoaded && !force) return;
+      set({ isLoadingSettings: true });
+      try {
+        const apiSettings = await apiClient.getSettings();
+        if (apiSettings) {
+          set({
+            settings: {
+              ...defaultSettings,
+              ...apiSettings,
+              companyProfile: apiSettings.companyProfile || defaultSettings.companyProfile,
+              ratingBands: apiSettings.ratingBands || defaultSettings.ratingBands,
+            },
+            settingsLoaded: true,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      } finally {
+        set({ isLoadingSettings: false });
+      }
     },
 
     initialize: async () => {
@@ -169,59 +286,16 @@ export const useAppStore = create<AppState>((set, get) => {
       }
 
       initializePromise = (async () => {
-        set({ isLoading: true });
-        
         try {
-          // Fetch from NestJS backend API in parallel for maximum speed
-          const [apiProjects, apiTemplates, apiSettings, apiWidgets] = await Promise.all([
-            apiClient.getProjects(),
-            apiClient.getTemplates(),
-            apiClient.getSettings(),
-            apiClient.getWidgets(),
-          ]);
-
-          let projects = apiProjects || [];
-          let templates = apiTemplates || [];
-          let settings: AppSettings = apiSettings 
-            ? { 
-                ...defaultSettings, 
-                ...apiSettings, 
-                companyProfile: apiSettings.companyProfile || defaultSettings.companyProfile,
-                ratingBands: apiSettings.ratingBands || defaultSettings.ratingBands
-              } 
-            : defaultSettings;
-          let widgets = apiWidgets || [];
-
-          // Auto-migrate to fix self-referential conditional rules
-          let stateChanged = false;
-          templates.forEach(t => {
-            t.categories.forEach(c => {
-              c.columns.forEach(col => {
-                if (col.name === 'Client Total Score' || col.name === 'Highest Score') {
-                  if (col.isReadOnly) {
-                    col.isReadOnly = false;
-                    stateChanged = true;
-                  }
-                }
-                col.conditionalRules?.forEach(rule => {
-                  if (rule.ifColumnId === col.id) {
-                    rule.ifColumnId = '';
-                    stateChanged = true;
-                  }
-                });
-              });
-            });
-          });
-
-          const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-          if (updated || stateChanged) {
-            projects = newProjects;
+          const userProfile = await apiClient.getMe();
+          if (userProfile) {
+            set({ currentUser: userProfile as User, isAuthenticated: true });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('rose_auth_user', JSON.stringify(userProfile));
+            }
           }
-
-          set({ templates, projects, settings, widgets, isLoading: false });
-          if (projects.length > 0 && !get().activeProject) {
-            set({ activeProject: projects[0] });
-          }
+        } catch {
+          // Keep current stored auth state
         } finally {
           initializePromise = null;
         }

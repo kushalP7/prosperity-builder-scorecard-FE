@@ -9,14 +9,21 @@ import { Spinner, SkeletonCard } from "@/components/ui/loader"
 import { Folder, Plus, Trash2, Pencil, Database, Image as ImageIcon, X, Upload } from "lucide-react"
 import { Link } from "@/lib/router-compat"
 import { createPortal } from "react-dom"
+import { usePermission } from "@/lib/permissions"
 
 export default function ProjectsPage() {
-  const { projects, createProject, updateProject, deleteProject, loadSampleData, isLoading } = useAppStore()
+  const { projects, fetchProjects, isLoadingProjects, createProject, updateProject, deleteProject, loadSampleData, isLoading } = useAppStore()
+  const canCreate = usePermission('create_project')
+  const canEdit = usePermission('edit_project_metadata')
+  const canDelete = usePermission('delete_project')
   const [mounted, setMounted] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  React.useEffect(() => setMounted(true), [])
+  React.useEffect(() => {
+    setMounted(true)
+    fetchProjects()
+  }, [fetchProjects])
 
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [editingProjectId, setEditingProjectId] = React.useState<string | null>(null)
@@ -102,19 +109,23 @@ export default function ProjectsPage() {
 
       {mounted && document.getElementById('app-header-actions') && createPortal(
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => loadSampleData()} disabled={isLoading}>
-            {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : <Database className="h-4 w-4 mr-2" />}
-            Load Sample Data
-          </Button>
-          <Button onClick={openCreateModal}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
+          {canCreate && (
+            <>
+              <Button variant="outline" onClick={() => loadSampleData()} disabled={isLoading}>
+                {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : <Database className="h-4 w-4 mr-2" />}
+                Load Sample Data
+              </Button>
+              <Button onClick={openCreateModal}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Project
+              </Button>
+            </>
+          )}
         </div>,
         document.getElementById('app-header-actions')!
       )}
 
-      {isLoading ? (
+      {(isLoading || isLoadingProjects) && projects.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <SkeletonCard />
           <SkeletonCard />
@@ -147,18 +158,24 @@ export default function ProjectsPage() {
                     </div>
                   </Link>
                   <div className="flex items-center">
-                    <button
-                      onClick={() => openEditModal(project)}
-                      className="text-muted-foreground hover:text-primary transition-colors p-1 mr-1"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => deleteProject(project.id)}
-                      className="text-muted-foreground hover:text-red-500 transition-colors p-1"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => openEditModal(project)}
+                        title="Edit Project Details"
+                        className="text-muted-foreground hover:text-primary transition-colors p-1 mr-1 cursor-pointer"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => deleteProject(project.id)}
+                        title="Delete Project (Admin only)"
+                        className="text-muted-foreground hover:text-red-500 transition-colors p-1 cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </CardHeader>

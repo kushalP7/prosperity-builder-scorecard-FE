@@ -7,8 +7,14 @@ import { FolderOpen, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function GlobalAnalyticsPage() {
-  const { projects } = useAppStore()
+  const { projects, fetchProjects, fetchWidgets, fetchTemplates } = useAppStore()
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>("")
+
+  React.useEffect(() => {
+    fetchProjects()
+    fetchWidgets()
+    fetchTemplates()
+  }, [fetchProjects, fetchWidgets, fetchTemplates])
 
   // Auto-select the first project if none is selected
   React.useEffect(() => {

@@ -39,8 +39,8 @@ export function LandingHeader() {
       isDropdown: true,
     },
     { name: "Executive Analytics", href: "/executive-analytics" },
-    // { name: "Projects", href: "/project-portfolio" }, // need to uncomment
-    // { name: "Media Sphere", href: "/videos" }, // need to uncomment
+    { name: "Projects", href: "/project-portfolio" }, // need to uncomment
+    { name: "Media Sphere", href: "/videos" }, // need to uncomment
     { name: "About Us", href: "/about" },
   ]
 
@@ -110,19 +110,17 @@ export function LandingHeader() {
                   <Link
                     href={item.href}
                     onClick={() => setScorecardDropdownOpen(false)}
-                    className={`transition-colors whitespace-nowrap flex items-center gap-1.5 py-1 ${
-                      isScorecardActive
-                        ? "text-[#B5111B] font-extrabold"
-                        : "hover:text-[#B5111B]"
-                    }`}
+                    className={`transition-colors whitespace-nowrap flex items-center gap-1.5 py-1 ${isScorecardActive
+                      ? "text-[#B5111B] font-extrabold"
+                      : "hover:text-[#B5111B]"
+                      }`}
                   >
                     <span>{item.name}</span>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        scorecardDropdownOpen
-                          ? "rotate-180 text-[#B5111B]"
-                          : "text-slate-400 group-hover:text-[#B5111B]"
-                      }`}
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${scorecardDropdownOpen
+                        ? "rotate-180 text-[#B5111B]"
+                        : "text-slate-400 group-hover:text-[#B5111B]"
+                        }`}
                     />
                   </Link>
 
@@ -141,18 +139,16 @@ export function LandingHeader() {
                               key={sub.href}
                               href={sub.href}
                               onClick={() => setScorecardDropdownOpen(false)}
-                              className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${
-                                isSubActive
-                                  ? "bg-red-50 text-[#B5111B]"
-                                  : "hover:bg-slate-50 text-slate-800 hover:text-[#B5111B]"
-                              }`}
+                              className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${isSubActive
+                                ? "bg-red-50 text-[#B5111B]"
+                                : "hover:bg-slate-50 text-slate-800 hover:text-[#B5111B]"
+                                }`}
                             >
                               <div
-                                className={`p-2 rounded-lg shrink-0 mt-0.5 transition-colors ${
-                                  isSubActive
-                                    ? "bg-[#B5111B] text-white"
-                                    : "bg-slate-100 text-slate-600 group-hover:text-[#B5111B]"
-                                }`}
+                                className={`p-2 rounded-lg shrink-0 mt-0.5 transition-colors ${isSubActive
+                                  ? "bg-[#B5111B] text-white"
+                                  : "bg-slate-100 text-slate-600 group-hover:text-[#B5111B]"
+                                  }`}
                               >
                                 <IconComponent className="w-4 h-4" />
                               </div>
@@ -179,11 +175,10 @@ export function LandingHeader() {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className={`transition-colors whitespace-nowrap ${
-                  isActive(item.href)
-                    ? "text-[#B5111B] font-extrabold"
-                    : "hover:text-[#B5111B]"
-                }`}
+                className={`transition-colors whitespace-nowrap ${isActive(item.href)
+                  ? "text-[#B5111B] font-extrabold"
+                  : "hover:text-[#B5111B]"
+                  }`}
               >
                 {item.name}
               </Link>
@@ -237,11 +232,10 @@ export function LandingHeader() {
                 <Link
                   href="/prosperity-builder-scorecard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex-1 transition-colors ${
-                    isScorecardActive
-                      ? "text-[#B5111B] font-extrabold"
-                      : "text-slate-800 hover:text-[#B5111B]"
-                  }`}
+                  className={`flex-1 transition-colors ${isScorecardActive
+                    ? "text-[#B5111B] font-extrabold"
+                    : "text-slate-800 hover:text-[#B5111B]"
+                    }`}
                 >
                   Prosperity Builder Scorecard®
                 </Link>
@@ -252,9 +246,8 @@ export function LandingHeader() {
                   aria-label="Toggle scorecard subcategories"
                 >
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      mobileScorecardOpen ? "rotate-180 text-[#B5111B]" : ""
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-200 ${mobileScorecardOpen ? "rotate-180 text-[#B5111B]" : ""
+                      }`}
                   />
                 </button>
               </div>
@@ -268,11 +261,10 @@ export function LandingHeader() {
                         key={sub.href}
                         href={sub.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`block px-3 py-2 text-xs font-bold rounded-lg transition-colors ${
-                          isSubActive
-                            ? "bg-red-50 text-[#B5111B] font-black"
-                            : "text-slate-600 hover:bg-red-50 hover:text-[#B5111B]"
-                        }`}
+                        className={`block px-3 py-2 text-xs font-bold rounded-lg transition-colors ${isSubActive
+                          ? "bg-red-50 text-[#B5111B] font-black"
+                          : "text-slate-600 hover:bg-red-50 hover:text-[#B5111B]"
+                          }`}
                       >
                         {sub.name}
                       </Link>
@@ -286,50 +278,46 @@ export function LandingHeader() {
             <Link
               href="/executive-analytics"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors ${
-                pathname === "/executive-analytics"
-                  ? "bg-red-50 text-[#B5111B] font-extrabold"
-                  : "hover:bg-red-50 hover:text-[#B5111B]"
-              }`}
+              className={`p-2.5 rounded-lg transition-colors ${pathname === "/executive-analytics"
+                ? "bg-red-50 text-[#B5111B] font-extrabold"
+                : "hover:bg-red-50 hover:text-[#B5111B]"
+                }`}
             >
               Executive Analytics
             </Link>
             {/* need to uncomment */}
             {/* Projects */}
-            {/* <Link
+            <Link
               href="/project-portfolio"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors ${
-                pathname.startsWith("/project-portfolio")
+              className={`p-2.5 rounded-lg transition-colors ${pathname.startsWith("/project-portfolio")
                   ? "bg-red-50 text-[#B5111B] font-extrabold"
                   : "hover:bg-red-50 hover:text-[#B5111B]"
-              }`}
+                }`}
             >
               Projects
-            </Link> */}
+            </Link>
 
             {/* Media Sphere */}
-            {/* <Link
+            <Link
               href="/videos"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors ${
-                pathname.startsWith("/videos")
+              className={`p-2.5 rounded-lg transition-colors ${pathname.startsWith("/videos")
                   ? "bg-red-50 text-[#B5111B] font-extrabold"
                   : "hover:bg-red-50 hover:text-[#B5111B]"
-              }`}
+                }`}
             >
               Media Sphere
-            </Link> */}
+            </Link>
 
             {/* About Us */}
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors ${
-                pathname === "/about"
-                  ? "bg-red-50 text-[#B5111B] font-extrabold"
-                  : "hover:bg-red-50 hover:text-[#B5111B]"
-              }`}
+              className={`p-2.5 rounded-lg transition-colors ${pathname === "/about"
+                ? "bg-red-50 text-[#B5111B] font-extrabold"
+                : "hover:bg-red-50 hover:text-[#B5111B]"
+                }`}
             >
               About Us
             </Link>
