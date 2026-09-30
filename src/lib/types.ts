@@ -139,18 +139,143 @@ export const DataRecordSchema = z.object({
 });
 export type DataRecord = z.infer<typeof DataRecordSchema>;
 
+export type ProjectStatus = 
+  | 'ONBOARDING'
+  | 'INTAKE_PENDING'
+  | 'INGESTION_RUNNING'
+  | 'CALCULATED'
+  | 'IN_REVIEW'
+  | 'PUBLISHED'
+  | 'ARCHIVED';
+
+export type MilestoneType = 'INITIAL_40' | 'MID_30' | 'FINAL_30';
+export type PaymentStatusType = 'PENDING' | 'PAID' | 'BYPASSED' | 'FAILED';
+
+export interface PaymentMilestone {
+  id: string;
+  projectId: string;
+  milestoneType: MilestoneType;
+  amountDue: number;
+  percentage: number;
+  status: PaymentStatusType;
+  paymentMethod: string;
+  provider: string;
+  transactionReference?: string;
+  clearedAt?: string;
+}
+
+export interface QuestionDefinition {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'boolean' | 'textarea';
+  unit?: string;
+  placeholder?: string;
+  options?: string[];
+  helpText?: string;
+}
+
+export interface CategoryQuestionGroup {
+  categoryKey: string;
+  categoryLabel: string;
+  description: string;
+  questions: QuestionDefinition[];
+}
+
+export interface QuestionnaireSubmission {
+  id: string;
+  projectId: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'VERIFIED';
+  completedPointsCount: number;
+  totalPointsCount: number;
+  percentageCompleted?: number;
+  answersPayload: Record<string, {
+    value: any;
+    unit?: string;
+    notes?: string;
+    documentUrl?: string;
+    updatedAt?: string;
+  }>;
+  submittedAt?: string;
+  categories?: CategoryQuestionGroup[];
+}
+
+export interface ExternalDataStaging {
+  id: string;
+  projectId: string;
+  source: string;
+  categoryKey: string;
+  metricKey: string;
+  metricLabel: string;
+  rawResponse?: any;
+  extractedValue?: number;
+  unit?: string;
+  ingestionStatus: 'FETCHED' | 'PARSED' | 'ERROR';
+}
+
+export interface CategoryScore {
+  categoryKey: string;
+  categoryLabel: string;
+  totalClientPoints: number;
+  totalMaxPoints: number;
+  scorePercentage: number;
+  scoreTenScale: number;
+  rank: number;
+  metricsCount: number;
+}
+
+export interface ScorecardRollup {
+  id: string;
+  projectId: string;
+  overallScoreTenScale: number;
+  overallScorePercentage: number;
+  performanceBand: 'Poor' | 'Average' | 'Good' | 'Excellent';
+  categoryScores: CategoryScore[];
+  isCalibrated: boolean;
+  calibrationNotes?: string;
+  analystOverrides?: Record<string, any>;
+}
+
 export const ProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   clientName: z.string(),
+  clientEmail: z.string().optional(),
+  jurisdictionType: z.string().optional(),
   year: z.number(),
+  status: z.enum(['ONBOARDING', 'INTAKE_PENDING', 'INGESTION_RUNNING', 'CALCULATED', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED']).optional(),
+  packageType: z.string().optional(),
+  totalProjectValue: z.number().optional(),
+  bypassPayments: z.boolean().optional(),
   image: z.string().optional(),
   assignedSections: z.array(TemplateSectionSchema).default([]),
   enabledWidgets: z.array(z.string()).optional(),
   dashboardLayout: z.any().optional(),
   data: z.record(z.string(), z.record(z.string(), DataRecordSchema)).default({}),
+  paymentMilestones: z.array(z.any()).optional(),
+  questionnaireSubmission: z.any().optional(),
+  rollup: z.any().optional(),
 });
-export type Project = z.infer<typeof ProjectSchema>;
+
+export type Project = {
+  id: string;
+  name: string;
+  clientName: string;
+  clientEmail?: string;
+  jurisdictionType?: string;
+  year: number;
+  status?: ProjectStatus;
+  packageType?: string;
+  totalProjectValue?: number;
+  bypassPayments?: boolean;
+  image?: string;
+  assignedSections: z.infer<typeof TemplateSectionSchema>[];
+  enabledWidgets?: string[];
+  dashboardLayout?: any;
+  data: Record<string, Record<string, DataRecord>>;
+  paymentMilestones?: any[];
+  questionnaireSubmission?: any;
+  rollup?: any;
+};
 
 // --- Settings ---
 

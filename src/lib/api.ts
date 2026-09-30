@@ -121,6 +121,14 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
   }
 }
 
+async function unpackJson(res: Response): Promise<any> {
+  const json = await res.json();
+  if (json && typeof json === 'object' && 'data' in json && json.success === true) {
+    return json.data;
+  }
+  return json;
+}
+
 export const apiClient = {
   // Auth endpoints
   async login(email: string, password: string): Promise<{ success: boolean; user?: UserProfile; message?: string }> {
@@ -258,6 +266,17 @@ export const apiClient = {
       return json.data || null;
     } catch (err) {
       console.error('apiClient getProjects error:', err);
+      return null;
+    }
+  },
+
+  async getProject(id: string): Promise<Project | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${id}`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch (err) {
+      console.error(`apiClient getProject(${id}) error:`, err);
       return null;
     }
   },
@@ -403,6 +422,166 @@ export const apiClient = {
     } catch (err) {
       console.error('apiClient loadSampleData error:', err);
       return false;
+    }
+  },
+
+  // --- Phase 1: Milestone Payments & Bypass ---
+  async getProjectMilestones(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/payments/project/${projectId}`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async advanceMilestone(projectId: string, milestoneType: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/payments/project/${projectId}/advance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneType }),
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async toggleBypass(projectId: string, bypass: boolean): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/payments/project/${projectId}/toggle-bypass`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bypass }),
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  // --- Phase 2: Client Intake & Questionnaire ---
+  async getQuestionnaireDefinition(): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/intake/definition`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async getQuestionnaireSubmission(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/intake/project/${projectId}`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async saveQuestionnaireDraft(projectId: string, answers: Record<string, any>): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/intake/project/${projectId}/draft`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async submitQuestionnaire(projectId: string, answers?: Record<string, any>): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/intake/project/${projectId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: answers || {} }),
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  // --- Phase 2: Automated API Ingestion & Staging ---
+  async getStagedData(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/ingestion/project/${projectId}`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async triggerIngestion(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/ingestion/project/${projectId}/trigger`, {
+        method: 'POST',
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  // --- Phase 3 & 4: Calibration & Scorecard Rollup ---
+  async getScorecardRollup(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/rollup`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async recalculateScorecard(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/calculate`, {
+        method: 'POST',
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async applyCalibration(projectId: string, overrides: Record<string, any>, notes: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/override`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides, notes }),
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async publishScorecard(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/publish`, {
+        method: 'POST',
+      });
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
     }
   },
 };

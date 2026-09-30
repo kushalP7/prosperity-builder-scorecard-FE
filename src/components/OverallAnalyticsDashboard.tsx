@@ -258,8 +258,12 @@ export function OverallAnalyticsDashboard() {
   // Compute overall score & category scores for each selected project
   const projectSummaries = React.useMemo(() => {
     return activeProjects.map(project => {
-      const enabled = widgets.filter(w => project.enabledWidgets?.includes(w.id))
-      const statCards = enabled.filter(w => w.chartType === 'stat_card')
+      const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
+      const enabled = (project.enabledWidgets && project.enabledWidgets.length > 0)
+        ? widgets.filter(w => project.enabledWidgets!.includes(w.id))
+        : widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
+      const isStatCard = (w: any) => w.chartType === 'stat_card' || (w.title && w.title.endsWith(' Score'));
+      const statCards = enabled.filter(w => isStatCard(w));
 
       const sectionScores = statCards.map(widget => {
         const data = evaluateWidgetData(widget, project, templates)
@@ -273,16 +277,30 @@ export function OverallAnalyticsDashboard() {
             hasBoth = true
           }
         })
-        const finalScore = hasBoth && totalHighest > 0 ? (totalClient / totalHighest) * 10 : (data[0]?.value || 0)
+        let rawScore = 0
+        if (hasBoth && totalHighest > 0) {
+          rawScore = (totalClient / totalHighest) * 10
+        } else {
+          const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0)
+          if (positivePoints.length > 0) {
+            const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length
+            rawScore = avg > 10 ? Math.min(10, avg / 10) : avg
+          } else {
+            rawScore = data[0]?.value || 0
+          }
+        }
+        const finalScore = Math.min(10, Math.max(0, rawScore))
+
         return {
           name: widget.title.replace(' Score', '').trim(),
           score: Number(finalScore.toFixed(1))
         }
       })
 
-      const overall = sectionScores.length > 0
-        ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length
-        : 0
+      const scoredSections = sectionScores.filter(s => s.score > 0)
+      const overall = scoredSections.length > 0
+        ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
+        : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0)
 
       return {
         project,

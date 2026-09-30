@@ -698,9 +698,8 @@ export function addSampleData() {
   existingTemplates.push(...generatedSections);
   storage.saveTemplates(existingTemplates);
 
-  // Generate widgets dynamically
+  // Generate widgets dynamically (client requirement: donut_chart only for all categories)
   const widgets: AnalyticsWidget[] = [];
-  const chartTypes: any[] = ['bar_chart', 'pie_chart', 'area_chart', 'donut_chart', 'radar_chart', 'line_chart'];
 
   generatedSections.forEach((sec, idx) => {
     // The first category's columns are representative of the whole section
@@ -717,25 +716,22 @@ export function addSampleData() {
       aggregation: 'average'
     });
 
-    // 1 Main Chart per section (Point to Value breakdown)
-    const type1 = chartTypes[idx % chartTypes.length];
+    // 1 Main Chart per section (Point to Value breakdown) -> donut_chart
     widgets.push({
       id: `w_${Date.now()}_chart1_${idx}`,
       title: `${sec.label} Value Overview`,
-      chartType: type1,
+      chartType: 'donut_chart',
       sectionId: sec.id,
       categoryId: '',
       columnId: firstCategory.columns[2].id, // Value
       aggregation: 'sum'
     });
 
-    // 1 Additional Analytical Chart per section (Point to Client Total Score breakdown)
-    // Offset the index so it doesn't match type1
-    const type2 = chartTypes[(idx + 2) % chartTypes.length];
+    // 1 Additional Analytical Chart per section (Point to Client Total Score breakdown) -> donut_chart
     widgets.push({
       id: `w_${Date.now()}_chart2_${idx}`,
       title: `${sec.label} Score Breakdown`,
-      chartType: type2,
+      chartType: 'donut_chart',
       sectionId: sec.id,
       categoryId: '',
       columnId: firstCategory.columns[3].id, // Client Total Score

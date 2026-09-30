@@ -41,6 +41,8 @@ import ReportEditPage from "@/pages/cms/ReportEditPage"
 // import ProjectLayout from "@/pages/projects/ProjectLayout"
 // import ProjectDataPage from "@/pages/projects/ProjectDataPage"
 // import ProjectAnalyticsPage from "@/pages/projects/ProjectAnalyticsPage"
+// import ProjectIntakePage from "@/pages/projects/ProjectIntakePage"
+// import ProjectCalibrationPage from "@/pages/projects/ProjectCalibrationPage"
 // import SectionMakerPage from "@/pages/section-maker/SectionMakerPage"
 // import SectionMakerCategoryPage from "@/pages/section-maker/SectionMakerCategoryPage"
 // import OrdersPage from "@/pages/orders/OrdersPage"
@@ -100,7 +102,7 @@ export function App() {
 
           {/* Projects */}
           <Route path="/projects" element={<FeatureUnderDevelopmentPage />} /> {/* Future: <ProjectsPage /> */}
-          <Route path="/projects/:id/*" element={<FeatureUnderDevelopmentPage />} /> {/* Future: <ProjectLayout /> */}
+          <Route path="/projects/:id/*" element={<FeatureUnderDevelopmentPage />} /> {/* Future: <ProjectLayout /> (data, analytics, intake, calibration) */}
 
           {/* Section Maker */}
           <Route path="/section-maker" element={<FeatureUnderDevelopmentPage />} /> {/* Future: <SectionMakerPage /> */}

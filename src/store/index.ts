@@ -348,21 +348,27 @@ export const useAppStore = create<AppState>((set, get) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
     
+    if (!project.enabledWidgets || project.enabledWidgets.length === 0) {
+      const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
+      const allWidgets = get().widgets;
+      project.enabledWidgets = allWidgets
+        .filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId))
+        .map(w => w.id);
+    }
+
     if (enabled) {
-      if (!project.enabledWidgets) project.enabledWidgets = [];
       if (!project.enabledWidgets.includes(widgetId)) {
         project.enabledWidgets.push(widgetId);
       }
     } else {
-      if (project.enabledWidgets) {
-        project.enabledWidgets = project.enabledWidgets.filter(w => w !== widgetId);
-      }
+      project.enabledWidgets = project.enabledWidgets.filter(w => w !== widgetId);
     }
     
     set({ projects: [...projects] });
     if (get().activeProject?.id === projectId) {
       set({ activeProject: { ...project } });
     }
+    apiClient.updateProject(projectId, { enabledWidgets: project.enabledWidgets });
   },
 
   setActiveProject: (id) => {

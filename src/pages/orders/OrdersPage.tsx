@@ -57,12 +57,12 @@ export interface TimelineStepItem {
 }
 
 export const TIMELINE_STEPS: TimelineStepItem[] = [
-  { id: 1, label: "Partial Payment", shortLabel: "Payment", description: "Initial deposit received", icon: DollarSign },
-  { id: 2, label: "Questionnaire Filled", shortLabel: "Questionnaire", description: "Customer intake form completed", icon: FileText },
-  { id: 3, label: "3rd Party Web Data Done", shortLabel: "Web Data", description: "External data aggregated", icon: Database },
-  { id: 4, label: "Manual Data Entry", shortLabel: "Data Entry", description: "Manual verification completed", icon: Edit3 },
-  { id: 5, label: "Final Report Sent", shortLabel: "Report Sent", description: "Scorecard PDF delivered", icon: Send },
-  { id: 6, label: "Completed Full Payment", shortLabel: "Full Paid", description: "100% contract settled", icon: CheckCircle2 }
+  { id: 1, label: "Phase 1: Initial Milestone (40%)", shortLabel: "Initial (40%)", description: "ACH deposit cleared (Bypass active)", icon: DollarSign },
+  { id: 2, label: "Phase 2: Client Questionnaire", shortLabel: "Intake (90+)", description: "90+ local data points submitted", icon: FileText },
+  { id: 3, label: "Phase 2: Mid-Milestone & API Data", shortLabel: "30% / APIs", description: "Census, ESRI, BLS & NCDOT staged", icon: Database },
+  { id: 4, label: "Phase 3: 12-Category Scoring Engine", shortLabel: "Scoring Engine", description: "Normalization & Speedometer computed", icon: Edit3 },
+  { id: 5, label: "Phase 4: Analyst Review & Calibration", shortLabel: "Calibration", description: "Analyst review and score adjustments", icon: Send },
+  { id: 6, label: "Phase 4: Final Release & Settlement", shortLabel: "Published", description: "Dashboard & report officially released", icon: CheckCircle2 }
 ];
 
 export interface OrderItem {

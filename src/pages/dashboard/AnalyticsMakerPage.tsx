@@ -24,7 +24,7 @@ export default function AnalyticsMakerPage() {
   const [formData, setFormData] = React.useState<Partial<AnalyticsWidget>>({
     title: "",
     description: "",
-    chartType: "bar_chart",
+    chartType: "donut_chart",
     sectionId: "",
     categoryId: "",
     columnId: "",
@@ -45,7 +45,7 @@ export default function AnalyticsMakerPage() {
       setFormData({
         title: "",
         description: "",
-        chartType: "bar_chart",
+        chartType: "donut_chart",
         sectionId: templates[0]?.id || "",
         categoryId: "",
         columnId: "",

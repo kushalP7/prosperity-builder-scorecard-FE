@@ -7,7 +7,7 @@ import { Outlet } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
-import { ArrowLeft, CheckCircle2, Plus, Layers } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Plus, Layers, ShieldCheck } from "lucide-react"
 
 export default function ProjectLayout({
   children,
@@ -85,14 +85,74 @@ export default function ProjectLayout({
               <ArrowLeft className="h-6 w-6" />
             </Link>
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h2>
-              <p className="text-muted-foreground mt-1">Client: {project.clientName} &bull; {project.year}</p>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{project.name}</h2>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  project.status === 'PUBLISHED'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                    : project.status === 'IN_REVIEW'
+                    ? 'bg-purple-50 text-purple-700 border-purple-300'
+                    : project.status === 'CALCULATED'
+                    ? 'bg-blue-50 text-blue-700 border-blue-300'
+                    : project.status === 'INGESTION_RUNNING'
+                    ? 'bg-cyan-50 text-cyan-700 border-cyan-300'
+                    : 'bg-amber-50 text-amber-700 border-amber-300'
+                }`}>
+                  {project.status || 'INTAKE_PENDING'}
+                </span>
+                {project.bypassPayments !== false && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                    Payment Bypass Active
+                  </span>
+                )}
+              </div>
+              <p className="text-muted-foreground mt-1 text-xs">Client: {project.clientName} &bull; {project.year} &bull; {project.packageType || 'Standard Scorecard'}</p>
             </div>
           </div>
-          <Button onClick={() => setIsAssignModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button onClick={() => setIsAssignModalOpen(true)} size="sm" variant="outline">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
             Assign Section
           </Button>
+        </div>
+
+        {/* Phase Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b border-border/80 mt-5 pt-1 overflow-x-auto">
+          <Link
+            href={`/projects/${id}/data`}
+            className={cn(
+              "px-3.5 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap",
+              pathname.includes('/data')
+                ? "border-emerald-600 text-emerald-700 bg-emerald-50/50"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Executive Scorecard
+          </Link>
+          <Link
+            href={`/projects/${id}/intake`}
+            className={cn(
+              "px-3.5 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap",
+              pathname.includes('/intake')
+                ? "border-emerald-600 text-emerald-700 bg-emerald-50/50"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Phase 2: Client Intake (90+ Data Points)
+          </Link>
+          <Link
+            href={`/projects/${id}/calibration`}
+            className={cn(
+              "px-3.5 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 -mb-px flex items-center gap-2 whitespace-nowrap",
+              pathname.includes('/calibration')
+                ? "border-emerald-600 text-emerald-700 bg-emerald-50/50"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Phase 3 & 4: Calibration & Release
+          </Link>
         </div>
 
       </div>

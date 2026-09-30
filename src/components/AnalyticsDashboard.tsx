@@ -196,9 +196,13 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
 
   if (!project) return <div className="p-8">Project not found</div>
 
-  const enabledWidgets = widgets.filter(w => project.enabledWidgets?.includes(w.id))
-  const statCards = enabledWidgets.filter(w => w.chartType === 'stat_card');
-  const otherChartsRaw = enabledWidgets.filter(w => w.chartType !== 'stat_card');
+  const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
+  const enabledWidgets = (project.enabledWidgets && project.enabledWidgets.length > 0)
+    ? widgets.filter(w => project.enabledWidgets!.includes(w.id))
+    : widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
+  const isStatCard = (w: any) => w.chartType === 'stat_card' || (w.title && w.title.endsWith(' Score'));
+  const statCards = enabledWidgets.filter(w => isStatCard(w));
+  const otherChartsRaw = enabledWidgets.filter(w => !isStatCard(w));
 
   const sectionScores = statCards.map(widget => {
     const data = evaluateWidgetData(widget, project, templates);
@@ -212,16 +216,30 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
         hasBoth = true;
       }
     });
-    const finalScore = hasBoth && totalHighest > 0 ? (totalClient / totalHighest) * 10 : (data[0]?.value || 0);
+    let rawScore = 0;
+    if (hasBoth && totalHighest > 0) {
+      rawScore = (totalClient / totalHighest) * 10;
+    } else {
+      const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
+      if (positivePoints.length > 0) {
+        const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
+        rawScore = avg > 10 ? Math.min(10, avg / 10) : avg;
+      } else {
+        rawScore = data[0]?.value || 0;
+      }
+    }
+    const finalScore = Math.min(10, Math.max(0, rawScore));
+
     return {
       name: widget.title.replace(' Score', '').trim(),
       score: Number(finalScore.toFixed(1))
     };
   });
 
-  const overallScore = sectionScores.length > 0
-    ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length
-    : 0;
+  const scoredSections = sectionScores.filter(s => s.score > 0);
+  const overallScore = scoredSections.length > 0
+    ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
+    : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0);
 
   const statCardsSortedByScore = statCards
     .map((widget, index) => ({ widget, score: sectionScores[index]?.score ?? 0 }))
@@ -389,11 +407,16 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
         if (hasBoth && totalHighest > 0) {
           return Math.min(10, (totalClient / totalHighest) * 10);
         }
+        const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
+        if (positivePoints.length > 0) {
+          const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
+          return Math.min(10, Math.max(0, avg > 10 ? avg / 10 : avg));
+        }
       }
-      return Math.min(10, originalVal);
+      return Math.min(10, originalVal > 10 ? originalVal / 10 : originalVal);
     };
 
-    if (widget.chartType === 'stat_card') {
+    if (isStatCard(widget)) {
       let val = calculateGaugeValue(data, widget.aggregation);
       val = getPreciseSectionScoreOutOf10(val);
 
@@ -1006,7 +1029,7 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
                   <input
                     type="checkbox"
                     className="mt-1 accent-primary w-4 h-4"
-                    checked={project.enabledWidgets?.includes(widget.id)}
+                    checked={project.enabledWidgets && project.enabledWidgets.length > 0 ? project.enabledWidgets!.includes(widget.id) : (!widget.sectionId || assignedSectionIds.includes(widget.sectionId))}
                     onChange={(e) => toggleProjectWidget(project.id, widget.id, e.target.checked)}
                   />
                   <div>

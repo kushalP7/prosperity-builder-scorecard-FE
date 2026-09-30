@@ -25,7 +25,10 @@ export function evaluateWidgetData(
       for (const category of sectionTemplate.categories) {
         const groups = category.groups.length > 0 ? category.groups : [category];
         for (const group of groups) {
-          const val = project.data[group.id]?.[colId]?.value;
+          let val = project.data?.[group.id]?.[colId]?.value;
+          if (val === undefined || val === null) {
+            val = project.data?.[group.id]?.['__base__']?.scoreValue ?? project.data?.[group.id]?.['__base__']?.value;
+          }
           if (typeof val === 'number') {
             sectionTotal += val;
             count++;
@@ -66,7 +69,7 @@ export function evaluateWidgetData(
       const columnSums: Record<string, number> = {};
 
       for (const group of groups) {
-        const groupData = project.data[group.id];
+        const groupData = project.data?.[group.id];
         if (!groupData) continue;
 
         const firstCategory = sectionTemplate.categories[0];
@@ -79,6 +82,11 @@ export function evaluateWidgetData(
               val = groupData[catCol.id]?.value;
             }
           }
+        }
+
+        // Fallback to __base__ when specific column has no explicit value
+        if (val === undefined || val === null) {
+          val = groupData['__base__']?.scoreValue ?? groupData['__base__']?.value;
         }
 
         if (typeof val === 'number') {
@@ -124,13 +132,16 @@ export function evaluateWidgetData(
 
     for (const group of groups) {
       const point: any = { name: group.label };
-      const groupData = project.data[group.id];
+      const groupData = project.data?.[group.id];
 
       if (groupData) {
         let subMetricsValues: number[] = [];
         
         // Always set the actual requested value
-        const val = groupData[colId]?.value;
+        let val = groupData[colId]?.value;
+        if (val === undefined || val === null) {
+          val = groupData['__base__']?.scoreValue ?? groupData['__base__']?.value;
+        }
         point.value = typeof val === 'number' ? val : 0;
         
         // Also map all other numerical columns dynamically

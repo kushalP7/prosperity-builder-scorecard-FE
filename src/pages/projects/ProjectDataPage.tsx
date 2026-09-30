@@ -13,8 +13,11 @@ import {
   Activity,
   Building2,
   FolderKanban,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw,
+  CheckCircle2
 } from "lucide-react"
+import { apiClient } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -42,6 +45,42 @@ export default function ProjectDataPage() {
   const [viewMode, setViewMode] = React.useState<'summary' | 'detailed'>('summary')
   const [collapsedCategories, setCollapsedCategories] = React.useState<Record<string, boolean>>({})
   const [isAllCollapsed, setIsAllCollapsed] = React.useState(true)
+  const [isSyncing, setIsSyncing] = React.useState(false)
+  const [syncMessage, setSyncMessage] = React.useState<string | null>(null)
+
+  const handleSyncLiveApis = async () => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+    try {
+      await apiClient.triggerIngestion(id);
+      const fresh = await apiClient.getProject(id);
+      if (fresh) {
+        useAppStore.setState(state => ({
+          projects: state.projects.map(p => p.id === id ? { ...p, ...fresh, data: fresh.data || p.data } : p),
+          activeProject: state.activeProject?.id === id ? { ...state.activeProject, ...fresh, data: fresh.data || state.activeProject.data } : state.activeProject
+        }));
+      }
+      setSyncMessage('APIs Ingested & Scores Calculated!');
+      setTimeout(() => setSyncMessage(null), 4000);
+    } catch (err: any) {
+      console.error('Failed to sync live APIs:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    async function loadFreshProject() {
+      const fresh = await apiClient.getProject(id);
+      if (fresh) {
+        useAppStore.setState(state => ({
+          projects: state.projects.map(p => p.id === id ? { ...p, ...fresh, data: fresh.data || p.data } : p),
+          activeProject: state.activeProject?.id === id ? { ...state.activeProject, ...fresh, data: fresh.data || state.activeProject.data } : state.activeProject
+        }));
+      }
+    }
+    loadFreshProject();
+  }, [id]);
 
   if (!project) return <div>Project not found</div>
 
@@ -146,27 +185,48 @@ export default function ProjectDataPage() {
               </div>
 
               {/* Action Controls Row - Below Tab Line & Just Above Table */}
-              <div className="flex items-center justify-end gap-2 pt-0.5 pb-0.5">
-                {viewMode === 'detailed' && (
+              <div className="flex items-center justify-between gap-2 pt-0.5 pb-0.5">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setViewMode('summary')}
-                    className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={handleSyncLiveApis}
+                    disabled={isSyncing}
+                    className="text-xs h-8 rounded-xl px-3.5 border-red-200 bg-red-50 text-[#B5111B] hover:bg-red-100 hover:border-red-300 font-semibold shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-                    Back to Summary
+                    <RefreshCw className={cn("w-3.5 h-3.5", isSyncing && "animate-spin")} />
+                    <span>{isSyncing ? "Syncing & Calculating..." : "Sync Live APIs & Calculate"}</span>
                   </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleAllCategories}
-                  className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 cursor-pointer"
-                >
-                  <ChevronsUpDown className="w-3.5 h-3.5 mr-1.5" />
-                  {hasAnyCategoryExpanded ? 'Collapse All' : 'Expand All'}
-                </Button>
+                  {syncMessage && (
+                    <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {syncMessage}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {viewMode === 'detailed' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setViewMode('summary')}
+                      className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                      Back to Summary
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleAllCategories}
+                    className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 cursor-pointer"
+                  >
+                    <ChevronsUpDown className="w-3.5 h-3.5 mr-1.5" />
+                    {hasAnyCategoryExpanded ? 'Collapse All' : 'Expand All'}
+                  </Button>
+                </div>
               </div>
             </div>
 
