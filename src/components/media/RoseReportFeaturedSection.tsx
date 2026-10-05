@@ -103,20 +103,22 @@ export function RoseReportFeaturedSection() {
           </div>
 
           {/* Right Author Profile */}
-          <div className="md:col-span-4 flex flex-col items-center md:items-end text-center md:text-right">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 mb-3">
-              <img
-                src="/kathleen_rose.png"
-                alt="Kathleen Rose, CCIM, CRE"
-                className="w-full h-full object-cover object-center"
-                onError={(e) => {
-                  e.currentTarget.src = "/logo.png"
-                  e.currentTarget.className = "w-full h-full object-contain p-2 bg-white"
-                }}
-              />
+          <div className="md:col-span-4 flex justify-center md:justify-end">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 mb-3">
+                <img
+                  src="/kathleen_rose.png"
+                  alt="Kathleen Rose, CCIM, CRE"
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => {
+                    e.currentTarget.src = "/logo.png"
+                    e.currentTarget.className = "w-full h-full object-contain p-2 bg-white"
+                  }}
+                />
+              </div>
+              <div className="text-sm font-bold text-slate-900">Kathleen Rose, CCIM, CRE®</div>
+              <div className="text-xs text-slate-500">President & Founder, Rose Associates</div>
             </div>
-            <div className="text-sm font-bold text-slate-900">Kathleen Rose, CCIM, CRE®</div>
-            <div className="text-xs text-slate-500">President & Founder, Rose Associates</div>
           </div>
         </div>
       </div>

@@ -291,8 +291,8 @@ export function LandingHeader() {
               href="/project-portfolio"
               onClick={() => setMobileMenuOpen(false)}
               className={`p-2.5 rounded-lg transition-colors ${pathname.startsWith("/project-portfolio")
-                  ? "bg-red-50 text-[#B5111B] font-extrabold"
-                  : "hover:bg-red-50 hover:text-[#B5111B]"
+                ? "bg-red-50 text-[#B5111B] font-extrabold"
+                : "hover:bg-red-50 hover:text-[#B5111B]"
                 }`}
             >
               Projects
@@ -303,8 +303,8 @@ export function LandingHeader() {
               href="/videos"
               onClick={() => setMobileMenuOpen(false)}
               className={`p-2.5 rounded-lg transition-colors ${pathname.startsWith("/videos")
-                  ? "bg-red-50 text-[#B5111B] font-extrabold"
-                  : "hover:bg-red-50 hover:text-[#B5111B]"
+                ? "bg-red-50 text-[#B5111B] font-extrabold"
+                : "hover:bg-red-50 hover:text-[#B5111B]"
                 }`}
             >
               Media Sphere

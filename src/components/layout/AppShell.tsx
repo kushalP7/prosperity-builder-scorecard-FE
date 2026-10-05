@@ -4,18 +4,18 @@ import * as React from "react"
 import { Link, usePathname, useRouter } from "@/lib/router-compat"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/store"
-import { 
-  LayoutDashboard, 
-  FileSpreadsheet, 
-  Layers, 
-  PieChart, 
-  Settings, 
-  FolderOpen, 
-  BarChart3, 
-  ReceiptText, 
-  Users, 
-  DollarSign, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  FileSpreadsheet,
+  Layers,
+  PieChart,
+  Settings,
+  FolderOpen,
+  BarChart3,
+  ReceiptText,
+  Users,
+  DollarSign,
+  LogOut,
   User,
   Menu,
   X,
@@ -110,17 +110,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      
+
       {/* MOBILE DRAWER BACKDROP */}
       {sidebarOpen && (
-        <div 
+        <div
           onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden transition-opacity"
         />
       )}
 
       {/* SIDEBAR (DESKTOP FIXED + MOBILE SLIDE-OUT DRAWER) */}
-      <aside 
+      <aside
         className={cn(
           "fixed md:static inset-y-0 left-0 z-50 w-64 bg-surface flex flex-col border-r border-slate-200/80 shadow-xl md:shadow-none transition-transform duration-300 ease-in-out shrink-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -151,8 +151,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                  isActive 
-                    ? "bg-[#B5111B] text-white shadow-xs font-bold" 
+                  isActive
+                    ? "bg-[#B5111B] text-white shadow-xs font-bold"
                     : "text-slate-700 hover:bg-[#B5111B]/10 hover:text-[#B5111B]"
                 )}
               >
@@ -178,20 +178,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="text-[10px] text-slate-500 truncate font-medium mt-0.5" title={currentUser.email}>
                     {currentUser.email}
                   </span>
-                  <div className="mt-1 flex items-center">
-                    <span className={cn(
-                      "font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-[9px] inline-flex items-center",
-                      userRole === 'super_admin' ? "bg-rose-100 text-rose-800 border border-rose-200" :
-                      userRole === 'project_lead' ? "bg-blue-100 text-blue-800 border border-blue-200" :
-                      userRole === 'assessment_specialist' ? "bg-emerald-100 text-emerald-800 border border-emerald-200" :
-                      "bg-slate-200 text-slate-700 border border-slate-300"
-                    )}>
-                      {userRole === 'super_admin' ? 'Super Admin' :
-                       userRole === 'project_lead' ? 'Project Lead' :
-                       userRole === 'assessment_specialist' ? 'Specialist' :
-                       'Client Rep'}
-                    </span>
-                  </div>
                 </div>
               </div>
               <button
@@ -209,7 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
+
         {/* Top Header Bar with Mobile Hamburger Button */}
         <header className="min-h-[64px] py-2 bg-surface flex items-center justify-between px-4 sm:px-6 shrink-0 border-b border-slate-200/80">
           <div className="flex items-center gap-3">

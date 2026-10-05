@@ -44,7 +44,8 @@ export interface LandingReportItem {
   updatedAt?: string;
 }
 
-const API_BASE = ((import.meta as any).env?.VITE_API_URL || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:3001').replace(/\/api\/v1\/?$/, '');
+const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE = rawBase.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '') + '/api/v1';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {

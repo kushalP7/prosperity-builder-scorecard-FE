@@ -13,7 +13,7 @@ export interface UserProfile {
   createdAt?: string;
 }
 
-const rawBase = (import.meta as any).env?.VITE_API_URL || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:3001';
+const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const API_BASE = rawBase.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '') + '/api/v1';
 
 const ACCESS_TOKEN_KEY = 'rose_access_token';

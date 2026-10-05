@@ -106,7 +106,7 @@ export default function ProjectPortfolioPage() {
             <div className="lg:col-span-5">
               <ProjectPortfolioSidebar
                 selectedCategory={selectedCategory}
-                onSelectCategory={(cat) => setSelectedCategory(cat)}
+                onSelectCategory={(cat) => setSelectedCategory((prev) => (prev === cat ? "all" : cat))}
                 onSelectCommunity={handleSelectCommunity}
                 projects={projects}
               />

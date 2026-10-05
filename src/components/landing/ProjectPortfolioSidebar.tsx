@@ -97,7 +97,7 @@ export default function ProjectPortfolioSidebar({
             <div key={cat} className="transition-colors">
               <button
                 type="button"
-                onClick={() => onSelectCategory(cat)}
+                onClick={() => onSelectCategory(isSelected ? "all" : cat)}
                 className={`w-full text-left px-4 py-3 sm:py-3.5 flex items-center justify-between transition-all cursor-pointer group relative ${
                   isSelected
                     ? "bg-red-50/50 text-[#B5111B]"
@@ -131,11 +131,13 @@ export default function ProjectPortfolioSidebar({
                 </div>
 
                 <div className="flex items-center shrink-0">
-                  {isSelected ? (
-                    <ChevronDown className="w-4 h-4 text-[#B5111B] shrink-0" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all shrink-0" />
-                  )}
+                  <ChevronRight
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                      isSelected
+                        ? "text-[#B5111B] rotate-90"
+                        : "text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5"
+                    }`}
+                  />
                 </div>
               </button>
 
