@@ -517,7 +517,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                     {uploadingField === "video" ? (
                       <div className="flex items-center gap-2 text-rose-600 font-bold">
                         <Loader2 className="w-6 h-6 animate-spin" />
-                        <span>{uploadStatusText || "Uploading video to Cloudinary..."}</span>
+                        <span>{uploadStatusText || "Uploading video..."}</span>
                       </div>
                     ) : stagedMediaFile?.type === "video" ? (
                       <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">
@@ -703,7 +703,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                     {uploadingField === "audio" ? (
                       <div className="flex items-center gap-2 text-rose-600 font-bold">
                         <Loader2 className="w-6 h-6 animate-spin" />
-                        <span>{uploadStatusText || "Uploading audio to Cloudinary..."}</span>
+                        <span>{uploadStatusText || "Uploading audio..."}</span>
                       </div>
                     ) : stagedMediaFile?.type === "audio" ? (
                       <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">
@@ -822,7 +822,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   {uploadingField === "pdf" ? (
                     <div className="flex items-center gap-2 text-rose-600 font-bold">
                       <Loader2 className="w-6 h-6 animate-spin" />
-                      <span>{uploadStatusText || "Uploading PDF to Cloudinary..."}</span>
+                      <span>{uploadStatusText || "Uploading PDF..."}</span>
                     </div>
                   ) : stagedMediaFile?.type === "pdf" ? (
                     <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">

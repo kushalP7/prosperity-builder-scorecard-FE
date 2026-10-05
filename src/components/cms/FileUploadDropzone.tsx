@@ -95,7 +95,7 @@ export function FileUploadDropzone({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Paste Cloudinary or direct URL (https://res.cloudinary.com/...)"
+            placeholder="Paste direct asset URL or public link (e.g. https://...)"
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 bg-white focus:outline-none focus:border-[#B5111B]"
           />
         </div>
@@ -206,7 +206,7 @@ export function FileUploadDropzone({
             <div>
               <span className="text-xs font-bold text-slate-800">{helperText}</span>
               <p className="text-[11px] text-slate-500 font-medium">
-                {acceptType === "image" ? "Supports JPG, PNG, WebP (Uploads to Cloudinary on save)" : "Supports PDF, DOCX, ZIP files (Uploads on save)"}
+                {acceptType === "image" ? "Supports JPG, PNG, WebP (Uploads on save)" : "Supports PDF, DOCX, ZIP files (Uploads on save)"}
               </p>
             </div>
           </div>

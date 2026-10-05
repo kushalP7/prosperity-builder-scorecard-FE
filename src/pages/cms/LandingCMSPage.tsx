@@ -1922,7 +1922,7 @@ export default function LandingCMSPage() {
                       <div className="min-w-0 flex-1">
                         <span className="font-bold block truncate">{stagedPdfFile.name}</span>
                         <span className="text-[10px] text-amber-600 font-semibold">
-                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally (uploads to Cloudinary on Save)
+                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally (uploads on Save)
                         </span>
                       </div>
                       <button
