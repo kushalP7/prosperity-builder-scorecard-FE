@@ -175,7 +175,7 @@ export function App() {
             element={<FeatureUnderDevelopmentPage />}
           />{" "}
           {/* Future: <PaymentsPage /> */}
-          <Route path="/users" element={<FeatureUnderDevelopmentPage />} />{" "}
+          <Route path="/users" element={<UsersPage />} />{" "}
           {/* Future: <UsersPage /> */}
           <Route
             path="/settings"

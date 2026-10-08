@@ -1,17 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Plus, 
-  Trash2, 
-  ArrowUp, 
-  ArrowDown, 
-  FileText, 
-  Image as ImageIcon, 
-  FileCheck, 
-  BarChart2, 
-  Download, 
-  Layout, 
+import {
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  Image as ImageIcon,
+  FileCheck,
+  BarChart2,
+  Download,
+  Layout,
   Copy,
   Columns
 } from "lucide-react"
@@ -252,13 +252,13 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                   const items: ImageTextItem[] = (block.items && block.items.length > 0)
                     ? block.items
                     : [
-                        {
-                          id: `item-${Date.now()}-1`,
-                          imageUrl: block.imageUrl || "",
-                          contentHtml: block.contentHtml || "",
-                          imagePosition: block.imagePosition || "left"
-                        }
-                      ];
+                      {
+                        id: `item-${Date.now()}-1`,
+                        imageUrl: block.imageUrl || "",
+                        contentHtml: block.contentHtml || "",
+                        imagePosition: block.imagePosition || "left"
+                      }
+                    ];
 
                   const updateItems = (newItems: ImageTextItem[]) => {
                     updateBlock(block.id, {
@@ -314,9 +314,9 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                                     onChange={(e) => updateItem(idx, { layoutStyle: e.target.value as any })}
                                     className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
                                   >
-                                    <option value="wrap">📰 Text Wrap (Magazine)</option>
-                                    <option value="columns">⚖️ 2-Columns (Sticky)</option>
-                                    <option value="stacked">📄 Stacked (Banner)</option>
+                                    <option value="wrap">Text Wrap (Magazine)</option>
+                                    <option value="columns">2-Columns (Sticky)</option>
+                                    <option value="stacked">Stacked (Banner)</option>
                                   </select>
                                 </div>
 
@@ -584,73 +584,73 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
 
       {/* Bottom Add Block Card (Always positioned below section blocks) */}
       <div className="p-5 sm:p-6 rounded-3xl border-2 border-dashed border-[#B5111B]/30 bg-red-50/20 space-y-4 text-center sm:text-left shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h4 className="text-xs font-bold text-[#B5111B] flex items-center justify-center sm:justify-start gap-1.5">
-                <span>Add Another Section Block</span>
-              </h4>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                Choose a section type to insert at the bottom of your report layout:
-              </p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h4 className="text-xs font-bold text-[#B5111B] flex items-center justify-center sm:justify-start gap-1.5">
+              <span>Add Another Section Block</span>
+            </h4>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+              Choose a section type to insert at the bottom of your report layout:
+            </p>
+          </div>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5">
-              <button
-                type="button"
-                onClick={() => addBlock("rich_text")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <FileText className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>Rich Text</span>
-              </button>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => addBlock("rich_text")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>Rich Text</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => addBlock("image_text")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <Columns className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>Image & Text</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => addBlock("image_text")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <Columns className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>Image & Text</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => addBlock("stats_grid")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <BarChart2 className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>Stats Grid</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => addBlock("stats_grid")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <BarChart2 className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>Stats Grid</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => addBlock("pdf_viewer")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <FileCheck className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>PDF Viewer</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => addBlock("pdf_viewer")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <FileCheck className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>PDF Viewer</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => addBlock("gallery")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <ImageIcon className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>Gallery</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => addBlock("gallery")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>Gallery</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => addBlock("downloads")}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
-              >
-                <Download className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
-                <span>Downloads</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => addBlock("downloads")}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
+            >
+              <Download className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <span>Downloads</span>
+            </button>
           </div>
         </div>
+      </div>
     </div>
   )
 }

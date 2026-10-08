@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
+import { PublishedReportsCardsSection } from "@/components/landing/PublishedReportsCardsSection"
 
 export function RoseReportFeaturedSection() {
   const LINKEDIN_SUBSCRIBE_URL =
@@ -78,26 +79,32 @@ export function RoseReportFeaturedSection() {
                 href={LINKEDIN_SUBSCRIBE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs"
                 style={{ fontFamily: '"SF Pro Text", Helvetica, sans-serif' }}
               >
-                Subscribe on LinkedIn
+                <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+                </svg>
+                <span>Subscribe on LinkedIn</span>
               </a>
 
               <a
                 href={LINKEDIN_NEWSLETTER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 text-xs sm:text-sm font-semibold transition-colors bg-white cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-900 text-xs sm:text-sm font-semibold transition-colors bg-white cursor-pointer"
               >
-                Read on LinkedIn
+                <svg className="w-4 h-4 fill-[#0A66C2] shrink-0" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+                </svg>
+                <span>Read on LinkedIn</span>
               </a>
 
               <Link
                 href="/reports"
                 className="inline-flex items-center justify-center px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-[#B5111B] transition-colors"
               >
-                View all reports &rarr;
+                View all reports
               </Link>
             </div>
           </div>
@@ -140,7 +147,7 @@ export function RoseReportFeaturedSection() {
             rel="noopener noreferrer"
             className="text-xs font-semibold text-slate-600 hover:text-[#B5111B] transition-colors"
           >
-            View all on LinkedIn &rarr;
+            View all on LinkedIn
           </a>
         </div>
 
@@ -189,6 +196,9 @@ export function RoseReportFeaturedSection() {
           ))}
         </div>
       </div>
+
+      {/* 3. PUBLISHED REPORTS SECTION */}
+      <PublishedReportsCardsSection embedded />
     </section>
   )
 }

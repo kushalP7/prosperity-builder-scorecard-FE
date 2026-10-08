@@ -22,6 +22,8 @@ import {
   extractIframeHeight,
   isAudioIframe,
 } from "@/lib/media-api";
+import { Dropdown } from "@/components/ui/dropdown";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface MediaFormProps {
   mediaId?: string;
@@ -54,6 +56,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
     status: "published",
   });
 
+  const categoryOptions = React.useMemo(() => {
+    const options = CATEGORY_PRESETS.map((cat) => ({ value: cat, label: cat }));
+    if (formState.category && !CATEGORY_PRESETS.includes(formState.category)) {
+      options.push({ value: formState.category, label: formState.category });
+    }
+    return options;
+  }, [formState.category]);
+
   const [stagedMediaFile, setStagedMediaFile] = useState<{
     file: File;
     type: "audio" | "video" | "pdf";
@@ -64,7 +74,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
     if (stagedMediaFile?.previewUrl?.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(stagedMediaFile.previewUrl);
-      } catch {}
+      } catch { }
     }
     setStagedMediaFile(null);
   };
@@ -74,7 +84,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
       if (stagedMediaFile?.previewUrl?.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(stagedMediaFile.previewUrl);
-        } catch {}
+        } catch { }
       }
     };
   }, [stagedMediaFile]);
@@ -323,16 +333,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                       : prev.category,
                 }));
               }}
-              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${
-                formState.mediaType === "video"
+              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${formState.mediaType === "video"
                   ? "border-[#B5111B] bg-rose-50/50 text-[#B5111B] ring-2 ring-[#B5111B]/20"
                   : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
-              }`}
+                }`}
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  formState.mediaType === "video" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
-                }`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "video" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
+                  }`}
               >
                 <Film className="w-5 h-5" />
               </div>
@@ -354,16 +362,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   category: "Audio Podcasts",
                 }));
               }}
-              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${
-                formState.mediaType === "audio"
+              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${formState.mediaType === "audio"
                   ? "border-[#B5111B] bg-rose-50/50 text-[#B5111B] ring-2 ring-[#B5111B]/20"
                   : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
-              }`}
+                }`}
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  formState.mediaType === "audio" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
-                }`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "audio" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
+                  }`}
               >
                 <Mic className="w-5 h-5" />
               </div>
@@ -385,16 +391,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   category: "Market Reports",
                 }));
               }}
-              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${
-                formState.mediaType === "document"
+              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition cursor-pointer text-center ${formState.mediaType === "document"
                   ? "border-[#B5111B] bg-rose-50/50 text-[#B5111B] ring-2 ring-[#B5111B]/20"
                   : "border-slate-200 hover:border-slate-300 text-slate-600 bg-white"
-              }`}
+                }`}
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  formState.mediaType === "document" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
-                }`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "document" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
+                  }`}
               >
                 <FileText className="w-5 h-5" />
               </div>
@@ -434,21 +438,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Category Tag
                 </label>
-                <select
+                <Dropdown
                   value={formState.category || ""}
-                  onChange={(e) => setFormState({ ...formState, category: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:border-[#B5111B]"
-                >
-                  <option value="" disabled>Select category...</option>
-                  {CATEGORY_PRESETS.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  {formState.category && !CATEGORY_PRESETS.includes(formState.category) && (
-                    <option value={formState.category}>{formState.category}</option>
-                  )}
-                </select>
+                  onChange={(val) => setFormState({ ...formState, category: val })}
+                  options={categoryOptions}
+                  placeholder="Select category..."
+                  fullWidth
+                  size="md"
+                />
               </div>
 
               <div>
@@ -485,11 +482,10 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                       }
                       setFormState({ ...formState, videoSource: source });
                     }}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer ${
-                      formState.videoSource === source
+                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer ${formState.videoSource === source
                         ? "bg-white text-slate-900 shadow-xs"
                         : "text-slate-500 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     {source === "youtube" ? "YouTube" : source === "upload" ? "Upload File" : source.toUpperCase()}
                   </button>
@@ -560,8 +556,8 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   {formState.videoSource === "youtube"
                     ? "YouTube Video or Embed URL"
                     : formState.videoSource === "vimeo"
-                    ? "Vimeo Video URL"
-                    : "Direct MP4 Stream URL"}
+                      ? "Vimeo Video URL"
+                      : "Direct MP4 Stream URL"}
                 </label>
                 <input
                   type="url"
@@ -600,17 +596,16 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                       }
                       setFormState({ ...formState, audioSource: source });
                     }}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer ${
-                      formState.audioSource === source
+                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer ${formState.audioSource === source
                         ? "bg-white text-slate-900 shadow-xs"
                         : "text-slate-500 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     {source === "iframe"
-                      ? "📻 Podcast Embed (Iframe / URL)"
+                      ? "Podcast Embed (Iframe / URL)"
                       : source === "upload"
-                      ? "Upload MP3"
-                      : "Direct MP3 Stream"}
+                        ? "Upload MP3"
+                        : "Direct MP3 Stream"}
                   </button>
                 ))}
               </div>
@@ -644,11 +639,10 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                       <span
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          extractIframeSrc(formState.sourceUrl)
+                        className={`w-2.5 h-2.5 rounded-full ${extractIframeSrc(formState.sourceUrl)
                             ? "bg-emerald-500 animate-pulse"
                             : "bg-slate-300"
-                        }`}
+                          }`}
                       />
                       Live Interactive Audio Player Preview
                     </span>
@@ -793,13 +787,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Report Category
                 </label>
-                <select
+                <Dropdown
                   value={formState.category === "Market Reports" ? "Market Reports" : (formState.category || "Market Reports")}
-                  onChange={(e) => setFormState({ ...formState, category: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:border-[#B5111B]"
-                >
-                  <option value="Market Reports">Market Reports</option>
-                </select>
+                  onChange={(val) => setFormState({ ...formState, category: val })}
+                  options={[{ value: "Market Reports", label: "Market Reports" }]}
+                  fullWidth
+                  size="md"
+                />
               </div>
             </div>
 
@@ -884,30 +878,28 @@ export function MediaForm({ mediaId }: MediaFormProps) {
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Publishing State
               </label>
-              <select
+              <Dropdown
                 value={formState.status || "published"}
-                onChange={(e) => setFormState({ ...formState, status: e.target.value as any })}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-white focus:outline-none focus:border-[#B5111B]"
-              >
-                <option value="published">Published (Live on Public Site)</option>
-                <option value="draft">Draft (Hidden in CMS)</option>
-              </select>
+                onChange={(val) => setFormState({ ...formState, status: val as any })}
+                options={[
+                  { value: "published", label: "Published (Live on Public Site)" },
+                  { value: "draft", label: "Draft (Hidden in CMS)" },
+                ]}
+                fullWidth
+                size="md"
+              />
             </div>
 
             <div className="sm:pt-5">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={formState.featured || false}
-                  onChange={(e) => setFormState({ ...formState, featured: e.target.checked })}
-                  className="w-4 h-4 text-[#B5111B] rounded border-slate-300 focus:ring-[#B5111B]"
-                />
-                <span className="text-xs font-bold text-slate-800">
-                  {formState.mediaType === "document"
+              <Checkbox
+                checked={formState.featured || false}
+                onCheckedChange={(checked) => setFormState({ ...formState, featured: checked })}
+                label={
+                  formState.mediaType === "document"
                     ? "Pin as Featured Market Report"
-                    : "Pin as Featured Episode"}
-                </span>
-              </label>
+                    : "Pin as Featured Episode"
+                }
+              />
             </div>
           </div>
         </div>

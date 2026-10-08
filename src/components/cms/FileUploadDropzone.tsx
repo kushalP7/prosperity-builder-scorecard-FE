@@ -185,11 +185,10 @@ export function FileUploadDropzone({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 ${
-            dragOver
+          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 ${dragOver
               ? "border-[#B5111B] bg-red-50/50 scale-[1.01]"
               : "border-slate-300 bg-slate-50/50 hover:border-[#B5111B]/60 hover:bg-slate-50"
-          }`}
+            }`}
         >
           <input
             ref={fileInputRef}
@@ -206,7 +205,7 @@ export function FileUploadDropzone({
             <div>
               <span className="text-xs font-bold text-slate-800">{helperText}</span>
               <p className="text-[11px] text-slate-500 font-medium">
-                {acceptType === "image" ? "Supports JPG, PNG, WebP (Uploads on save)" : "Supports PDF, DOCX, ZIP files (Uploads on save)"}
+                {acceptType === "image" ? "Supports JPG, PNG, WebP" : "Supports PDF, DOCX, ZIP files"}
               </p>
             </div>
           </div>

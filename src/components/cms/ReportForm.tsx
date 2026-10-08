@@ -8,6 +8,8 @@ import { uploadAllPendingInPayload } from "@/lib/pending-uploads"
 import { FileUploadDropzone } from "./FileUploadDropzone"
 import { RichTextEditor } from "./RichTextEditor"
 import { ReportBlockBuilder } from "./ReportBlockBuilder"
+import { Dropdown } from "@/components/ui/dropdown"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ReportFormProps {
   reportId?: string
@@ -99,7 +101,14 @@ export function ReportForm({ reportId }: ReportFormProps) {
       router.push("/landing-cms")
     } catch (err: any) {
       console.error("Save error:", err)
-      setError(`Save failed: ${err.message}`)
+      let msg = err?.message || 'Failed to save report'
+      try {
+        if (typeof msg === 'string' && msg.trim().startsWith('{') && msg.trim().endsWith('}')) {
+          const parsed = JSON.parse(msg)
+          msg = parsed.error?.message || parsed.message || parsed.error || msg
+        }
+      } catch {}
+      setError(msg)
     } finally {
       setIsSaving(false)
       setUploadStatusText(null)
@@ -241,30 +250,25 @@ export function ReportForm({ reportId }: ReportFormProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <label className="text-xs font-bold text-slate-800">Status:</label>
-              <select
+              <Dropdown
                 value={formState.status || "published"}
-                onChange={(e) => setFormState({ ...formState, status: e.target.value as any })}
-                className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 bg-white"
-              >
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-              </select>
+                onChange={(val) => setFormState({ ...formState, status: val as any })}
+                options={[
+                  { value: "published", label: "Published" },
+                  { value: "draft", label: "Draft" },
+                ]}
+                size="sm"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="featured-full"
-                checked={formState.featured || false}
-                onChange={(e) => setFormState({ ...formState, featured: e.target.checked })}
-                className="w-4 h-4 text-[#B5111B] rounded-xs cursor-pointer"
-              />
-              <label htmlFor="featured-full" className="text-xs font-bold text-slate-800 cursor-pointer">
-                Feature on Main Landing Page
-              </label>
-            </div>
+            <Checkbox
+              id="featured-full"
+              checked={formState.featured || false}
+              onCheckedChange={(checked) => setFormState({ ...formState, featured: checked })}
+              label="Feature on Main Landing Page"
+            />
           </div>
         </div>
 

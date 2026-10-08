@@ -21,8 +21,8 @@ export function ReportShowcaseSection() {
           </p>
         </div>
 
-        {/* Mobile / Tablet Quick Page Selector Switcher */}
-        <div className="flex xl:hidden justify-center items-center gap-1.5 pt-1 pb-2">
+        {/* Mobile Quick Page Selector Switcher (Hidden on Tablet md and Laptop lg) */}
+        <div className="flex md:hidden justify-center items-center gap-1.5 pt-1 pb-2">
           <button
             onClick={() => setActiveFannedPage((prev) => (prev > 1 ? prev - 1 : 3))}
             className="p-2 rounded-xl bg-white text-[#B5111B] border border-slate-200 hover:bg-red-50 hover:border-red-200 transition-all cursor-pointer shadow-2xs flex items-center gap-1 text-xs font-bold"
@@ -71,11 +71,11 @@ export function ReportShowcaseSection() {
         </div>
 
         {/* 3D FANNED PAPER STACK CONTAINER WITH REAL ADMIN PORTAL CALLOUTS */}
-        <div className="relative min-h-[580px] sm:min-h-[640px] flex items-center justify-center py-6 px-2 sm:px-4 overflow-visible">
+        <div className="relative min-h-[580px] sm:min-h-[600px] md:min-h-[620px] lg:min-h-[640px] flex items-center justify-center py-6 px-2 sm:px-4 overflow-visible">
 
           <button
             onClick={() => setActiveFannedPage((prev) => (prev > 1 ? prev - 1 : 3))}
-            className="xl:hidden absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
+            className="md:hidden absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
             aria-label="Previous Page"
           >
             <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
@@ -83,7 +83,7 @@ export function ReportShowcaseSection() {
 
           <button
             onClick={() => setActiveFannedPage((prev) => (prev < 3 ? prev + 1 : 1))}
-            className="xl:hidden absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
+            className="md:hidden absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
             aria-label="Next Page"
           >
             <ChevronRight className="w-6 h-6 stroke-[2.5]" />
@@ -92,30 +92,30 @@ export function ReportShowcaseSection() {
           {/* ANNOTATION 1 (Top Left) */}
           <div
             onClick={() => setActiveFannedPage(1)}
-            className={`hidden xl:flex flex-col items-start gap-1.5 absolute top-0 left-0 max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 1
+            className={`hidden md:flex flex-col items-start gap-1 lg:gap-1.5 absolute top-0 left-0 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 1
                 ? "opacity-100 scale-105 z-50 pointer-events-auto"
                 : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
-            <div className={`p-3.5 rounded-2xl transition-all duration-300 ${activeFannedPage === 1
+            <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl transition-all duration-300 ${activeFannedPage === 1
                 ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
                 : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
-              <h4 className="text-xs font-black tracking-tight flex items-center gap-2">
-                <span className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 1 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
+              <h4 className="text-xs font-black tracking-tight flex items-center gap-1.5 lg:gap-2">
+                <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 1 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <ShieldCheck className="w-4 h-4" />
+                  <ShieldCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
-                <span className={activeFannedPage === 1 ? "text-slate-900 font-extrabold text-sm" : "text-slate-700 font-bold text-xs"}>
+                <span className={activeFannedPage === 1 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   Official 12-Step Guide Cover
                 </span>
               </h4>
-              <p className={`text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 1 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
+              <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 1 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
                 Lee County, NC 2025 Prosperity Building guide with Kathleen Rose CCIM/CRE seal.
               </p>
             </div>
-            <svg viewBox="0 0 160 70" className="w-36 h-16 overflow-visible ml-6">
+            <svg viewBox="0 0 160 70" className="w-24 md:w-28 lg:w-32 xl:w-36 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible ml-4 lg:ml-6">
               <path
                 d="M 15 5 C 50 5, 85 20, 115 45"
                 fill="none"
@@ -131,30 +131,30 @@ export function ReportShowcaseSection() {
           {/* ANNOTATION 2 (Top Right) */}
           <div
             onClick={() => setActiveFannedPage(2)}
-            className={`hidden xl:flex flex-col items-end gap-1.5 absolute top-2 -right-4 max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
+            className={`hidden md:flex flex-col items-end gap-1 lg:gap-1.5 absolute top-1 md:top-2 right-0 lg:-right-2 xl:-right-4 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
                 ? "opacity-100 scale-105 z-50 pointer-events-auto"
                 : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
-            <div className={`p-3.5 rounded-2xl text-right transition-all duration-300 relative ${activeFannedPage === 2
+            <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl text-right transition-all duration-300 relative ${activeFannedPage === 2
                 ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
                 : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
-              <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-2">
-                <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-sm" : "text-slate-700 font-bold text-xs"}>
+              <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-1.5 lg:gap-2">
+                <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   12-Category Scorecard Matrix
                 </span>
-                <span className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
+                <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Layers className="w-4 h-4" />
+                  <Layers className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
               </h4>
-              <p className={`text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
+              <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
                 Comprehensive 12-module evaluation across 90 verified community indicators.
               </p>
 
-              <svg viewBox="0 0 140 80" className="w-32 h-16 overflow-visible absolute -left-[105px] top-6 pointer-events-none z-40">
+              <svg viewBox="0 0 140 80" className="w-24 md:w-28 lg:w-30 xl:w-32 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible absolute -left-[75px] md:-left-[85px] lg:-left-[95px] xl:-left-[105px] top-4 lg:top-6 pointer-events-none z-40">
                 <path
                   d="M 130 10 C 95 10, 60 30, 25 55"
                   fill="none"
@@ -171,30 +171,30 @@ export function ReportShowcaseSection() {
           {/* ANNOTATION 3 (Bottom Left) */}
           <div
             onClick={() => setActiveFannedPage(2)}
-            className={`hidden xl:flex flex-col items-start gap-1.5 absolute bottom-4 -left-4 max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
+            className={`hidden md:flex flex-col items-start gap-1 lg:gap-1.5 absolute bottom-2 md:bottom-4 left-0 lg:-left-2 xl:-left-4 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
                 ? "opacity-100 scale-105 z-50 pointer-events-auto"
                 : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
-            <div className={`p-3.5 rounded-2xl transition-all duration-300 relative ${activeFannedPage === 2
+            <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl transition-all duration-300 relative ${activeFannedPage === 2
                 ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
                 : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
-              <h4 className="text-xs font-black tracking-tight flex items-center gap-2">
-                <span className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
+              <h4 className="text-xs font-black tracking-tight flex items-center gap-1.5 lg:gap-2">
+                <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Activity className="w-4 h-4" />
+                  <Activity className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
-                <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-sm" : "text-slate-700 font-bold text-xs"}>
+                <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   Quality of Life Score Dial
                 </span>
               </h4>
-              <p className={`text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
+              <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
                 Aggregated 74/100 community prosperity index with Poor/Average/Good/Excellent bands.
               </p>
 
-              <svg viewBox="0 0 140 80" className="w-32 h-16 overflow-visible absolute -right-[105px] -top-14 pointer-events-none z-40">
+              <svg viewBox="0 0 140 80" className="w-24 md:w-28 lg:w-30 xl:w-32 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible absolute -right-[75px] md:-right-[85px] lg:-right-[95px] xl:-right-[105px] -top-10 lg:-top-12 xl:-top-14 pointer-events-none z-40">
                 <path
                   d="M 10 70 C 45 70, 80 50, 115 25"
                   fill="none"
@@ -211,12 +211,12 @@ export function ReportShowcaseSection() {
           {/* ANNOTATION 4 (Bottom Right) */}
           <div
             onClick={() => setActiveFannedPage(3)}
-            className={`hidden xl:flex flex-col items-end gap-1.5 absolute bottom-0 right-0 max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 3
+            className={`hidden md:flex flex-col items-end gap-1 lg:gap-1.5 absolute bottom-0 right-0 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 3
                 ? "opacity-100 scale-105 z-50 pointer-events-auto"
                 : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
-            <svg viewBox="0 0 160 70" className="w-36 h-16 overflow-visible mr-6">
+            <svg viewBox="0 0 160 70" className="w-24 md:w-28 lg:w-32 xl:w-36 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible mr-4 lg:mr-6">
               <path
                 d="M 145 65 C 110 65, 75 50, 45 25"
                 fill="none"
@@ -227,20 +227,20 @@ export function ReportShowcaseSection() {
               />
               <polygon points="45 25, 57 30, 50 36" fill={activeFannedPage === 3 ? "#B5111B" : "#64748B"} />
             </svg>
-            <div className={`p-3.5 rounded-2xl text-right transition-all duration-300 ${activeFannedPage === 3
+            <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl text-right transition-all duration-300 ${activeFannedPage === 3
                 ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
                 : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
-              <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-2">
-                <span className={activeFannedPage === 3 ? "text-slate-900 font-extrabold text-sm" : "text-slate-700 font-bold text-xs"}>
+              <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-1.5 lg:gap-2">
+                <span className={activeFannedPage === 3 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   3-Phase Action Roadmap
                 </span>
-                <span className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 3 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
+                <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 3 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
               </h4>
-              <p className={`text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 3 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
+              <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 3 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
                 Reality Check → Plan Blueprint → Prosperity Building implementation chevrons.
               </p>
@@ -248,12 +248,12 @@ export function ReportShowcaseSection() {
           </div>
 
           {/* FANNED STACK CONTAINER */}
-          <div className="relative w-full max-w-4xl h-[580px] flex items-center justify-center">
+          <div className="relative w-full max-w-4xl h-[540px] md:h-[550px] lg:h-[580px] flex items-center justify-center">
 
             {/* PAGE 1: COVER PAGE */}
             <div
               onClick={() => setActiveFannedPage(1)}
-              className={`absolute left-[1%] xs:left-[2%] sm:left-[8%] top-2 w-[275px] xs:w-[310px] sm:w-[350px] h-[500px] xs:h-[520px] sm:h-[560px] bg-white text-slate-900 rounded-2xl p-4 xs:p-6 space-y-3.5 cursor-pointer transition-all duration-500 ease-out origin-bottom-left flex flex-col justify-between ${activeFannedPage === 1
+              className={`absolute left-[1%] xs:left-[2%] sm:left-[4%] md:left-[5%] lg:left-[8%] top-2 w-[275px] xs:w-[310px] sm:w-[330px] md:w-[310px] lg:w-[350px] h-[500px] xs:h-[520px] sm:h-[540px] md:h-[520px] lg:h-[560px] bg-white text-slate-900 rounded-2xl p-4 xs:p-6 space-y-3.5 cursor-pointer transition-all duration-500 ease-out origin-bottom-left flex flex-col justify-between ${activeFannedPage === 1
                   ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] ring-4 ring-[#B5111B]/30 border-2 border-[#B5111B] opacity-100"
                   : "z-10 -rotate-6 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}
@@ -308,7 +308,7 @@ export function ReportShowcaseSection() {
             {/* PAGE 2: MIDDLE PAGE (Prosperity Builder Scorecard® - All 12 Indicators) */}
             <div
               onClick={() => setActiveFannedPage(2)}
-              className={`absolute top-0 w-[285px] xs:w-[325px] sm:w-[380px] h-[520px] xs:h-[550px] sm:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-4 sm:p-5 space-y-2 cursor-pointer transition-all duration-500 ease-out origin-bottom-center flex flex-col justify-between overflow-hidden ${activeFannedPage === 2
+              className={`absolute top-0 w-[285px] xs:w-[325px] sm:w-[350px] md:w-[330px] lg:w-[380px] h-[520px] xs:h-[550px] sm:h-[570px] md:h-[540px] lg:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-4 sm:p-5 space-y-2 cursor-pointer transition-all duration-500 ease-out origin-bottom-center flex flex-col justify-between overflow-hidden ${activeFannedPage === 2
                   ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
                   : "z-20 rotate-4 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}
@@ -619,7 +619,7 @@ export function ReportShowcaseSection() {
             {/* PAGE 3: BACK PAGE (Next Steps & Resources) */}
             <div
               onClick={() => setActiveFannedPage(3)}
-              className={`absolute right-[1%] xs:right-[2%] sm:right-[8%] top-0 w-[285px] xs:w-[325px] sm:w-[380px] h-[520px] xs:h-[550px] sm:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-5 sm:p-6 cursor-pointer transition-all duration-500 ease-out origin-bottom-right flex flex-col justify-between overflow-hidden ${activeFannedPage === 3
+              className={`absolute right-[1%] xs:right-[2%] sm:right-[4%] md:right-[5%] lg:right-[8%] top-0 w-[285px] xs:w-[325px] sm:w-[350px] md:w-[310px] lg:w-[380px] h-[520px] xs:h-[550px] sm:h-[570px] md:h-[520px] lg:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-5 sm:p-6 cursor-pointer transition-all duration-500 ease-out origin-bottom-right flex flex-col justify-between overflow-hidden ${activeFannedPage === 3
                   ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
                   : "z-10 rotate-8 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}

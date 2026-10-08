@@ -10,7 +10,7 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-radial-[ellipse_at_center,_var(--tw-gradient-stops)] from-[#6A040E]/80 via-[#540208] to-[#3B0105] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40" />
 
-      {/* Desktop Flush Right Wedge Wheel Graphic */}
+      {/* Desktop Floating/Anchored Wedge Wheel graphic positioned to right edge */}
       <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-0 xl:right-4 2xl:right-12 w-[42vw] xl:w-[45vw] max-w-[500px] xl:max-w-[620px] 2xl:max-w-[700px] pointer-events-none z-10 select-none items-center justify-end pr-2 lg:pr-4 py-2">
         <div className="w-full pointer-events-auto">
           <CommunityWedgeWheel />
@@ -62,7 +62,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Mobile/Tablet Graphic */}
+          {/* Mobile Wedge Wheel Graphic (Centered on mobile/tablet) */}
           <div className="lg:hidden flex justify-center pt-4">
             <div className="w-full max-w-[340px] sm:max-w-[420px]">
               <CommunityWedgeWheel />

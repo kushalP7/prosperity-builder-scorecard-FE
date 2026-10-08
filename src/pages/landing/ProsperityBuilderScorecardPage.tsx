@@ -5,7 +5,6 @@ import { Link } from "@/lib/router-compat"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { ReportShowcaseSection } from "@/components/landing/ReportShowcaseSection"
-import { PublishedReportsCardsSection } from "@/components/landing/PublishedReportsCardsSection"
 
 export default function ProsperityBuilderScorecardPage() {
   return (
@@ -49,10 +48,6 @@ export default function ProsperityBuilderScorecardPage() {
 
         {/* 1. Scorecard PDF Report Design Showcase (Interactive 3D Folio) */}
         <ReportShowcaseSection />
-
-        {/* 2. Published Real Estate & Community Dossiers */}
-        {/* need to uncomment */}
-        <PublishedReportsCardsSection />
       </main>
 
       {/* Global Footer */}

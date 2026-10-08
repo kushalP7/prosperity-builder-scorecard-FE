@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:prod": "tsc -b && vite build --mode prod",
     "preview": "vite preview",
     "build:clean": "vite build"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.20.6",
     "@types/leaflet": "^1.9.22",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",

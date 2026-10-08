@@ -2,18 +2,18 @@
 
 import * as React from "react"
 import { Link, useRouter } from "@/lib/router-compat"
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Edit3, 
-  Trash2, 
-  Eye, 
-  Star, 
-  Loader2, 
-  Film, 
-  FolderOpen, 
-  Mic, 
+import {
+  FileText,
+  Plus,
+  Search,
+  Edit3,
+  Trash2,
+  Eye,
+  Star,
+  Loader2,
+  Film,
+  FolderOpen,
+  Mic,
   ExternalLink,
   LayoutGrid,
   List,
@@ -22,18 +22,24 @@ import {
   ArrowUpDown,
   X,
   Play,
-  Share2,
-  Check,
-  Send,
   Headphones,
   MapPin,
-  Upload
+  Upload,
+  MoreVertical,
+  Download,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { reportsApi, LandingReportItem } from "@/lib/reports-api"
 import { mediaApi, LandingMediaItem, getYouTubeThumbnail } from "@/lib/media-api"
 import { projectsApi, LandingProjectItem, PORTFOLIO_CATEGORIES } from "@/lib/projects-api"
 import { Dropdown } from "@/components/ui/dropdown"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { DataTable } from "@/components/ui/data-table"
+import { Pagination } from "@/components/ui/pagination"
+import { ColumnDef, SortingState } from "@tanstack/react-table"
 
 export default function LandingCMSPage() {
   const router = useRouter()
@@ -46,7 +52,7 @@ export default function LandingCMSPage() {
     type: "project" | "report" | "media"
   } | null>(null)
   const [isDeleting, setIsDeleting] = React.useState(false)
-  
+
   // Data state
   const [reports, setReports] = React.useState<LandingReportItem[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -58,27 +64,46 @@ export default function LandingCMSPage() {
   // Reports Filters & Controls
   const [reportViewMode, setReportViewMode] = React.useState<"grid" | "list">("grid")
   const [searchTerm, setSearchTerm] = React.useState("")
+  const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [reportYearFilter, setReportYearFilter] = React.useState<string>("all")
   const [reportFeaturedOnly, setReportFeaturedOnly] = React.useState<boolean>(false)
   const [reportSortBy, setReportSortBy] = React.useState<"newest" | "oldest" | "title_asc" | "title_desc">("newest")
+  const [openActionMenuId, setOpenActionMenuId] = React.useState<string | null>(null)
+  const [reportPage, setReportPage] = React.useState<number>(1)
+  const [reportsPerPage, setReportsPerPage] = React.useState<number>(10)
+  const [totalReports, setTotalReports] = React.useState<number>(0)
+  const [totalReportPages, setTotalReportPages] = React.useState<number>(1)
+  const [availableReportYears, setAvailableReportYears] = React.useState<string[]>([])
 
   // Media Sphere Filters & Controls
   const [mediaViewMode, setMediaViewMode] = React.useState<"grid" | "list">("grid")
   const [mediaSearch, setMediaSearch] = React.useState("")
+  const [debouncedMediaSearch, setDebouncedMediaSearch] = React.useState("")
   const [mediaTypeFilter, setMediaTypeFilter] = React.useState<"all" | "video" | "audio" | "document">("all")
   const [mediaStatusFilter, setMediaStatusFilter] = React.useState<string>("all")
   const [mediaYearFilter, setMediaYearFilter] = React.useState<string>("all")
   const [mediaFeaturedOnly, setMediaFeaturedOnly] = React.useState<boolean>(false)
   const [mediaSortBy, setMediaSortBy] = React.useState<"newest" | "oldest" | "title_asc" | "title_desc">("newest")
+  const [mediaPage, setMediaPage] = React.useState<number>(1)
+  const [mediaPerPage, setMediaPerPage] = React.useState<number>(10)
+  const [totalMedia, setTotalMedia] = React.useState<number>(0)
+  const [totalMediaPages, setTotalMediaPages] = React.useState<number>(1)
+  const [availableMediaYears, setAvailableMediaYears] = React.useState<string[]>([])
 
   // Featured Projects Data & Controls
   const [projects, setProjects] = React.useState<LandingProjectItem[]>([])
   const [projectsLoading, setProjectsLoading] = React.useState(false)
   const [projectsSearch, setProjectsSearch] = React.useState("")
+  const [debouncedProjectsSearch, setDebouncedProjectsSearch] = React.useState("")
   const [projectsCategoryFilter, setProjectsCategoryFilter] = React.useState<string>("all")
   const [projectsStatusFilter, setProjectsStatusFilter] = React.useState<string>("all")
   const [projectsFeaturedOnly, setProjectsFeaturedOnly] = React.useState<boolean>(false)
+  const [projectsSortBy, setProjectsSortBy] = React.useState<"newest" | "oldest" | "title_asc" | "title_desc">("newest")
+  const [projectsPage, setProjectsPage] = React.useState<number>(1)
+  const [projectsPerPage, setProjectsPerPage] = React.useState<number>(10)
+  const [totalProjects, setTotalProjects] = React.useState<number>(0)
+  const [totalProjectPages, setTotalProjectPages] = React.useState<number>(1)
 
   // Project Add/Edit Modal State
   const [projectModalOpen, setProjectModalOpen] = React.useState(false)
@@ -97,7 +122,34 @@ export default function LandingCMSPage() {
     status: "published" as "published" | "draft",
   })
 
-  // Sync tab with URL
+  // Debounce search input (300ms)
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setReportPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // Debounce media search input (300ms)
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMediaSearch(mediaSearch)
+      setMediaPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [mediaSearch])
+
+  // Debounce projects search input (300ms)
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedProjectsSearch(projectsSearch)
+      setProjectsPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [projectsSearch])
+
+  // Sync tab and report filters with URL on initial mount
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
@@ -105,8 +157,131 @@ export default function LandingCMSPage() {
       if (tab === "media" || tab === "reports" || tab === "projects") {
         setActiveTab(tab)
       }
+      if (tab === "reports" || !tab) {
+        if (params.get("search")) {
+          setSearchTerm(params.get("search") || "")
+          setDebouncedSearch(params.get("search") || "")
+        }
+        if (params.get("status")) setStatusFilter(params.get("status") || "all")
+        if (params.get("year")) setReportYearFilter(params.get("year") || "all")
+        if (params.get("featured")) setReportFeaturedOnly(params.get("featured") === "true")
+        if (params.get("sortBy")) setReportSortBy((params.get("sortBy") as any) || "newest")
+        if (params.get("view")) setReportViewMode(params.get("view") === "list" ? "list" : "grid")
+        if (params.get("page")) setReportPage(Math.max(1, parseInt(params.get("page") || "1", 10)))
+        if (params.get("limit")) setReportsPerPage(Math.max(1, parseInt(params.get("limit") || "10", 10)))
+      }
+      if (tab === "media") {
+        if (params.get("search")) {
+          setMediaSearch(params.get("search") || "")
+          setDebouncedMediaSearch(params.get("search") || "")
+        }
+        if (params.get("type")) setMediaTypeFilter((params.get("type") as any) || "all")
+        if (params.get("status")) setMediaStatusFilter(params.get("status") || "all")
+        if (params.get("year")) setMediaYearFilter(params.get("year") || "all")
+        if (params.get("featured")) setMediaFeaturedOnly(params.get("featured") === "true")
+        if (params.get("sortBy")) setMediaSortBy((params.get("sortBy") as any) || "newest")
+        if (params.get("view")) setMediaViewMode(params.get("view") === "list" ? "list" : "grid")
+        if (params.get("page")) setMediaPage(Math.max(1, parseInt(params.get("page") || "1", 10)))
+        if (params.get("limit")) setMediaPerPage(Math.max(1, parseInt(params.get("limit") || "10", 10)))
+      }
+      if (tab === "projects") {
+        if (params.get("search")) {
+          setProjectsSearch(params.get("search") || "")
+          setDebouncedProjectsSearch(params.get("search") || "")
+        }
+        if (params.get("category")) setProjectsCategoryFilter(params.get("category") || "all")
+        if (params.get("status")) setProjectsStatusFilter(params.get("status") || "all")
+        if (params.get("featured")) setProjectsFeaturedOnly(params.get("featured") === "true")
+        if (params.get("sortBy")) setProjectsSortBy((params.get("sortBy") as any) || "newest")
+        if (params.get("page")) setProjectsPage(Math.max(1, parseInt(params.get("page") || "1", 10)))
+        if (params.get("limit")) setProjectsPerPage(Math.max(1, parseInt(params.get("limit") || "10", 10)))
+      }
     }
   }, [])
+
+  // Sync URL route path when report filters, pagination, or view changes
+  React.useEffect(() => {
+    if (typeof window === "undefined" || activeTab !== "reports") return
+    const params = new URLSearchParams()
+    params.set("tab", "reports")
+    if (reportPage > 1) params.set("page", String(reportPage))
+    if (reportsPerPage !== 10) params.set("limit", String(reportsPerPage))
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim())
+    if (statusFilter !== "all") params.set("status", statusFilter)
+    if (reportYearFilter !== "all") params.set("year", reportYearFilter)
+    if (reportFeaturedOnly) params.set("featured", "true")
+    if (reportSortBy !== "newest") params.set("sortBy", reportSortBy)
+    if (reportViewMode !== "grid") params.set("view", reportViewMode)
+
+    const newQuery = params.toString() ? `?${params.toString()}` : ""
+    window.history.replaceState(null, "", `/landing-cms${newQuery}`)
+  }, [
+    activeTab,
+    reportPage,
+    reportsPerPage,
+    debouncedSearch,
+    statusFilter,
+    reportYearFilter,
+    reportFeaturedOnly,
+    reportSortBy,
+    reportViewMode,
+  ])
+
+  // Sync URL route path when media filters, pagination, or view changes
+  React.useEffect(() => {
+    if (typeof window === "undefined" || activeTab !== "media") return
+    const params = new URLSearchParams()
+    params.set("tab", "media")
+    if (mediaPage > 1) params.set("page", String(mediaPage))
+    if (mediaPerPage !== 10) params.set("limit", String(mediaPerPage))
+    if (debouncedMediaSearch.trim()) params.set("search", debouncedMediaSearch.trim())
+    if (mediaTypeFilter !== "all") params.set("type", mediaTypeFilter)
+    if (mediaStatusFilter !== "all") params.set("status", mediaStatusFilter)
+    if (mediaYearFilter !== "all") params.set("year", mediaYearFilter)
+    if (mediaFeaturedOnly) params.set("featured", "true")
+    if (mediaSortBy !== "newest") params.set("sortBy", mediaSortBy)
+    if (mediaViewMode !== "grid") params.set("view", mediaViewMode)
+
+    const newQuery = params.toString() ? `?${params.toString()}` : ""
+    window.history.replaceState(null, "", `/landing-cms${newQuery}`)
+  }, [
+    activeTab,
+    mediaPage,
+    mediaPerPage,
+    debouncedMediaSearch,
+    mediaTypeFilter,
+    mediaStatusFilter,
+    mediaYearFilter,
+    mediaFeaturedOnly,
+    mediaSortBy,
+    mediaViewMode,
+  ])
+
+  // Sync URL route path when project filters, pagination changes
+  React.useEffect(() => {
+    if (typeof window === "undefined" || activeTab !== "projects") return
+    const params = new URLSearchParams()
+    params.set("tab", "projects")
+    if (projectsPage > 1) params.set("page", String(projectsPage))
+    if (projectsPerPage !== 10) params.set("limit", String(projectsPerPage))
+    if (debouncedProjectsSearch.trim()) params.set("search", debouncedProjectsSearch.trim())
+    if (projectsCategoryFilter !== "all") params.set("category", projectsCategoryFilter)
+    if (projectsStatusFilter !== "all") params.set("status", projectsStatusFilter)
+    if (projectsFeaturedOnly) params.set("featured", "true")
+    if (projectsSortBy !== "newest") params.set("sortBy", projectsSortBy)
+
+    const newQuery = params.toString() ? `?${params.toString()}` : ""
+    window.history.replaceState(null, "", `/landing-cms${newQuery}`)
+  }, [
+    activeTab,
+    projectsPage,
+    projectsPerPage,
+    debouncedProjectsSearch,
+    projectsCategoryFilter,
+    projectsStatusFilter,
+    projectsFeaturedOnly,
+    projectsSortBy,
+  ])
 
   const handleTabChange = (tab: "reports" | "media" | "projects") => {
     setActiveTab(tab)
@@ -115,36 +290,110 @@ export default function LandingCMSPage() {
     }
   }
 
-  // Load Data
+  // Load available report years once for the dropdown
+  React.useEffect(() => {
+    reportsApi.getReports().then((all) => {
+      if (Array.isArray(all)) {
+        const years = new Set<string>()
+        all.forEach((r) => {
+          const d = r.publishedAt || r.createdAt
+          if (d) {
+            const yr = new Date(d).getFullYear()
+            if (!isNaN(yr)) years.add(String(yr))
+          }
+        })
+        setAvailableReportYears(Array.from(years).sort((a, b) => b.localeCompare(a)))
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Server-side Load Reports
   const loadReports = React.useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await reportsApi.getReports()
-      setReports(Array.isArray(data) ? data : [])
+      const res = await reportsApi.getPaginatedReports({
+        page: reportPage,
+        limit: reportsPerPage,
+        search: debouncedSearch,
+        status: statusFilter,
+        featured: reportFeaturedOnly,
+        sortBy: reportSortBy,
+        year: reportYearFilter,
+      })
+      setReports(Array.isArray(res.data) ? res.data : [])
+      setTotalReports(res.total || 0)
+      setTotalReportPages(res.totalPages || 1)
     } catch (err: any) {
       console.error("Failed to fetch reports:", err)
       setError("Failed to connect to backend server. Make sure NestJS backend is running.")
     } finally {
       setLoading(false)
     }
+  }, [
+    reportPage,
+    reportsPerPage,
+    debouncedSearch,
+    statusFilter,
+    reportFeaturedOnly,
+    reportSortBy,
+    reportYearFilter,
+  ])
+
+  React.useEffect(() => {
+    if (activeTab === "reports") {
+      loadReports()
+    }
+  }, [loadReports, activeTab])
+
+  // Load available media years once for the dropdown
+  React.useEffect(() => {
+    mediaApi.getMedia().then((all) => {
+      if (Array.isArray(all)) {
+        const years = new Set<string>()
+        all.forEach((m) => {
+          const d = m.createdAt || m.updatedAt
+          if (d) {
+            const yr = new Date(d).getFullYear()
+            if (!isNaN(yr)) years.add(String(yr))
+          }
+        })
+        setAvailableMediaYears(Array.from(years).sort((a, b) => b.localeCompare(a)))
+      }
+    }).catch(() => {})
   }, [])
 
   const loadMedia = React.useCallback(async () => {
     setMediaLoading(true)
     try {
-      const items = await mediaApi.getMedia()
-      setMediaItems(Array.isArray(items) ? items : [])
+      const res = await mediaApi.getPaginatedMedia({
+        page: mediaPage,
+        limit: mediaPerPage,
+        search: debouncedMediaSearch,
+        mediaType: mediaTypeFilter,
+        status: mediaStatusFilter,
+        featured: mediaFeaturedOnly ? true : undefined,
+        year: mediaYearFilter,
+        sortBy: mediaSortBy,
+      })
+      setMediaItems(Array.isArray(res.data) ? res.data : [])
+      setTotalMedia(res.total || 0)
+      setTotalMediaPages(res.totalPages || 1)
     } catch (err: any) {
       console.error("Failed to fetch media:", err)
     } finally {
       setMediaLoading(false)
     }
-  }, [])
-
-  React.useEffect(() => {
-    loadReports()
-  }, [loadReports])
+  }, [
+    mediaPage,
+    mediaPerPage,
+    debouncedMediaSearch,
+    mediaTypeFilter,
+    mediaStatusFilter,
+    mediaFeaturedOnly,
+    mediaYearFilter,
+    mediaSortBy,
+  ])
 
   React.useEffect(() => {
     if (activeTab === "media") {
@@ -155,14 +404,32 @@ export default function LandingCMSPage() {
   const loadProjects = React.useCallback(async () => {
     setProjectsLoading(true)
     try {
-      const items = await projectsApi.getProjects()
-      setProjects(Array.isArray(items) ? items : [])
+      const res = await projectsApi.getPaginatedProjects({
+        page: projectsPage,
+        limit: projectsPerPage,
+        search: debouncedProjectsSearch,
+        category: projectsCategoryFilter,
+        status: projectsStatusFilter,
+        featured: projectsFeaturedOnly ? true : undefined,
+        sortBy: projectsSortBy,
+      })
+      setProjects(Array.isArray(res.data) ? res.data : [])
+      setTotalProjects(res.total || 0)
+      setTotalProjectPages(res.totalPages || 1)
     } catch (err: any) {
       console.error("Failed to fetch projects:", err)
     } finally {
       setProjectsLoading(false)
     }
-  }, [])
+  }, [
+    projectsPage,
+    projectsPerPage,
+    debouncedProjectsSearch,
+    projectsCategoryFilter,
+    projectsStatusFilter,
+    projectsFeaturedOnly,
+    projectsSortBy,
+  ])
 
   React.useEffect(() => {
     if (activeTab === "projects") {
@@ -174,7 +441,7 @@ export default function LandingCMSPage() {
     if (stagedPdfPreviewUrl?.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(stagedPdfPreviewUrl)
-      } catch {}
+      } catch { }
     }
     setStagedPdfFile(null)
     setStagedPdfPreviewUrl(null)
@@ -257,7 +524,7 @@ export default function LandingCMSPage() {
     if (stagedPdfPreviewUrl?.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(stagedPdfPreviewUrl)
-      } catch {}
+      } catch { }
     }
 
     // Stage file locally via blob URL for instant preview without touching Cloudinary
@@ -287,7 +554,7 @@ export default function LandingCMSPage() {
         if (stagedPdfPreviewUrl) {
           try {
             URL.revokeObjectURL(stagedPdfPreviewUrl)
-          } catch {}
+          } catch { }
         }
         setStagedPdfFile(null)
         setStagedPdfPreviewUrl(null)
@@ -315,25 +582,6 @@ export default function LandingCMSPage() {
     }
   }
 
-  // Filtered Projects
-  const filteredProjects = React.useMemo(() => {
-    return (Array.isArray(projects) ? projects : []).filter((p) => {
-      const term = projectsSearch.trim().toLowerCase()
-      const matchesSearch =
-        !term ||
-        p.title.toLowerCase().includes(term) ||
-        p.studyType.toLowerCase().includes(term) ||
-        p.category.toLowerCase().includes(term)
-
-      const matchesCat =
-        projectsCategoryFilter === "all" || p.category === projectsCategoryFilter
-      const matchesStatus =
-        projectsStatusFilter === "all" || p.status === projectsStatusFilter
-      const matchesFeatured = !projectsFeaturedOnly || !!p.featured
-
-      return matchesSearch && matchesCat && matchesStatus && matchesFeatured
-    })
-  }, [projects, projectsSearch, projectsCategoryFilter, projectsStatusFilter, projectsFeaturedOnly])
 
   // Delete Actions
   const handleConfirmDelete = async () => {
@@ -403,17 +651,7 @@ export default function LandingCMSPage() {
     }
   }
 
-  const [copiedMediaId, setCopiedMediaId] = React.useState<string | null>(null)
 
-  const handleShareMedia = (item: LandingMediaItem, e: React.MouseEvent) => {
-    e.stopPropagation()
-    const shareUrl = item.sourceUrl || (typeof window !== "undefined" ? `${window.location.origin}/videos` : "")
-    if (navigator.clipboard && shareUrl) {
-      navigator.clipboard.writeText(shareUrl)
-      setCopiedMediaId(item.id)
-      setTimeout(() => setCopiedMediaId(null), 2000)
-    }
-  }
 
   const formatMediaDate = (dateString?: string): string => {
     if (!dateString) return ""
@@ -433,6 +671,7 @@ export default function LandingCMSPage() {
 
   // Dynamic Year Extraction
   const reportYears = React.useMemo(() => {
+    if (availableReportYears.length > 0) return availableReportYears
     const years = new Set<string>()
     ;(reports || []).forEach((r) => {
       const d = r.publishedAt || r.createdAt
@@ -442,9 +681,10 @@ export default function LandingCMSPage() {
       }
     })
     return Array.from(years).sort((a, b) => b.localeCompare(a))
-  }, [reports])
+  }, [availableReportYears, reports])
 
   const mediaYears = React.useMemo(() => {
+    if (availableMediaYears.length > 0) return availableMediaYears
     const years = new Set<string>()
     ;(mediaItems || []).forEach((m) => {
       const d = m.createdAt || m.updatedAt
@@ -454,105 +694,622 @@ export default function LandingCMSPage() {
       }
     })
     return Array.from(years).sort((a, b) => b.localeCompare(a))
-  }, [mediaItems])
+  }, [availableMediaYears, mediaItems])
 
-  // Filtered & Sorted Reports
-  const filteredReports = React.useMemo(() => {
-    const list = (Array.isArray(reports) ? [...reports] : []).filter((r) => {
-      const term = searchTerm.trim().toLowerCase()
-      const matchesSearch =
-        !term ||
-        r.title.toLowerCase().includes(term) ||
-        (r.summary || "").toLowerCase().includes(term) ||
-        (r.author || "").toLowerCase().includes(term)
+  // Close action dropdown on outside click or scroll
+  React.useEffect(() => {
+    if (!openActionMenuId) return
+    const handleClose = () => setOpenActionMenuId(null)
+    document.addEventListener("click", handleClose)
+    window.addEventListener("scroll", handleClose, true)
+    return () => {
+      document.removeEventListener("click", handleClose)
+      window.removeEventListener("scroll", handleClose, true)
+    }
+  }, [openActionMenuId])
 
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter
-      const matchesFeatured = !reportFeaturedOnly || !!r.featured
+  // TanStack Table Column Definitions for Reports List View
+  const reportColumns = React.useMemo<ColumnDef<LandingReportItem>[]>(() => [
+    {
+      id: "index",
+      header: "#",
+      cell: ({ row }) => (
+        <span className="font-bold text-slate-400">
+          {(reportPage - 1) * reportsPerPage + row.index + 1}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "title",
+      accessorKey: "title",
+      header: "Report",
+      cell: ({ row }) => {
+        const report = row.original
+        return (
+          <div className="flex items-center gap-3 min-w-[200px]">
+            <div
+              className="w-11 h-11 rounded-xl border border-slate-200/60 overflow-hidden shrink-0 flex items-center justify-center bg-slate-100"
+            >
+              {report.coverImage ? (
+                <img
+                  src={report.coverImage}
+                  alt={report.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FileText className="w-5 h-5 text-[#B5111B]" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/landing-cms/reports/edit/${report.id}`}
+                className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
+              >
+                {report.title}
+              </Link>
+              <span className="text-[11px] text-slate-400 truncate block">
+                {report.summary || report.subtitle || `/${report.slug}`}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      enableSorting: true,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const report = row.original
+        return (
+          <button
+            type="button"
+            onClick={() => handleToggleStatus(report)}
+            title="Click to toggle status"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition hover:opacity-80 cursor-pointer ${
+              report.status === "published"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-slate-100 text-slate-700 border-slate-200"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+              }`}
+            />
+            <span className="capitalize">{report.status}</span>
+          </button>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "featured",
+      header: "Featured",
+      cell: ({ row }) => {
+        const report = row.original
+        return report.featured ? (
+          <span className="inline-flex items-center gap-1 font-bold text-amber-600 text-[11px]">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+            <span>Yes</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-slate-400 text-[11px]">
+            <Star className="w-3.5 h-3.5" />
+            <span>No</span>
+          </span>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "author",
+      header: "Author",
+      cell: ({ row }) => (
+        <span className="text-slate-600 font-medium whitespace-nowrap">
+          {row.original.author || "Kathleen Rose, CCIM, CRE"}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "publishedAt",
+      accessorKey: "publishedAt",
+      header: "Date",
+      cell: ({ row }) => {
+        const report = row.original
+        const d = report.publishedAt || report.createdAt
+        return (
+          <span className="text-slate-500 font-medium whitespace-nowrap">
+            {d
+              ? new Date(d).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "Recent"}
+          </span>
+        )
+      },
+      enableSorting: true,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const report = row.original
+        return (
+          <div className="inline-flex items-center gap-1.5 justify-end w-full">
+            <Link
+              href={`/report/${report.slug || report.id}`}
+              target="_blank"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
+              title="Preview report in new tab"
+            >
+              <Eye className="w-4 h-4" />
+            </Link>
+            <Link
+              href={`/landing-cms/reports/edit/${report.id}`}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
+              title="Edit Report"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleDelete(report)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+              title="Delete Report"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+  ], [reportPage, reportsPerPage])
 
-      let matchesYear = true
-      if (reportYearFilter !== "all") {
-        const d = r.publishedAt || r.createdAt
-        if (d) {
-          matchesYear = String(new Date(d).getFullYear()) === reportYearFilter
-        } else {
-          matchesYear = false
-        }
-      }
+  // TanStack Sorting State synchronized with server-side reportSortBy
+  const reportSorting = React.useMemo<SortingState>(() => {
+    if (reportSortBy === "title_asc") return [{ id: "title", desc: false }]
+    if (reportSortBy === "title_desc") return [{ id: "title", desc: true }]
+    if (reportSortBy === "oldest") return [{ id: "publishedAt", desc: false }]
+    return [{ id: "publishedAt", desc: true }] // default "newest"
+  }, [reportSortBy])
 
-      return matchesSearch && matchesStatus && matchesFeatured && matchesYear
-    })
-
-    list.sort((a, b) => {
+  const handleReportSortingChange = React.useCallback((newSorting: SortingState) => {
+    if (!newSorting || newSorting.length === 0) {
       if (reportSortBy === "newest") {
-        const da = new Date(a.publishedAt || a.createdAt || 0).getTime()
-        const db = new Date(b.publishedAt || b.createdAt || 0).getTime()
-        return db - da
+        setReportSortBy("oldest")
+      } else if (reportSortBy === "oldest") {
+        setReportSortBy("newest")
+      } else if (reportSortBy === "title_asc") {
+        setReportSortBy("title_desc")
+      } else {
+        setReportSortBy("newest")
       }
-      if (reportSortBy === "oldest") {
-        const da = new Date(a.publishedAt || a.createdAt || 0).getTime()
-        const db = new Date(b.publishedAt || b.createdAt || 0).getTime()
-        return da - db
-      }
-      if (reportSortBy === "title_asc") {
-        return a.title.localeCompare(b.title)
-      }
-      if (reportSortBy === "title_desc") {
-        return b.title.localeCompare(a.title)
-      }
-      return 0
-    })
+      setReportPage(1)
+      return
+    }
 
-    return list
-  }, [reports, searchTerm, statusFilter, reportYearFilter, reportFeaturedOnly, reportSortBy])
+    const sort = newSorting[0]
+    if (sort.id === "title") {
+      setReportSortBy(sort.desc ? "title_desc" : "title_asc")
+    } else if (sort.id === "publishedAt") {
+      setReportSortBy(sort.desc ? "newest" : "oldest")
+    }
+    setReportPage(1)
+  }, [reportSortBy])
 
-  // Filtered & Sorted Media
-  const filteredMedia = React.useMemo(() => {
-    const list = (Array.isArray(mediaItems) ? [...mediaItems] : []).filter((m) => {
-      const term = mediaSearch.trim().toLowerCase()
-      const matchesSearch =
-        !term ||
-        m.title.toLowerCase().includes(term) ||
-        (m.category || "").toLowerCase().includes(term)
+  // Media items are loaded directly from paginated server API
+  const filteredMedia = mediaItems
 
-      const matchesType = mediaTypeFilter === "all" || m.mediaType === mediaTypeFilter
-      const matchesStatus = mediaStatusFilter === "all" || m.status === mediaStatusFilter
-      const matchesFeatured = !mediaFeaturedOnly || !!m.featured
+  // TanStack Table Column Definitions for Media List View
+  const mediaColumns = React.useMemo<ColumnDef<LandingMediaItem>[]>(() => [
+    {
+      id: "index",
+      header: "#",
+      cell: ({ row }) => (
+        <span className="font-bold text-slate-400">
+          {(mediaPage - 1) * mediaPerPage + row.index + 1}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "title",
+      accessorKey: "title",
+      header: "Item",
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <div className="flex items-center gap-3 min-w-[200px]">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs bg-slate-100"
+            >
+              {item.mediaType === "audio" ? (
+                <Mic className="w-4 h-4 text-[#B5111B]" />
+              ) : item.mediaType === "document" ? (
+                <FileText className="w-4 h-4 text-[#B5111B]" />
+              ) : (
+                <Film className="w-4 h-4 text-[#B5111B]" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/landing-cms/media/edit/${item.id}`}
+                className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
+              >
+                {item.title}
+              </Link>
+              <span className="text-[11px] text-slate-400 truncate block">
+                {item.category || "Media Sphere broadcast"}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      enableSorting: true,
+      sortDescFirst: false,
+    },
+    {
+      accessorKey: "mediaType",
+      header: "Type",
+      cell: ({ row }) => (
+        <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
+          {row.original.mediaType}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <button
+            type="button"
+            onClick={() => handleToggleMediaStatus(item)}
+            title="Click to toggle status"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
+              item.status === "published"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-slate-100 text-slate-700 border-slate-200"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+              }`}
+            />
+            <span className="capitalize">{item.status}</span>
+          </button>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "featured",
+      header: () => <div className="text-center">Featured</div>,
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => handleToggleMediaFeatured(item)}
+              className={`p-1 rounded-lg transition cursor-pointer ${
+                item.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
+              }`}
+              title="Toggle featured status"
+            >
+              <Star className={`w-4 h-4 ${item.featured ? "fill-amber-400 text-amber-500" : ""}`} />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => (
+        <span className="text-slate-600 font-medium">
+          {row.original.category || "General"}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "createdAt",
+      accessorKey: "createdAt",
+      header: "Date",
+      cell: ({ row }) => {
+        const d = row.original.createdAt
+        return (
+          <span className="text-slate-500 font-medium whitespace-nowrap">
+            {d
+              ? new Date(d).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "Recent"}
+          </span>
+        )
+      },
+      enableSorting: true,
+      sortDescFirst: true,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            {item.sourceUrl ? (
+              <a
+                href={item.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
+                title="Preview media in new tab"
+              >
+                <Eye className="w-4 h-4" />
+              </a>
+            ) : (
+              <span className="p-1.5 text-slate-300 cursor-not-allowed" title="No URL available">
+                <Eye className="w-4 h-4" />
+              </span>
+            )}
+            <Link
+              href={`/landing-cms/media/edit/${item.id}`}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
+              title="Edit media item"
+            >
+              <Edit3 className="w-4 h-4" />
+            </Link>
 
-      let matchesYear = true
-      if (mediaYearFilter !== "all") {
-        const d = m.createdAt || m.updatedAt
-        if (d) {
-          matchesYear = String(new Date(d).getFullYear()) === mediaYearFilter
-        } else {
-          matchesYear = false
-        }
-      }
+            <button
+              type="button"
+              onClick={() => handleDeleteMedia(item)}
+              className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition cursor-pointer"
+              title="Delete media item"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+  ], [mediaPage, mediaPerPage])
 
-      return matchesSearch && matchesType && matchesStatus && matchesFeatured && matchesYear
-    })
+  const mediaSorting = React.useMemo<SortingState>(() => {
+    if (mediaSortBy === "title_asc") return [{ id: "title", desc: false }]
+    if (mediaSortBy === "title_desc") return [{ id: "title", desc: true }]
+    if (mediaSortBy === "oldest") return [{ id: "createdAt", desc: false }]
+    return [{ id: "createdAt", desc: true }] // default "newest"
+  }, [mediaSortBy])
 
-    list.sort((a, b) => {
-      if (mediaSortBy === "newest") {
-        const da = new Date(a.createdAt || 0).getTime()
-        const db = new Date(b.createdAt || 0).getTime()
-        return db - da
-      }
-      if (mediaSortBy === "oldest") {
-        const da = new Date(a.createdAt || 0).getTime()
-        const db = new Date(b.createdAt || 0).getTime()
-        return da - db
-      }
-      if (mediaSortBy === "title_asc") {
-        return a.title.localeCompare(b.title)
-      }
-      if (mediaSortBy === "title_desc") {
-        return b.title.localeCompare(a.title)
-      }
-      return 0
-    })
+  const handleMediaSortingChange = React.useCallback((newSorting: SortingState) => {
+    if (!newSorting || newSorting.length === 0) {
+      if (mediaSortBy === "newest") setMediaSortBy("oldest")
+      else if (mediaSortBy === "oldest") setMediaSortBy("newest")
+      else if (mediaSortBy === "title_asc") setMediaSortBy("title_desc")
+      else setMediaSortBy("newest")
+      setMediaPage(1)
+      return
+    }
+    const sort = newSorting[0]
+    if (sort.id === "title") {
+      setMediaSortBy(sort.desc ? "title_desc" : "title_asc")
+    } else if (sort.id === "createdAt") {
+      setMediaSortBy(sort.desc ? "newest" : "oldest")
+    }
+    setMediaPage(1)
+  }, [mediaSortBy])
 
-    return list
-  }, [mediaItems, mediaSearch, mediaTypeFilter, mediaStatusFilter, mediaYearFilter, mediaFeaturedOnly, mediaSortBy])
+  // TanStack Table Column Definitions for Projects
+  const projectColumns = React.useMemo<ColumnDef<LandingProjectItem>[]>(() => [
+    {
+      id: "index",
+      header: "#",
+      cell: ({ row }) => (
+        <span className="font-bold text-slate-400">
+          {(projectsPage - 1) * projectsPerPage + row.index + 1}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "title",
+      accessorKey: "title",
+      header: "Location / Title",
+      cell: ({ row }) => {
+        const proj = row.original
+        return (
+          <div
+            className="font-bold text-slate-900 hover:text-[#B5111B] cursor-pointer transition-colors"
+            onClick={() => openEditProjectModal(proj)}
+          >
+            {proj.title}
+          </div>
+        )
+      },
+      enableSorting: true,
+      sortDescFirst: false,
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => (
+        <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 max-w-[200px] truncate">
+          {row.original.category}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      accessorKey: "studyType",
+      header: "Study Type",
+      cell: ({ row }) => (
+        <span className="font-medium text-slate-600 max-w-[220px] truncate block">
+          {row.original.studyType}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "coordinates",
+      header: "Map Coordinates",
+      cell: ({ row }) => (
+        <span className="text-slate-500 font-mono text-[11px]">
+          {row.original.latitude?.toFixed(3)}, {row.original.longitude?.toFixed(3)}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      accessorKey: "featured",
+      header: () => <div className="text-center">Map Pin</div>,
+      cell: ({ row }) => {
+        const proj = row.original
+        return (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => handleToggleProjectFeatured(proj)}
+              title="Toggle visibility on interactive map"
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                proj.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
+              }`}
+            >
+              <Star className={`w-4 h-4 ${proj.featured ? "fill-amber-400 text-amber-500" : ""}`} />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-center">Status</div>,
+      cell: ({ row }) => {
+        const proj = row.original
+        return (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => handleToggleProjectStatus(proj)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
+                proj.status === "published"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  proj.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                }`}
+              />
+              <span className="capitalize">{proj.status}</span>
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      id: "createdAt",
+      accessorKey: "createdAt",
+      header: "Date",
+      cell: ({ row }) => {
+        const d = row.original.createdAt
+        return (
+          <span className="text-slate-500 font-medium whitespace-nowrap">
+            {d
+              ? new Date(d).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "Recent"}
+          </span>
+        )
+      },
+      enableSorting: true,
+      sortDescFirst: true,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const proj = row.original
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            {proj.pdfUrl && (
+              <a
+                href={proj.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
+                title="View PDF"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => openEditProjectModal(proj)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+              title="Edit project"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteProject(proj)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+              title="Delete project"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+  ], [projectsPage, projectsPerPage])
+
+  const projectsSorting = React.useMemo<SortingState>(() => {
+    if (projectsSortBy === "title_asc") return [{ id: "title", desc: false }]
+    if (projectsSortBy === "title_desc") return [{ id: "title", desc: true }]
+    if (projectsSortBy === "oldest") return [{ id: "createdAt", desc: false }]
+    return [{ id: "createdAt", desc: true }] // default "newest"
+  }, [projectsSortBy])
+
+  const handleProjectsSortingChange = React.useCallback((newSorting: SortingState) => {
+    if (!newSorting || newSorting.length === 0) {
+      if (projectsSortBy === "newest") setProjectsSortBy("oldest")
+      else if (projectsSortBy === "oldest") setProjectsSortBy("newest")
+      else if (projectsSortBy === "title_asc") setProjectsSortBy("title_desc")
+      else setProjectsSortBy("newest")
+      setProjectsPage(1)
+      return
+    }
+    const sort = newSorting[0]
+    if (sort.id === "title") {
+      setProjectsSortBy(sort.desc ? "title_desc" : "title_asc")
+    } else if (sort.id === "createdAt") {
+      setProjectsSortBy(sort.desc ? "newest" : "oldest")
+    }
+    setProjectsPage(1)
+  }, [projectsSortBy])
 
   return (
     <div className="space-y-6">
@@ -563,11 +1320,10 @@ export default function LandingCMSPage() {
           <button
             type="button"
             onClick={() => handleTabChange("reports")}
-            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${
-              activeTab === "reports"
+            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "reports"
                 ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
                 : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
-            }`}
+              }`}
           >
             <FileText className="w-4 h-4" />
             <span>Reports Module</span>
@@ -576,11 +1332,10 @@ export default function LandingCMSPage() {
           <button
             type="button"
             onClick={() => handleTabChange("media")}
-            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${
-              activeTab === "media"
+            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "media"
                 ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
                 : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
-            }`}
+              }`}
           >
             <Film className="w-4 h-4" />
             <span>Media Sphere</span>
@@ -589,11 +1344,10 @@ export default function LandingCMSPage() {
           <button
             type="button"
             onClick={() => handleTabChange("projects")}
-            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${
-              activeTab === "projects"
+            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "projects"
                 ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
                 : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
-            }`}
+              }`}
           >
             <FolderOpen className="w-4 h-4" />
             <span>Featured Projects</span>
@@ -618,8 +1372,12 @@ export default function LandingCMSPage() {
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    onClick={() => {
+                      setSearchTerm("")
+                      setDebouncedSearch("")
+                      setReportPage(1)
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -632,11 +1390,10 @@ export default function LandingCMSPage() {
                   <button
                     type="button"
                     onClick={() => setReportViewMode("grid")}
-                    className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      reportViewMode === "grid"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${reportViewMode === "grid"
                         ? "bg-[#B5111B] text-white shadow-xs"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-4 h-4" />
@@ -644,11 +1401,10 @@ export default function LandingCMSPage() {
                   <button
                     type="button"
                     onClick={() => setReportViewMode("list")}
-                    className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      reportViewMode === "list"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${reportViewMode === "list"
                         ? "bg-[#B5111B] text-white shadow-xs"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                     title="List View"
                   >
                     <List className="w-4 h-4" />
@@ -670,7 +1426,10 @@ export default function LandingCMSPage() {
               {/* Status Dropdown with Colored Indicator */}
               <Dropdown
                 value={statusFilter}
-                onChange={setStatusFilter}
+                onChange={(val) => {
+                  setStatusFilter(val)
+                  setReportPage(1)
+                }}
                 title="FILTER BY STATUS:"
                 options={[
                   { value: "all", label: "All Statuses" },
@@ -682,7 +1441,10 @@ export default function LandingCMSPage() {
               {/* Year Dropdown */}
               <Dropdown
                 value={reportYearFilter}
-                onChange={setReportYearFilter}
+                onChange={(val) => {
+                  setReportYearFilter(val)
+                  setReportPage(1)
+                }}
                 title="FILTER BY YEAR:"
                 icon={<Calendar className="w-3.5 h-3.5" />}
                 options={[
@@ -694,17 +1456,18 @@ export default function LandingCMSPage() {
               {/* Featured Toggle Button */}
               <button
                 type="button"
-                onClick={() => setReportFeaturedOnly(!reportFeaturedOnly)}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${
-                  reportFeaturedOnly
+                onClick={() => {
+                  setReportFeaturedOnly(!reportFeaturedOnly)
+                  setReportPage(1)
+                }}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${reportFeaturedOnly
                     ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
                     : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
-                }`}
+                  }`}
               >
                 <Star
-                  className={`w-3.5 h-3.5 ${
-                    reportFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
-                  }`}
+                  className={`w-3.5 h-3.5 ${reportFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
+                    }`}
                 />
                 <span>Featured</span>
               </button>
@@ -712,7 +1475,10 @@ export default function LandingCMSPage() {
               {/* Sort By Dropdown - Aligned right on laptop/desktop */}
               <Dropdown
                 value={reportSortBy}
-                onChange={(val) => setReportSortBy(val as any)}
+                onChange={(val) => {
+                  setReportSortBy(val as any)
+                  setReportPage(1)
+                }}
                 title="SORT REPORTS:"
                 icon={<ArrowUpDown className="w-3.5 h-3.5" />}
                 options={[
@@ -745,8 +1511,12 @@ export default function LandingCMSPage() {
                 {mediaSearch && (
                   <button
                     type="button"
-                    onClick={() => setMediaSearch("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    onClick={() => {
+                      setMediaSearch("")
+                      setDebouncedMediaSearch("")
+                      setMediaPage(1)
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -759,11 +1529,10 @@ export default function LandingCMSPage() {
                   <button
                     type="button"
                     onClick={() => setMediaViewMode("grid")}
-                    className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      mediaViewMode === "grid"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${mediaViewMode === "grid"
                         ? "bg-[#B5111B] text-white shadow-xs"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-4 h-4" />
@@ -771,11 +1540,10 @@ export default function LandingCMSPage() {
                   <button
                     type="button"
                     onClick={() => setMediaViewMode("list")}
-                    className={`p-1.5 rounded-lg transition cursor-pointer ${
-                      mediaViewMode === "list"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${mediaViewMode === "list"
                         ? "bg-[#B5111B] text-white shadow-xs"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                     title="List View"
                   >
                     <List className="w-4 h-4" />
@@ -800,12 +1568,14 @@ export default function LandingCMSPage() {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setMediaTypeFilter(type)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer shrink-0 ${
-                      mediaTypeFilter === type
+                    onClick={() => {
+                      setMediaTypeFilter(type)
+                      setMediaPage(1)
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer shrink-0 ${mediaTypeFilter === type
                         ? "bg-white text-slate-900 shadow-xs"
                         : "text-slate-500 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     {type === "all" ? "All" : type === "document" ? "PDFs" : type + "s"}
                   </button>
@@ -815,7 +1585,10 @@ export default function LandingCMSPage() {
               {/* Status Dropdown */}
               <Dropdown
                 value={mediaStatusFilter}
-                onChange={setMediaStatusFilter}
+                onChange={(val) => {
+                  setMediaStatusFilter(val)
+                  setMediaPage(1)
+                }}
                 title="FILTER BY STATUS:"
                 options={[
                   { value: "all", label: "All Statuses" },
@@ -827,7 +1600,10 @@ export default function LandingCMSPage() {
               {/* Year Dropdown */}
               <Dropdown
                 value={mediaYearFilter}
-                onChange={setMediaYearFilter}
+                onChange={(val) => {
+                  setMediaYearFilter(val)
+                  setMediaPage(1)
+                }}
                 title="FILTER BY YEAR:"
                 icon={<Calendar className="w-3.5 h-3.5" />}
                 options={[
@@ -839,17 +1615,18 @@ export default function LandingCMSPage() {
               {/* Featured Toggle */}
               <button
                 type="button"
-                onClick={() => setMediaFeaturedOnly(!mediaFeaturedOnly)}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${
-                  mediaFeaturedOnly
+                onClick={() => {
+                  setMediaFeaturedOnly(!mediaFeaturedOnly)
+                  setMediaPage(1)
+                }}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${mediaFeaturedOnly
                     ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
                     : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
-                }`}
+                  }`}
               >
                 <Star
-                  className={`w-3.5 h-3.5 ${
-                    mediaFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
-                  }`}
+                  className={`w-3.5 h-3.5 ${mediaFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
+                    }`}
                 />
                 <span>Featured</span>
               </button>
@@ -857,7 +1634,10 @@ export default function LandingCMSPage() {
               {/* Sort Dropdown - Aligned right on laptop/desktop */}
               <Dropdown
                 value={mediaSortBy}
-                onChange={(val) => setMediaSortBy(val as any)}
+                onChange={(val) => {
+                  setMediaSortBy(val as any)
+                  setMediaPage(1)
+                }}
                 title="SORT MEDIA:"
                 icon={<ArrowUpDown className="w-3.5 h-3.5" />}
                 options={[
@@ -889,7 +1669,11 @@ export default function LandingCMSPage() {
                 {projectsSearch && (
                   <button
                     type="button"
-                    onClick={() => setProjectsSearch("")}
+                    onClick={() => {
+                      setProjectsSearch("")
+                      setDebouncedProjectsSearch("")
+                      setProjectsPage(1)
+                    }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -925,10 +1709,13 @@ export default function LandingCMSPage() {
               {/* Category Filter */}
               <Dropdown
                 value={projectsCategoryFilter}
-                onChange={setProjectsCategoryFilter}
+                onChange={(val) => {
+                  setProjectsCategoryFilter(val)
+                  setProjectsPage(1)
+                }}
                 title="FILTER BY PRACTICE AREA:"
                 options={[
-                  { value: "all", label: `All Practice Areas (${projects.length})` },
+                  { value: "all", label: `All Practice Areas (${totalProjects || projects.length})` },
                   ...PORTFOLIO_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
                 ]}
               />
@@ -936,7 +1723,10 @@ export default function LandingCMSPage() {
               {/* Status Filter */}
               <Dropdown
                 value={projectsStatusFilter}
-                onChange={setProjectsStatusFilter}
+                onChange={(val) => {
+                  setProjectsStatusFilter(val)
+                  setProjectsPage(1)
+                }}
                 title="FILTER BY STATUS:"
                 options={[
                   { value: "all", label: "All Statuses" },
@@ -948,16 +1738,36 @@ export default function LandingCMSPage() {
               {/* Featured On Map Only */}
               <button
                 type="button"
-                onClick={() => setProjectsFeaturedOnly(!projectsFeaturedOnly)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  projectsFeaturedOnly
+                onClick={() => {
+                  setProjectsFeaturedOnly(!projectsFeaturedOnly)
+                  setProjectsPage(1)
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${projectsFeaturedOnly
                     ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold"
                     : "bg-slate-50/80 text-slate-600 border border-slate-200 hover:bg-slate-100"
-                }`}
+                  }`}
               >
                 <Star className={`w-3.5 h-3.5 ${projectsFeaturedOnly ? "fill-amber-500 text-amber-500" : ""}`} />
                 <span>Map Pins Only</span>
               </button>
+
+              {/* Sort By Dropdown - Aligned right on laptop/desktop */}
+              <Dropdown
+                value={projectsSortBy}
+                onChange={(val) => {
+                  setProjectsSortBy(val as any)
+                  setProjectsPage(1)
+                }}
+                title="SORT PROJECTS:"
+                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                options={[
+                  { value: "newest", label: "Sort by: Newest" },
+                  { value: "oldest", label: "Sort by: Oldest" },
+                  { value: "title_asc", label: "Sort by: Title (A-Z)" },
+                  { value: "title_desc", label: "Sort by: Title (Z-A)" },
+                ]}
+                className="sm:ml-auto"
+              />
             </div>
           </div>
         )}
@@ -966,7 +1776,7 @@ export default function LandingCMSPage() {
       {/* REPORTS MODULE CONTENT */}
       {activeTab === "reports" && (
         <div>
-          {loading ? (
+          {loading && reports.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading reports from database...</span>
@@ -977,19 +1787,17 @@ export default function LandingCMSPage() {
               <button
                 type="button"
                 onClick={loadReports}
-                className="px-4 py-1.5 bg-[#B5111B] text-white text-xs font-bold rounded-xl shadow-xs"
+                className="px-4 py-1.5 bg-[#B5111B] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
               >
                 Retry
               </button>
             </div>
-          ) : filteredReports.length === 0 ? (
+          ) : reports.length === 0 && !loading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
               <FileText className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Reports Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {reports.length === 0
-                  ? "Publish your first research report to make it visible on your landing page."
-                  : "No reports match your active search terms and filter criteria."}
+                No reports match your active search terms and filter criteria.
               </p>
               <Link
                 href="/landing-cms/reports/create"
@@ -1000,276 +1808,258 @@ export default function LandingCMSPage() {
               </Link>
             </div>
           ) : reportViewMode === "grid" ? (
-            /* GRID VIEW (Responsive Columns: 1 col tab portrait, 2 col laptop/tab landscape, 3 col xl desktop) */
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-              {filteredReports.map((report) => {
-                const dateStr = report.publishedAt
-                  ? new Date(report.publishedAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : report.createdAt
-                  ? new Date(report.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "Recent"
-
-                return (
-                  <div
-                    key={report.id}
-                    className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group"
-                  >
-                    {/* Thumbnail Image with Badges */}
-                    <div className="relative h-44 sm:h-48 w-full bg-slate-900 overflow-hidden shrink-0">
-                      {report.coverImage ? (
-                        <img
-                          src={report.coverImage}
-                          alt={report.title}
-                          className="w-full h-full object-cover group-hover:scale-103 transition duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
-                          <FileText className="w-10 h-10 text-rose-400 mb-2 opacity-80" />
-                          <span className="text-xs font-bold line-clamp-2 px-2">{report.title}</span>
-                        </div>
-                      )}
-
-                      {/* Floating Badges */}
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap max-w-[85%]">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(report)}
-                          title="Click to toggle status"
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs cursor-pointer transition ${
-                            report.status === "published"
-                              ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                              : "bg-slate-700/90 hover:bg-slate-800 text-white"
-                          }`}
-                        >
-                          {report.status}
-                        </button>
-
-                        {report.featured && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                            <Star className="w-3 h-3 fill-slate-950" />
-                            <span>Featured</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                      <div className="space-y-2">
-                        <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug line-clamp-2 group-hover:text-[#B5111B] transition-colors min-h-[38px] sm:min-h-[42px]">
-                          {report.title}
-                        </h3>
-
-                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[34px]">
-                          {report.summary || report.subtitle || "In-depth market intelligence and executive insights."}
-                        </p>
-
-                        {/* Author and Date Metadata Row */}
-                        <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500 pt-1">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="truncate">{report.author || "Kathleen Rose, CCIM, CRE"}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0 text-slate-400">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="whitespace-nowrap">{dateStr}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Footer Actions */}
-                      <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
-                        <Link
-                          href={`/report/${report.slug}`}
-                          target="_blank"
-                          className="text-xs font-bold text-slate-700 hover:text-[#B5111B] flex items-center gap-1.5 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-[#B5111B]" />
-                          <span>Preview</span>
-                        </Link>
-
-                        <div className="flex items-center gap-1">
-                          <Link
-                            href={`/landing-cms/reports/edit/${report.id}`}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                            title="Edit Report"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(report)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Delete Report"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+            /* GRID (CARD) VIEW with Live Loader Overlay and Server Pagination */
+            <div className="space-y-4">
+              <div className="relative">
+                {/* Active Fetching / Updating Records Overlay */}
+                {loading && (
+                  <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center gap-2.5 rounded-2xl animate-in fade-in duration-150">
+                    <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+                    <span className="text-xs font-bold text-slate-700">Updating records...</span>
                   </div>
-                )
-              })}
-            </div>
-          ) : (
-            /* LIST VIEW (Table Matching Mockup) */
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                <table className="w-full text-left border-collapse min-w-[720px]">
-                  <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3 px-4 w-12 text-center">#</th>
-                      <th className="py-3 px-4">Report</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Featured</th>
-                      <th className="py-3 px-4">Author</th>
-                      <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs">
-                    {filteredReports.map((report, idx) => {
-                      const dateStr = report.publishedAt
-                        ? new Date(report.publishedAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        : report.createdAt
+                )}
+
+                {/* Grid of Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                  {reports.map((report) => {
+                    const dateStr = report.publishedAt
+                      ? new Date(report.publishedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                      : report.createdAt
                         ? new Date(report.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
                         : "Recent"
 
-                      return (
-                        <tr key={report.id} className="hover:bg-slate-50/70 transition-colors group">
-                          {/* Index */}
-                          <td className="py-3 px-4 text-center font-bold text-slate-400">
-                            {idx + 1}
-                          </td>
+                    const isMenuOpen = openActionMenuId === report.id
 
-                          {/* Thumbnail + Title */}
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3 min-w-[200px]">
-                              <div
-                                className="w-11 h-11 rounded-xl border border-slate-200/60 overflow-hidden shrink-0 flex items-center justify-center"
-                                style={{ backgroundColor: "lab(92 0 -0.01)" }}
-                              >
-                                {report.coverImage ? (
-                                  <img
-                                    src={report.coverImage}
-                                    alt={report.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <FileText className="w-5 h-5 text-[#B5111B]" />
-                                )}
+                    return (
+                      <div
+                        key={report.id}
+                        className={`bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col group relative ${isMenuOpen ? "z-20" : "hover:z-10 z-0"}`}
+                      >
+                        {/* Thumbnail Image with 3-Dots Action Menu */}
+                        <div className="relative h-44 sm:h-48 w-full shrink-0">
+                          <div className="absolute inset-0 bg-slate-900 overflow-hidden rounded-t-2xl">
+                            {report.coverImage ? (
+                              <img
+                                src={report.coverImage}
+                                alt={report.title}
+                                className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/rose_community_hero.jpg"
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
+                                <FileText className="w-10 h-10 text-rose-400 mb-2 opacity-80" />
+                                <span className="text-xs font-bold line-clamp-2 px-2">{report.title}</span>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <Link
-                                  href={`/landing-cms/reports/edit/${report.id}`}
-                                  className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
-                                >
-                                  {report.title}
-                                </Link>
-                                <span className="text-[11px] text-slate-400 truncate block">
-                                  {report.summary || report.subtitle || `/${report.slug}`}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
+                            )}
+                          </div>
 
-                          {/* Status */}
-                          <td className="py-3 px-4">
+                          {/* 3-Dots Action Menu Button */}
+                          <div className="absolute top-3 right-3 z-30">
                             <button
                               type="button"
-                              onClick={() => handleToggleStatus(report)}
-                              title="Click to toggle status"
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
-                                report.status === "published"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                  : "bg-slate-100 text-slate-700 border-slate-200"
-                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenActionMenuId(isMenuOpen ? null : report.id)
+                              }}
+                              className="w-8 h-8 rounded-full bg-slate-900/65 hover:bg-slate-900/85 text-white flex items-center justify-center transition shadow-md cursor-pointer backdrop-blur-xs"
+                              title="Actions Menu"
                             >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-                                }`}
-                              />
-                              <span className="capitalize">{report.status}</span>
+                              <MoreVertical className="w-4 h-4 text-white" />
                             </button>
-                          </td>
 
-                          {/* Featured */}
-                          <td className="py-3 px-4">
-                            {report.featured ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-amber-600 text-[11px]">
-                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                                <span>Yes</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-slate-400 text-[11px]">
-                                <Star className="w-3.5 h-3.5" />
-                                <span>No</span>
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Author */}
-                          <td className="py-3 px-4 text-slate-600 font-medium whitespace-nowrap">
-                            {report.author || "Kathleen Rose, CCIM, CRE"}
-                          </td>
-
-                          {/* Date */}
-                          <td className="py-3 px-4 text-slate-500 font-medium whitespace-nowrap">
-                            {dateStr}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5 justify-end">
-                              <Link
-                                href={`/report/${report.slug}`}
-                                target="_blank"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition text-xs font-semibold"
+                            {/* Dropdown Menu */}
+                            {isMenuOpen && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left"
                               >
-                                <Eye className="w-3.5 h-3.5 text-[#B5111B]" />
-                                <span>Preview</span>
-                              </Link>
+                                <Link
+                                  href={`/report/${report.slug || report.id}`}
+                                  target="_blank"
+                                  onClick={() => setOpenActionMenuId(null)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-4 h-4 text-slate-500" />
+                                  <span>Preview</span>
+                                </Link>
+
+                                <Link
+                                  href={`/landing-cms/reports/edit/${report.id}`}
+                                  onClick={() => setOpenActionMenuId(null)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Edit3 className="w-4 h-4 text-slate-500" />
+                                  <span>Edit</span>
+                                </Link>
+
+                                {report.pdfUrl && (
+                                  <a
+                                    href={report.pdfUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setOpenActionMenuId(null)}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Download className="w-4 h-4 text-slate-500" />
+                                    <span>Download</span>
+                                  </a>
+                                )}
+
+                                <div className="border-t border-slate-100 my-1" />
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null)
+                                    handleToggleStatus(report)
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <AlertCircle className="w-4 h-4 text-red-600" />
+                                  <span>{report.status === "published" ? "Move to Draft" : "Publish"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null)
+                                    handleDelete(report)
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                          <div className="space-y-2">
+                            {/* Status & Featured Row */}
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
                               <Link
                                 href={`/landing-cms/reports/edit/${report.id}`}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
-                                title="Edit Report"
+                                className="inline-flex items-center gap-1.5 hover:text-[#B5111B] transition-colors"
+                                title="Edit report status"
                               >
-                                <Edit3 className="w-3.5 h-3.5" />
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                                  }`}
+                                />
+                                <span>{report.status === "published" ? "Published" : "Draft"}</span>
                               </Link>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(report)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                                title="Delete Report"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+
+                              {report.featured && (
+                                <>
+                                  <span className="text-slate-300">|</span>
+                                  <Link
+                                    href={`/landing-cms/reports/edit/${report.id}`}
+                                    className="inline-flex items-center gap-1 hover:text-[#B5111B] transition-colors"
+                                    title="Edit featured status"
+                                  >
+                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                                    <span>Featured</span>
+                                  </Link>
+                                </>
+                              )}
                             </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+
+                            {/* Red Category Tag */}
+                            <div className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#B5111B]">
+                              {(report as any).category || "RESEARCH REPORT"}
+                            </div>
+
+                            {/* Report Title */}
+                            <Link
+                              href={`/landing-cms/reports/edit/${report.id}`}
+                              className="block group-hover:text-[#B5111B] transition-colors"
+                            >
+                              <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2 min-h-[38px] sm:min-h-[42px]">
+                                {report.title}
+                              </h3>
+                            </Link>
+
+                            {/* Description / Summary */}
+                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[34px]">
+                              {report.summary || report.subtitle || "In-depth market intelligence and executive insights into commercial real estate and economic development."}
+                            </p>
+
+                            {/* Metadata Row: Author & Date */}
+                            <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500 pt-2 border-t border-slate-100/90">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">{report.author || "Kathleen Rose, CCIM, CRE"}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 text-slate-500">
+                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="whitespace-nowrap">{dateStr}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
+
+              {/* Shared Card View Pagination */}
+              <Pagination
+                page={reportPage}
+                totalPages={totalReportPages}
+                totalItems={totalReports}
+                pageSize={reportsPerPage}
+                onPageChange={setReportPage}
+                onPageSizeChange={(newSize) => {
+                  setReportsPerPage(newSize)
+                  setReportPage(1)
+                }}
+                isLoading={loading}
+              />
             </div>
+          ) : (
+            /* LIST VIEW using TanStack DataTable with Server Pagination */
+            <DataTable
+              columns={reportColumns}
+              data={reports}
+              totalItems={totalReports}
+              page={reportPage}
+              pageSize={reportsPerPage}
+              totalPages={totalReportPages}
+              onPageChange={setReportPage}
+              onPageSizeChange={(newSize) => {
+                setReportsPerPage(newSize)
+                setReportPage(1)
+              }}
+              sorting={reportSorting}
+              onSortingChange={handleReportSortingChange}
+              isLoading={loading}
+              emptyMessage="No Reports Found"
+              emptySubtext="No reports match your active search terms and filter criteria."
+              emptyAction={
+                <Link
+                  href="/landing-cms/reports/create"
+                  className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create New Report</span>
+                </Link>
+              }
+            />
           )}
         </div>
       )}
@@ -1277,19 +2067,17 @@ export default function LandingCMSPage() {
       {/* MEDIA SPHERE TAB CONTENT */}
       {activeTab === "media" && (
         <div>
-          {mediaLoading ? (
+          {mediaLoading && mediaItems.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading Media Sphere items...</span>
             </div>
-          ) : filteredMedia.length === 0 ? (
+          ) : mediaItems.length === 0 && !mediaLoading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
               <Film className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Media Sphere Items Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {mediaItems.length === 0
-                  ? "Add YouTube broadcasts, podcast audio episodes, or market report PDFs."
-                  : "No media items match your search terms and filter criteria."}
+                No media items match your search terms and filter criteria.
               </p>
               <Link
                 href="/landing-cms/media/create"
@@ -1300,367 +2088,319 @@ export default function LandingCMSPage() {
               </Link>
             </div>
           ) : mediaViewMode === "grid" ? (
-            /* MEDIA GRID VIEW (Responsive Columns: 1 col tab portrait, 2 col laptop/tab landscape, 3 col xl desktop) */
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-              {filteredMedia.map((item, idx) => {
-                const ytThumb = item.mediaType === "video" ? getYouTubeThumbnail(item.sourceUrl) : null
+            /* MEDIA GRID VIEW with Live Loader Overlay and Server Pagination */
+            <div className="space-y-4">
+              <div className="relative">
+                {/* Active Fetching / Updating Records Overlay */}
+                {mediaLoading && (
+                  <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center gap-2.5 rounded-2xl animate-in fade-in duration-150">
+                    <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+                    <span className="text-xs font-bold text-slate-700">Updating records...</span>
+                  </div>
+                )}
 
-                return (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group relative"
-                  >
-                    {/* Media Header Banner */}
-                    <div className="relative h-44 sm:h-48 overflow-hidden shrink-0 border-b border-slate-100">
-                      {/* 1. VIDEO BANNER */}
-                      {item.mediaType === "video" && (
-                        ytThumb ? (
-                          <div className="w-full h-full relative overflow-hidden bg-slate-950">
-                            <img
-                              src={ytThumb}
-                              alt={item.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            {/* Subtle dark vignette overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 pointer-events-none" />
-                            {/* Centered Frosted Glass Play Button */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                                <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                  {mediaItems.map((item) => {
+                    const ytThumb = item.mediaType === "video" ? getYouTubeThumbnail(item.sourceUrl) : null
+                    const isMenuOpen = openActionMenuId === item.id
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col group relative ${isMenuOpen ? "z-20" : "hover:z-10 z-0"}`}
+                      >
+                        {/* Media Header Banner */}
+                        <div className="relative h-44 sm:h-48 shrink-0 border-b border-slate-100">
+                          {/* Clipped Media Visual Background */}
+                          <div className="absolute inset-0 overflow-hidden rounded-t-2xl">
+                            {/* 1. VIDEO BANNER */}
+                            {item.mediaType === "video" && (
+                              ytThumb ? (
+                                <div className="w-full h-full relative overflow-hidden bg-slate-950">
+                                  <img
+                                    src={ytThumb}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  {/* Subtle dark vignette overlay */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 pointer-events-none" />
+                                  {/* Centered Frosted Glass Play Button */}
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
+                                      <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* Fallback modern look for non-YouTube video */
+                                <div className="w-full h-full relative bg-gradient-to-br from-slate-900 via-[#131b2e] to-slate-950 flex items-center justify-center overflow-hidden">
+                                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+                                  <div className="relative z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
+                                    <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                  </div>
+                                </div>
+                              )
+                            )}
+
+                            {/* 2. AUDIO BANNER */}
+                            {item.mediaType === "audio" && (
+                              <div className="w-full h-full relative bg-gradient-to-r from-[#0a111e] via-[#0f192b] to-[#0a111e] flex items-center justify-center overflow-hidden">
+                                {/* Audio Waveform Graphic */}
+                                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-[3px] sm:gap-[3.5px] px-6 sm:px-8 opacity-45 group-hover:opacity-65 transition-opacity pointer-events-none">
+                                  {[12, 18, 8, 22, 34, 16, 28, 42, 30, 48, 24, 38, 56, 32, 20, 0, 0, 0, 0, 0, 20, 32, 56, 38, 24, 48, 30, 42, 28, 16, 34, 22, 8, 18, 12].map((h, i) => (
+                                    <span
+                                      key={i}
+                                      style={{ height: `${h}px` }}
+                                      className={`w-[2.5px] rounded-full transition-all duration-300 ${h === 0 ? "invisible w-3" : "bg-gradient-to-t from-slate-400 via-white to-slate-400"
+                                        }`}
+                                    />
+                                  ))}
+                                </div>
+
+                                {/* Centered Circular Play Button */}
+                                <div className="relative z-10 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border-2 border-white text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-[#B5111B] group-hover:bg-[#B5111B] transition-all duration-300">
+                                  <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 3. DOCUMENT BANNER */}
+                            {item.mediaType === "document" && (
+                              <div className="w-full h-full relative bg-gradient-to-br from-[#FFF1F2] via-[#FDF3F5] to-[#FCE8EB] flex items-center justify-center overflow-hidden">
+                                <svg className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
+                                  <path d="M-20,130 C80,180 180,90 280,140 C340,170 390,130 420,110 L420,220 L-20,220 Z" fill="#FCA5A5" fillOpacity="0.22" />
+                                  <path d="M-20,150 C70,110 160,190 260,130 C330,85 380,150 420,135 L420,220 L-20,220 Z" fill="#FECDD3" fillOpacity="0.35" />
+                                </svg>
+
+                                <div className="relative z-10 w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/95 backdrop-blur-xs shadow-xs border border-rose-200/70 flex items-center justify-center group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
+                                  <FileText className="w-8 h-8 text-[#B5111B] stroke-[1.8]" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Top Left: Type Badge */}
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                            {item.mediaType === "video" ? (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
+                                <Play className="w-3 h-3 fill-white text-white" />
+                                <span>Video</span>
+                              </div>
+                            ) : item.mediaType === "document" ? (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 text-slate-700 border border-slate-200/80 text-xs font-semibold shadow-xs">
+                                <FileText className="w-3.5 h-3.5 text-slate-600" />
+                                <span>Document</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
+                                <Headphones className="w-3.5 h-3.5 text-white" />
+                                <span>Audio</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Top Right: 3-Dots Action Menu Button (Matching Report Module) */}
+                          <div className="absolute top-3 right-3 z-30">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenActionMenuId(isMenuOpen ? null : item.id)
+                              }}
+                              className="w-8 h-8 rounded-full bg-slate-900/65 hover:bg-slate-900/85 text-white flex items-center justify-center transition shadow-md cursor-pointer backdrop-blur-xs"
+                              title="Actions Menu"
+                            >
+                              <MoreVertical className="w-4 h-4 text-white" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {isMenuOpen && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left"
+                              >
+                                {item.sourceUrl && (
+                                  <a
+                                    href={item.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setOpenActionMenuId(null)}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-4 h-4 text-slate-500" />
+                                    <span>Preview</span>
+                                  </a>
+                                )}
+
+                                <Link
+                                  href={`/landing-cms/media/edit/${item.id}`}
+                                  onClick={() => setOpenActionMenuId(null)}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Edit3 className="w-4 h-4 text-slate-500" />
+                                  <span>Edit</span>
+                                </Link>
+
+                                {item.mediaType === "document" && item.sourceUrl && (
+                                  <a
+                                    href={item.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setOpenActionMenuId(null)}
+                                    className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Download className="w-4 h-4 text-slate-500" />
+                                    <span>Download</span>
+                                  </a>
+                                )}
+
+                                <div className="border-t border-slate-100 my-1" />
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null)
+                                    handleToggleMediaStatus(item)
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <AlertCircle className="w-4 h-4 text-slate-500" />
+                                  <span>{item.status === "published" ? "Move to Draft" : "Publish"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null)
+                                    handleDeleteMedia(item)
+                                  }}
+                                  className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Card Body (Matching Report Module Design) */}
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                          <div className="space-y-2">
+                            {/* Status & Featured Row */}
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleMediaStatus(item)}
+                                className="inline-flex items-center gap-1.5 hover:text-[#B5111B] transition-colors cursor-pointer"
+                                title="Click to toggle status"
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                                  }`}
+                                />
+                                <span>{item.status === "published" ? "Published" : "Draft"}</span>
+                              </button>
+
+                              {item.featured && (
+                                <>
+                                  <span className="text-slate-300">|</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleMediaFeatured(item)}
+                                    className="inline-flex items-center gap-1 hover:text-[#B5111B] transition-colors cursor-pointer"
+                                    title="Click to unpin from featured"
+                                  >
+                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                                    <span>Featured</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Red Category Tag */}
+                            <div className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#B5111B]">
+                              {item.category || (item.mediaType === "video" ? "VIDEO BROADCAST" : item.mediaType === "audio" ? "AUDIO PODCAST" : "DOCUMENT / PDF")}
+                            </div>
+
+                            {/* Media Title */}
+                            <Link
+                              href={`/landing-cms/media/edit/${item.id}`}
+                              className="block group-hover:text-[#B5111B] transition-colors"
+                            >
+                              <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2 min-h-[38px] sm:min-h-[42px]">
+                                {item.title}
+                              </h3>
+                            </Link>
+
+                            {/* Description / Summary */}
+                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[34px]">
+                              {item.description || "Executive market commentary, media coverage, and broadcasts."}
+                            </p>
+
+                            {/* Metadata Row: Author / Speaker & Date (Footer) */}
+                            <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500 pt-2 border-t border-slate-100/90 mt-auto">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">Rose Associates</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 text-slate-500">
+                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="whitespace-nowrap">{formatMediaDate(item.createdAt)}</span>
                               </div>
                             </div>
                           </div>
-                        ) : (
-                          /* Fallback modern look for non-YouTube video */
-                          <div className="w-full h-full relative bg-gradient-to-br from-slate-900 via-[#131b2e] to-slate-950 flex items-center justify-center overflow-hidden">
-                            <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-                            <div className="relative z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                              <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
-                            </div>
-                          </div>
-                        )
-                      )}
-
-                      {/* 2. AUDIO BANNER (Matching Uploaded Screenshot) */}
-                      {item.mediaType === "audio" && (
-                        <div className="w-full h-full relative bg-gradient-to-r from-[#0a111e] via-[#0f192b] to-[#0a111e] flex items-center justify-center overflow-hidden">
-                          {/* Audio Waveform Graphic */}
-                          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-[3px] sm:gap-[3.5px] px-6 sm:px-8 opacity-45 group-hover:opacity-65 transition-opacity pointer-events-none">
-                            {[12, 18, 8, 22, 34, 16, 28, 42, 30, 48, 24, 38, 56, 32, 20, 0, 0, 0, 0, 0, 20, 32, 56, 38, 24, 48, 30, 42, 28, 16, 34, 22, 8, 18, 12].map((h, i) => (
-                              <span
-                                key={i}
-                                style={{ height: `${h}px` }}
-                                className={`w-[2.5px] rounded-full transition-all duration-300 ${
-                                  h === 0 ? "invisible w-3" : "bg-gradient-to-t from-slate-400 via-white to-slate-400"
-                                }`}
-                              />
-                            ))}
-                          </div>
-
-                          {/* Centered Circular Play Button */}
-                          <div className="relative z-10 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border-2 border-white text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-[#B5111B] group-hover:bg-[#B5111B] transition-all duration-300">
-                            <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 3. DOCUMENT BANNER (Matching Uploaded Screenshot) */}
-                      {item.mediaType === "document" && (
-                        <div className="w-full h-full relative bg-gradient-to-br from-[#FFF1F2] via-[#FDF3F5] to-[#FCE8EB] flex items-center justify-center overflow-hidden">
-                          {/* Soft wavy abstract decorative layer */}
-                          <svg className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
-                            <path d="M-20,130 C80,180 180,90 280,140 C340,170 390,130 420,110 L420,220 L-20,220 Z" fill="#FCA5A5" fillOpacity="0.22" />
-                            <path d="M-20,150 C70,110 160,190 260,130 C330,85 380,150 420,135 L420,220 L-20,220 Z" fill="#FECDD3" fillOpacity="0.35" />
-                          </svg>
-
-                          {/* Center Rounded Icon Tile */}
-                          <div className="relative z-10 w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/95 backdrop-blur-xs shadow-xs border border-rose-200/70 flex items-center justify-center group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
-                            <FileText className="w-8 h-8 text-[#B5111B] stroke-[1.8]" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Top Left: Type Badge (Matching Uploaded Screenshot) */}
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
-                        {item.mediaType === "video" ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
-                            <Play className="w-3 h-3 fill-white text-white" />
-                            <span>Video</span>
-                          </div>
-                        ) : item.mediaType === "document" ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 text-slate-700 border border-slate-200/80 text-xs font-semibold shadow-xs">
-                            <FileText className="w-3.5 h-3.5 text-slate-600" />
-                            <span>Document</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
-                            <Headphones className="w-3.5 h-3.5 text-white" />
-                            <span>Audio</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Top Right: Featured + Status Badges (Matching Uploaded Screenshot) */}
-                      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-                        {item.featured && (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMediaFeatured(item)}
-                            title="Click to unpin from featured"
-                            className="px-2.5 py-1 rounded-lg bg-amber-100/95 hover:bg-amber-200 text-amber-900 border border-amber-300/80 text-xs font-semibold flex items-center gap-1 shadow-xs transition cursor-pointer"
-                          >
-                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                            <span>Featured</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleToggleMediaStatus(item)}
-                          title="Click to toggle status"
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer transition ${
-                            item.status === "published"
-                              ? "bg-emerald-100/90 hover:bg-emerald-200 text-emerald-800 border border-emerald-200/80"
-                              : "bg-slate-100/90 hover:bg-slate-200 text-slate-700 border border-slate-200/80"
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              item.status === "published" ? "bg-emerald-600" : "bg-slate-400"
-                            }`}
-                          />
-                          <span className="capitalize">{item.status}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Body Content */}
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                      <div className="space-y-1">
-                        <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug line-clamp-2 group-hover:text-[#B5111B] transition-colors min-h-[38px] sm:min-h-[42px]">
-                          {item.title}
-                        </h3>
-                        {item.description && (
-                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[34px]">
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Card Footer: Date on left, 4 Action Icons on right (Matching Screenshot Red Box) */}
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <Calendar className="w-4 h-4 text-slate-400" />
-                          <span className="text-xs font-medium text-slate-500">
-                            {formatMediaDate(item.createdAt)}
-                          </span>
-                        </div>
-
-                        {/* 4 Action Icons */}
-                        <div className="flex items-center gap-1">
-                          {/* 1. Preview / View */}
-                          {item.sourceUrl ? (
-                            <a
-                              href={item.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
-                              title="Preview media in new tab"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </a>
-                          ) : (
-                            <span className="p-1.5 text-slate-300 cursor-not-allowed" title="No URL available">
-                              <Eye className="w-4 h-4" />
-                            </span>
-                          )}
-
-                          {/* 2. Edit */}
-                          <Link
-                            href={`/landing-cms/media/edit/${item.id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
-                            title="Edit media item"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Link>
-
-                          {/* 3. Share / Send */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleShareMedia(item, e)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer relative"
-                            title={copiedMediaId === item.id ? "Link copied!" : "Share / Copy link"}
-                          >
-                            {copiedMediaId === item.id ? (
-                              <Check className="w-4 h-4 text-emerald-600" />
-                            ) : (
-                              <Send className="w-4 h-4" />
-                            )}
-                          </button>
-
-                          {/* 4. Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMedia(item)}
-                            className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition cursor-pointer"
-                            title="Delete media item"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Shared Card View Pagination */}
+              <Pagination
+                page={mediaPage}
+                totalPages={totalMediaPages}
+                totalItems={totalMedia}
+                pageSize={mediaPerPage}
+                onPageChange={setMediaPage}
+                onPageSizeChange={(newSize) => {
+                  setMediaPerPage(newSize)
+                  setMediaPage(1)
+                }}
+                isLoading={mediaLoading}
+              />
             </div>
           ) : (
-            /* MEDIA LIST VIEW */
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                <table className="w-full text-left border-collapse min-w-[740px]">
-                  <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3 px-4 w-12 text-center">#</th>
-                      <th className="py-3 px-4">Item</th>
-                      <th className="py-3 px-4">Type</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Featured</th>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs">
-                    {filteredMedia.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-slate-50/70 transition-colors group">
-                        {/* Index */}
-                        <td className="py-3 px-4 text-center font-bold text-slate-400">
-                          {idx + 1}
-                        </td>
-
-                        {/* Title & Preview */}
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3 min-w-[200px]">
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs"
-                              style={{ backgroundColor: "lab(92 0 -0.01)" }}
-                            >
-                              {item.mediaType === "audio" ? (
-                                <Mic className="w-4 h-4 text-[#B5111B]" />
-                              ) : item.mediaType === "document" ? (
-                                <FileText className="w-4 h-4 text-[#B5111B]" />
-                              ) : (
-                                <Film className="w-4 h-4 text-[#B5111B]" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <Link
-                                href={`/landing-cms/media/edit/${item.id}`}
-                                className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
-                              >
-                                {item.title}
-                              </Link>
-                              <span className="text-[11px] text-slate-400 truncate block">
-                                {item.category || "Media Sphere broadcast"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Type */}
-                        <td className="py-3 px-4">
-                          <span className="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                            {item.mediaType}
-                          </span>
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3 px-4">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMediaStatus(item)}
-                            title="Click to toggle status"
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
-                              item.status === "published"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-slate-100 text-slate-700 border-slate-200"
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-                              }`}
-                            />
-                            <span className="capitalize">{item.status}</span>
-                          </button>
-                        </td>
-
-                        {/* Featured */}
-                        <td className="py-3 px-4">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleMediaFeatured(item)}
-                            title={item.featured ? "Click to unpin from featured" : "Click to pin as featured"}
-                            className="inline-flex items-center gap-1 cursor-pointer transition hover:opacity-80 text-[11px]"
-                          >
-                            {item.featured ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-amber-600">
-                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                                <span>Yes</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-slate-400">
-                                <Star className="w-3.5 h-3.5" />
-                                <span>No</span>
-                              </span>
-                            )}
-                          </button>
-                        </td>
-
-                        {/* Category */}
-                        <td className="py-3 px-4 font-medium text-slate-600 whitespace-nowrap">
-                          {item.category || "Media"}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 justify-end">
-
-                            {item.mediaType === "document" && item.sourceUrl && (
-                              <a
-                                href={item.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
-                                title="Open PDF in new tab"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-
-                            <Link
-                              href={`/landing-cms/media/edit/${item.id}`}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
-                              title="Edit media item"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteMedia(item)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                              title="Delete media item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            /* MEDIA LIST VIEW using TanStack DataTable with Server Pagination */
+            <DataTable
+              columns={mediaColumns}
+              data={mediaItems}
+              totalItems={totalMedia}
+              page={mediaPage}
+              pageSize={mediaPerPage}
+              totalPages={totalMediaPages}
+              onPageChange={setMediaPage}
+              onPageSizeChange={(newSize) => {
+                setMediaPerPage(newSize)
+                setMediaPage(1)
+              }}
+              sorting={mediaSorting}
+              onSortingChange={handleMediaSortingChange}
+              isLoading={mediaLoading}
+              emptyMessage="No Media Sphere Items Found"
+              emptySubtext="No media items match your active search terms and filter criteria."
+              emptyAction={
+                <Link
+                  href="/landing-cms/media/create"
+                  className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add First Media Item</span>
+                </Link>
+              }
+            />
           )}
         </div>
       )}
@@ -1668,19 +2408,17 @@ export default function LandingCMSPage() {
       {/* FEATURED PROJECTS TAB CONTENT */}
       {activeTab === "projects" && (
         <div className="space-y-4">
-          {projectsLoading ? (
+          {projectsLoading && projects.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading portfolio projects...</span>
             </div>
-          ) : filteredProjects.length === 0 ? (
+          ) : projects.length === 0 && !projectsLoading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
               <FolderOpen className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Projects Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {projects.length === 0
-                  ? "Create your first portfolio project to make it visible on your interactive map."
-                  : "No projects match your active search terms and filter criteria."}
+                No projects match your active search terms and filter criteria.
               </p>
               <button
                 type="button"
@@ -1692,118 +2430,35 @@ export default function LandingCMSPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
-                      <th className="py-3.5 px-4">Location / Title</th>
-                      <th className="py-3.5 px-4">Category</th>
-                      <th className="py-3.5 px-4">Study Type</th>
-                      <th className="py-3.5 px-4">Map Coordinates</th>
-                      <th className="py-3.5 px-4 text-center">Map Pin</th>
-                      <th className="py-3.5 px-4 text-center">Status</th>
-                      <th className="py-3.5 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredProjects.map((proj) => (
-                      <tr key={proj.id} className="hover:bg-slate-50/60 transition group">
-                        {/* Title */}
-                        <td className="py-3 px-4 font-bold text-slate-900">
-                          <div className="flex items-center gap-2">
-                            <span>{proj.title}</span>
-                          </div>
-                        </td>
-
-                        {/* Category */}
-                        <td className="py-3 px-4">
-                          <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 max-w-[200px] truncate">
-                            {proj.category}
-                          </span>
-                        </td>
-
-                        {/* Study Type */}
-                        <td className="py-3 px-4 font-medium text-slate-600 max-w-[220px] truncate">
-                          {proj.studyType}
-                        </td>
-
-                        {/* Coordinates */}
-                        <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
-                          {proj.latitude?.toFixed(3)}, {proj.longitude?.toFixed(3)}
-                        </td>
-
-                        {/* Featured (Map Pin) */}
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleProjectFeatured(proj)}
-                            title="Toggle visibility on interactive map"
-                            className={`p-1.5 rounded-lg transition cursor-pointer ${
-                              proj.featured
-                                ? "text-amber-500 hover:bg-amber-50"
-                                : "text-slate-300 hover:text-slate-500"
-                            }`}
-                          >
-                            <Star className={`w-4 h-4 ${proj.featured ? "fill-amber-400" : ""}`} />
-                          </button>
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleProjectStatus(proj)}
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider cursor-pointer transition ${
-                              proj.status === "published"
-                                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                            }`}
-                          >
-                            {proj.status}
-                          </button>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3 px-4 text-right">
-                          <div className="inline-flex items-center gap-1.5 justify-end">
-                            {proj.pdfUrl && (
-                              <a
-                                href={proj.pdfUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
-                                title="Open PDF in new tab"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => openEditProjectModal(proj)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-                              title="Edit project"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteProject(proj)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                              title="Delete project"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            /* PROJECTS LIST VIEW using TanStack DataTable with Server Pagination */
+            <DataTable
+              columns={projectColumns}
+              data={projects}
+              totalItems={totalProjects}
+              page={projectsPage}
+              pageSize={projectsPerPage}
+              totalPages={totalProjectPages}
+              onPageChange={setProjectsPage}
+              onPageSizeChange={(newSize) => {
+                setProjectsPerPage(newSize)
+                setProjectsPage(1)
+              }}
+              sorting={projectsSorting}
+              onSortingChange={handleProjectsSortingChange}
+              isLoading={projectsLoading}
+              emptyMessage="No Projects Found"
+              emptySubtext="No projects match your active search terms and filter criteria."
+              emptyAction={
+                <button
+                  type="button"
+                  onClick={openCreateProjectModal}
+                  className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add First Project</span>
+                </button>
+              }
+            />
           )}
         </div>
       )}
@@ -1922,7 +2577,7 @@ export default function LandingCMSPage() {
                       <div className="min-w-0 flex-1">
                         <span className="font-bold block truncate">{stagedPdfFile.name}</span>
                         <span className="text-[10px] text-amber-600 font-semibold">
-                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally (uploads on Save)
+                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally
                         </span>
                       </div>
                       <button
@@ -1970,15 +2625,11 @@ export default function LandingCMSPage() {
 
               {/* Toggles */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={projectFormData.featured}
-                    onChange={(e) => setProjectFormData({ ...projectFormData, featured: e.target.checked })}
-                    className="w-4 h-4 rounded text-[#B5111B] focus:ring-[#B5111B]"
-                  />
-                  <span>Show Pin on Interactive Map</span>
-                </label>
+                <Checkbox
+                  checked={projectFormData.featured}
+                  onCheckedChange={(checked) => setProjectFormData({ ...projectFormData, featured: checked })}
+                  label="Show Pin on Interactive Map"
+                />
 
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700">Status:</span>
@@ -1990,11 +2641,10 @@ export default function LandingCMSPage() {
                         status: projectFormData.status === "published" ? "draft" : "published",
                       })
                     }
-                    className={`px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-wider transition cursor-pointer ${
-                      projectFormData.status === "published"
+                    className={`px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-wider transition cursor-pointer ${projectFormData.status === "published"
                         ? "bg-emerald-500 text-white"
                         : "bg-slate-200 text-slate-700"
-                    }`}
+                      }`}
                   >
                     {projectFormData.status}
                   </button>
@@ -2043,15 +2693,15 @@ export default function LandingCMSPage() {
           deleteTarget?.type === "project"
             ? "Delete Portfolio Project"
             : deleteTarget?.type === "report"
-            ? "Delete Market Report"
-            : "Delete Media Item"
+              ? "Delete Market Report"
+              : "Delete Media Item"
         }
         description={
           deleteTarget?.type === "project"
             ? "Are you sure you want to delete this portfolio project? It will be removed from the active projects list and map."
             : deleteTarget?.type === "report"
-            ? "Are you sure you want to delete this report? It will no longer be visible on your landing page."
-            : "Are you sure you want to delete this media item? It will be removed from your active media sphere."
+              ? "Are you sure you want to delete this report? It will no longer be visible on your landing page."
+              : "Are you sure you want to delete this media item? It will be removed from your active media sphere."
         }
         itemName={deleteTarget?.title}
         confirmText="Delete"

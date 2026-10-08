@@ -27,6 +27,7 @@ export interface DropdownProps {
   defaultValue?: string;
   fullWidth?: boolean;
   size?: "sm" | "md" | "lg";
+  direction?: "down" | "up";
 }
 
 export function Dropdown({
@@ -39,9 +40,10 @@ export function Dropdown({
   buttonClassName,
   menuClassName,
   align = "left",
+  direction = "down",
   icon,
   disabled = false,
-  highlightSelected = true,
+  highlightSelected = false,
   defaultValue = "all",
   fullWidth = false,
   size = "sm",
@@ -78,7 +80,7 @@ export function Dropdown({
 
   const sizeStyles = {
     sm: "px-3 py-1.5 text-xs rounded-xl",
-    md: "px-3.5 py-2 text-xs rounded-xl",
+    md: "px-3.5 py-2.5 text-xs rounded-xl",
     lg: "px-4 py-2.5 text-sm rounded-xl",
   };
 
@@ -96,12 +98,14 @@ export function Dropdown({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "font-bold border transition-all cursor-pointer flex items-center justify-between gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50 select-none whitespace-nowrap",
+          "border transition-all cursor-pointer flex items-center justify-between gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50/80 select-none whitespace-nowrap",
           sizeStyles[size],
           fullWidth ? "w-full" : "",
-          (isOpen || isActive)
-            ? "border-[#B5111B] text-[#B5111B] ring-2 ring-[#B5111B]/20 bg-red-50/30 font-extrabold"
-            : "border-slate-200 text-slate-700",
+          isOpen
+            ? "border-[#B5111B] ring-2 ring-[#B5111B]/15 text-slate-900 font-medium"
+            : isActive
+            ? "border-[#B5111B] text-[#B5111B] ring-1 ring-[#B5111B]/20 bg-red-50/20 font-bold"
+            : "border-slate-200 text-slate-800 hover:border-slate-300 font-medium",
           disabled && "opacity-50 cursor-not-allowed",
           buttonClassName
         )}
@@ -113,7 +117,7 @@ export function Dropdown({
         <ChevronDown
           className={cn(
             "w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5",
-            isOpen && "rotate-180 text-[#B5111B]"
+            isOpen && "rotate-180 text-slate-600"
           )}
         />
       </button>
@@ -121,7 +125,8 @@ export function Dropdown({
       {isOpen && (
         <div
           className={cn(
-            "absolute top-full mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1 max-h-72 overflow-y-auto",
+            "absolute bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1 max-h-72 overflow-y-auto",
+            direction === "up" ? "bottom-full mb-1.5" : "top-full mt-1.5",
             fullWidth
               ? "w-full left-0 right-0 min-w-full"
               : align === "right"

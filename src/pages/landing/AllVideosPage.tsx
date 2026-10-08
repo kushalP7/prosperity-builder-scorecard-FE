@@ -68,19 +68,23 @@ function ViewAllVideosContent() {
   const categoryParam = searchParams.get("category");
 
   const [activeCategory, setActiveCategory] = useState<VideoCategory>(
-    categoryParam === "additional" ? "additional" : categoryParam === "all" ? "all" : "luminaries"
+    categoryParam === "luminaries"
+      ? "luminaries"
+      : categoryParam === "additional"
+        ? "additional"
+        : "all"
   );
   const [items, setItems] = useState<LandingMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Sync category state if URL query parameter changes
   useEffect(() => {
-    if (categoryParam === "additional") {
+    if (categoryParam === "luminaries") {
+      setActiveCategory("luminaries");
+    } else if (categoryParam === "additional") {
       setActiveCategory("additional");
     } else if (categoryParam === "all") {
       setActiveCategory("all");
-    } else if (categoryParam === "luminaries") {
-      setActiveCategory("luminaries");
     }
   }, [categoryParam]);
 
@@ -91,13 +95,12 @@ function ViewAllVideosContent() {
         // Fetch only published videos that are NOT featured on the landing page
         const data = await mediaApi.getMedia({
           mediaType: "video",
-          status: "published",
-          featured: false,
+          status: "published"
         });
 
         // Ensure strict filtering on client side as well
         const nonFeaturedPublished = (Array.isArray(data) ? data : []).filter(
-          (item) => item.mediaType === "video" && item.status === "published" && !item.featured
+          (item) => item.mediaType === "video" && item.status === "published"
         );
 
         setItems(nonFeaturedPublished);
@@ -148,10 +151,10 @@ function ViewAllVideosContent() {
               <div>
                 <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
                   {activeCategory === "luminaries"
-                    ? "All Luminaries Podcast Episodes"
+                    ? "Luminaries Podcasts"
                     : activeCategory === "additional"
-                    ? "All Additional Videos & Presentations"
-                    : "All Video Archive"}
+                      ? "Additional Videos"
+                      : "All Videos"}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1.5 max-w-2xl">
                   Browse through all published episodes and presentations. Click any card to launch and watch in the main spotlight player.
@@ -162,36 +165,33 @@ function ViewAllVideosContent() {
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
+                  onClick={() => setActiveCategory("all")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${activeCategory === "all"
+                    ? "bg-[#B5111B] text-white shadow-2xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
+                >
+                  All Videos
+                </button>
+                <button
+                  type="button"
                   onClick={() => setActiveCategory("luminaries")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
-                    activeCategory === "luminaries"
-                      ? "bg-[#B5111B] text-white shadow-2xs"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${activeCategory === "luminaries"
+                    ? "bg-[#B5111B] text-white shadow-2xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
                 >
                   Luminaries
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveCategory("additional")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
-                    activeCategory === "additional"
-                      ? "bg-[#B5111B] text-white shadow-2xs"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${activeCategory === "additional"
+                    ? "bg-[#B5111B] text-white shadow-2xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
                 >
                   Additional Videos
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory("all")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
-                    activeCategory === "all"
-                      ? "bg-[#B5111B] text-white shadow-2xs"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  All Archive
                 </button>
               </div>
             </div>

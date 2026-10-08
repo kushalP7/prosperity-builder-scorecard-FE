@@ -1,6 +1,11 @@
 "use client"
 
+import { useId } from "react"
+
 export function CommunityWedgeWheel() {
+  const rawId = useId()
+  const uid = rawId.replace(/[^a-zA-Z0-9_-]/g, "")
+
   const cx = 245
   const cy = 235
 
@@ -15,7 +20,7 @@ export function CommunityWedgeWheel() {
 
   const sectors = [
     {
-      id: "sec-market",
+      id: `sec-${uid}-market`,
       points: `${cx},${cy} ${vertices[0].x},${vertices[0].y} ${vertices[1].x},${vertices[1].y}`,
       image: "/sector_market.jpg",
       imgX: 70,
@@ -25,7 +30,7 @@ export function CommunityWedgeWheel() {
       title: "Fresh Produce & Local Agriculture",
     },
     {
-      id: "sec-park",
+      id: `sec-${uid}-park`,
       points: `${cx},${cy} ${vertices[1].x},${vertices[1].y} ${vertices[2].x},${vertices[2].y}`,
       image: "/sector_park.jpg",
       imgX: 230,
@@ -35,7 +40,7 @@ export function CommunityWedgeWheel() {
       title: "Parks & Green Infrastructure",
     },
     {
-      id: "sec-commercial",
+      id: `sec-${uid}-commercial`,
       points: `${cx},${cy} ${vertices[2].x},${vertices[2].y} ${vertices[3].x},${vertices[3].y}`,
       image: "/sector_commercial.jpg",
       imgX: 240,
@@ -45,7 +50,7 @@ export function CommunityWedgeWheel() {
       title: "Commercial & Civic Hubs",
     },
     {
-      id: "sec-students",
+      id: `sec-${uid}-students`,
       points: `${cx},${cy} ${vertices[3].x},${vertices[3].y} ${vertices[4].x},${vertices[4].y}`,
       image: "/sector_students.jpg",
       imgX: 190,
@@ -55,7 +60,7 @@ export function CommunityWedgeWheel() {
       title: "Education & Campus Life",
     },
     {
-      id: "sec-housing",
+      id: `sec-${uid}-housing`,
       points: `${cx},${cy} ${vertices[4].x},${vertices[4].y} ${vertices[5].x},${vertices[5].y}`,
       image: "/sector_housing.jpg",
       imgX: 15,
@@ -65,7 +70,7 @@ export function CommunityWedgeWheel() {
       title: "Suburban & Urban Housing",
     },
     {
-      id: "sec-transit",
+      id: `sec-${uid}-transit`,
       points: `${cx},${cy} ${vertices[5].x},${vertices[5].y} ${vertices[0].x},${vertices[0].y}`,
       image: "/sector_transit.jpg",
       imgX: 10,

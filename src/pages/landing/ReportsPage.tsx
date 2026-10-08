@@ -4,9 +4,9 @@ import * as React from "react"
 import { Link } from "@/lib/router-compat"
 import {
   FileText,
-  Download,
   Loader2,
-  ArrowLeft
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
@@ -54,6 +54,17 @@ const DEMO_REPORTS: LandingReportItem[] = [
     status: "published",
   },
 ]
+
+function formatReportDate(dateString?: string): string {
+  if (!dateString) return "Sep 2026";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Sep 2026";
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  } catch {
+    return "Sep 2026";
+  }
+}
 
 export default function ReportsPage() {
   const [reports, setReports] = React.useState<LandingReportItem[]>([])
@@ -147,6 +158,9 @@ export default function ReportsPage() {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
                   style={{ fontFamily: '"SF Pro Text", Helvetica, sans-serif' }}
                 >
+                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+                  </svg>
                   <span>Subscribe on LinkedIn</span>
                 </a>
                 <a
@@ -155,6 +169,9 @@ export default function ReportsPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 transition"
                 >
+                  <svg className="w-3.5 h-3.5 fill-[#0A66C2] shrink-0" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+                  </svg>
                   <span>View Newsletter</span>
                 </a>
               </div>
@@ -173,81 +190,70 @@ export default function ReportsPage() {
               <p className="text-sm font-bold text-slate-600">No reports found matching your query.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((report) => (
-                <div
-                  key={report.id}
-                  className="bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-[#B5111B]/60 transition-all duration-300 group flex flex-col justify-between"
-                >
-                  <div className="relative h-44 bg-slate-100 overflow-hidden">
-                    {report.coverImage ? (
-                      <img
-                        src={report.coverImage}
-                        alt={report.title}
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                        onError={(e) => {
-                          e.currentTarget.src = "/rose_community_hero.jpg"
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 p-4 text-center">
-                        <FileText className="w-8 h-8 text-[#B5111B]" />
-                      </div>
-                    )}
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+              {filtered.map((report) => {
+                const formattedDate = formatReportDate(report.publishedAt);
+                const reportHref = `/report/${report.slug || report.id}`;
+                const coverSrc = report.coverImage || "/rose_community_hero.jpg";
 
-                  <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="text-[11px] text-slate-500 font-medium">
-                        <span>By {report.author || "Kathleen Rose, CCIM, CRE"}</span>
-                        {report.publishedAt && (
-                          <>
-                            <span className="mx-1.5">•</span>
-                            <span>{new Date(report.publishedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
-                          </>
-                        )}
-                      </div>
+                return (
+                  <Link
+                    key={report.id}
+                    href={reportHref}
+                    className="group relative block aspect-[16/10] min-h-[240px] w-full rounded-xl overflow-hidden bg-slate-900 shadow-xs hover:shadow-lg hover:shadow-[#B5111B]/20 transition-all duration-300 cursor-pointer select-none"
+                  >
+                    {/* Base Image */}
+                    <img
+                      src={coverSrc}
+                      alt={report.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.src = "/rose_community_hero.jpg";
+                      }}
+                    />
 
-                      <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors leading-snug">
+                    {/* Resting State: Dark bottom gradient for high contrast & legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent transition-opacity duration-300 group-hover:opacity-0 pointer-events-none" />
+
+                    {/* Resting State Details (Inside the image card) */}
+                    <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-1 pointer-events-none z-10">
+                      <h3 className="font-bold text-sm sm:text-base leading-snug line-clamp-2 tracking-tight text-white drop-shadow-sm">
+                        {report.title}
+                      </h3>
+                      <p className="text-xs text-white/85 font-medium mt-1 drop-shadow-xs">
+                        By {report.author || "Kathleen Rose, CCIM, CRE"} • {formattedDate}
+                      </p>
+                    </div>
+
+                    {/* Hover State: Deep-red overlay with Read Report link & arrow graphic */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#9B0A13] via-[#A80F1A]/85 to-[#A80F1A]/40 text-white p-4 sm:p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 pointer-events-none">
+                      {/* Report Title */}
+                      <h3 className="text-white font-bold text-base sm:text-lg tracking-tight leading-snug mb-1 line-clamp-2 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
                         {report.title}
                       </h3>
 
-                      {report.subtitle && (
-                        <p className="text-xs font-semibold text-slate-600">
-                          {report.subtitle}
-                        </p>
-                      )}
+                      {/* Metadata */}
+                      <div className="text-[11.5px] text-rose-100/90 font-medium mb-3 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+                        <span>By {report.author || "Kathleen Rose, CCIM, CRE"}</span>
+                        <span className="mx-1">•</span>
+                        <span>{formattedDate}</span>
+                      </div>
 
-                      {report.summary && (
-                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 font-normal">
-                          {report.summary}
-                        </p>
-                      )}
+                      {/* Read Report Link & Subtle right arrow graphic */}
+                      <div className="flex items-center justify-between transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                        <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-white">
+                          <span>Read Report</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                        <div className="flex items-center text-white/40">
+                          <div className="w-8 sm:w-12 h-[1px] bg-white/40" />
+                          <ArrowRight className="w-3 h-3 -ml-0.5 text-white/50" />
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <Link
-                        href={`/report/${report.slug}`}
-                        className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] transition-colors"
-                      >
-                        Read Full Report
-                      </Link>
-
-                      {report.pdfUrl && (
-                        <a
-                          href={report.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-[#B5111B] transition-all"
-                          title="Download PDF"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
 
