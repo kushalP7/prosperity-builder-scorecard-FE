@@ -1988,7 +1988,7 @@ export default function LandingCMSPage() {
 
                             {/* Red Category Tag */}
                             <div className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#B5111B]">
-                              {(report as any).category || "RESEARCH REPORT"}
+                              {(report as any).type || "REPORT"}
                             </div>
 
                             {/* Report Title */}
