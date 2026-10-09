@@ -30,6 +30,8 @@ export function ReportForm({ reportId }: ReportFormProps) {
     publishedAt: new Date().toISOString().split("T")[0],
     coverImage: "",
     pdfUrl: "",
+    externalUrl: "",
+    type: "report",
     summary: "",
     contentHtml: "",
     featured: false,
@@ -52,6 +54,8 @@ export function ReportForm({ reportId }: ReportFormProps) {
             publishedAt: report.publishedAt ? new Date(report.publishedAt).toISOString().split("T")[0] : "",
             coverImage: report.coverImage || "",
             pdfUrl: report.pdfUrl || "",
+            externalUrl: report.externalUrl || "",
+            type: report.type || "report",
             summary: report.summary || "",
             contentHtml: report.contentHtml || "",
             featured: report.featured || false,
@@ -124,6 +128,28 @@ export function ReportForm({ reportId }: ReportFormProps) {
     )
   }
 
+  const isNewsletter = formState.type === "newsletter"
+
+  const publishButtonLabel =
+    uploadStatusText ||
+    (reportId
+      ? isNewsletter
+        ? "Update Newsletter"
+        : "Update Report"
+      : isNewsletter
+      ? "Publish Newsletter"
+      : "Publish Report")
+
+  const fullSaveButtonLabel =
+    uploadStatusText ||
+    (reportId
+      ? isNewsletter
+        ? "Update & Save Newsletter"
+        : "Update & Save Report"
+      : isNewsletter
+      ? "Publish Newsletter"
+      : "Publish Report")
+
   return (
     <div className="space-y-8 w-full pb-20">
       {/* Sticky Header Bar */}
@@ -138,24 +164,31 @@ export function ReportForm({ reportId }: ReportFormProps) {
           </Link>
           <div className="flex flex-col min-w-0">
             <h1 className="text-sm sm:text-lg font-black text-slate-900 truncate">
-              {reportId ? `Edit Report: ${formState.title || "Untitled"}` : "Create New Dynamic Report"}
+              {reportId
+                ? `${isNewsletter ? "Edit Newsletter" : "Edit Report"}: ${formState.title || "Untitled"}`
+                : isNewsletter
+                ? "Create New Newsletter Edition"
+                : "Create New Dynamic Report"}
             </h1>
             <span className="hidden md:inline-block text-[11px] text-slate-500 font-medium truncate">
-              Configure cover images, PDF downloads, rich text content, and dynamic section blocks
+              {isNewsletter
+                ? "Configure headline, cover thumbnail, summary teaser, and LinkedIn article URL"
+                : "Configure cover images, PDF downloads, rich text content, and dynamic section blocks"}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 justify-end shrink-0">
-          {formState.slug && (
-            <Link
-              href={`/report/${formState.slug}`}
+          {(isNewsletter ? formState.externalUrl : formState.slug) && (
+            <a
+              href={isNewsletter ? formState.externalUrl : `/report/${formState.slug}`}
               target="_blank"
+              rel="noopener noreferrer"
               className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all flex items-center gap-1.5"
             >
               <Eye className="w-4 h-4 text-[#B5111B]" />
               <span className="hidden xs:inline sm:inline">Preview</span>
-            </Link>
+            </a>
           )}
 
           <button
@@ -174,7 +207,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
             className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-extrabold shadow-md flex items-center gap-1.5 disabled:opacity-50 transition-all cursor-pointer"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{uploadStatusText || (reportId ? "Update Report" : "Publish Report")}</span>
+            <span>{publishButtonLabel}</span>
           </button>
         </div>
       </div>
@@ -251,6 +284,19 @@ export function ReportForm({ reportId }: ReportFormProps) {
 
           <div className="flex flex-wrap items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
             <div className="flex items-center gap-2.5">
+              <label className="text-xs font-bold text-slate-800">Content Type:</label>
+              <Dropdown
+                value={formState.type || "report"}
+                onChange={(val) => setFormState({ ...formState, type: val as any })}
+                options={[
+                  { value: "report", label: "Research Report (PDF / Page)" },
+                  { value: "newsletter", label: "Newsletter Edition (LinkedIn)" },
+                ]}
+                size="sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2.5">
               <label className="text-xs font-bold text-slate-800">Status:</label>
               <Dropdown
                 value={formState.status || "published"}
@@ -275,7 +321,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
         {/* Section 2: Media & Files Uploaders */}
         <div className="space-y-4">
           <h2 className="text-sm font-black text-[#B5111B] border-b border-slate-100 pb-2">
-            2. Media Assets
+            2. Media Assets & Links
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -283,58 +329,82 @@ export function ReportForm({ reportId }: ReportFormProps) {
               acceptType="image"
               value={formState.coverImage || ""}
               onChange={(url) => setFormState({ ...formState, coverImage: url })}
-              label="Banner Cover Image"
-              helperText="Upload cover image to Rose/Reports folder"
+              label={formState.type === "newsletter" ? "Newsletter Thumbnail Image" : "Banner Cover Image"}
+              helperText="Upload image to Rose/Reports folder"
               folder="reports"
             />
 
-            <FileUploadDropzone
-              acceptType="document"
-              value={formState.pdfUrl || ""}
-              onChange={(url) => setFormState({ ...formState, pdfUrl: url })}
-              label="Downloadable Report PDF"
-              helperText="Upload full PDF document to Rose/Reports folder"
-              folder="reports"
-            />
+            {formState.type === "newsletter" ? (
+              <div className="space-y-1.5 flex flex-col justify-start">
+                <label className="block text-xs font-bold text-slate-800">
+                  External Article URL (LinkedIn Pulse / Web Article) *
+                </label>
+                <input
+                  type="url"
+                  value={formState.externalUrl || ""}
+                  onChange={(e) => setFormState({ ...formState, externalUrl: e.target.value })}
+                  placeholder="https://www.linkedin.com/pulse/driving-automotive-carolinas-..."
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B]"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Direct link opened when readers click &quot;Read on LinkedIn &rarr;&quot; in the Sample Newsletter Editions section.
+                </p>
+              </div>
+            ) : (
+              <FileUploadDropzone
+                acceptType="document"
+                value={formState.pdfUrl || ""}
+                onChange={(url) => setFormState({ ...formState, pdfUrl: url })}
+                label="Downloadable Report PDF"
+                helperText="Upload full PDF document to Rose/Reports folder"
+                folder="reports"
+              />
+            )}
           </div>
         </div>
 
-        {/* Section 3: Summary Excerpt */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-slate-800 mb-1">
-            3. Executive Summary Excerpt
-          </label>
-          <textarea
-            rows={3}
-            value={formState.summary || ""}
-            onChange={(e) => setFormState({ ...formState, summary: e.target.value })}
-            placeholder="Brief summary card teaser text..."
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B]"
-          />
-        </div>
+        {/* Section 3: Summary Excerpt (Only for Research Reports) */}
+        {formState.type !== "newsletter" && (
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-800 mb-1">
+              3. Executive Summary Excerpt
+            </label>
+            <textarea
+              rows={3}
+              value={formState.summary || ""}
+              onChange={(e) => setFormState({ ...formState, summary: e.target.value })}
+              placeholder="Brief summary card teaser text..."
+              className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B]"
+            />
+          </div>
+        )}
 
-        {/* Section 4: Rich Text Body Editor */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-black text-[#B5111B] border-b border-slate-100 pb-2">
-            4. Article Content (Quill / Rich Text Editor)
-          </h2>
-          <RichTextEditor
-            value={formState.contentHtml || ""}
-            onChange={(html) => setFormState({ ...formState, contentHtml: html })}
-            label=""
-          />
-        </div>
+        {/* Section 4: Rich Text Body Editor (Only for Research Reports) */}
+        {formState.type !== "newsletter" && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-black text-[#B5111B] border-b border-slate-100 pb-2">
+              4. Article Content (Quill / Rich Text Editor)
+            </h2>
+            <RichTextEditor
+              value={formState.contentHtml || ""}
+              onChange={(html) => setFormState({ ...formState, contentHtml: html })}
+              label=""
+            />
+          </div>
+        )}
 
-        {/* Section 5: Dynamic Section Block Builder */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-black text-[#B5111B] border-b border-slate-100 pb-2">
-            5. Dynamic Section Blocks (Re-orderable)
-          </h2>
-          <ReportBlockBuilder
-            blocks={formState.blocks || []}
-            onChange={(blocks) => setFormState({ ...formState, blocks })}
-          />
-        </div>
+        {/* Section 5: Dynamic Section Block Builder (Only for Research Reports) */}
+        {formState.type !== "newsletter" && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-black text-[#B5111B] border-b border-slate-100 pb-2">
+              5. Dynamic Section Blocks (Re-orderable)
+            </h2>
+            <ReportBlockBuilder
+              blocks={formState.blocks || []}
+              onChange={(blocks) => setFormState({ ...formState, blocks })}
+            />
+          </div>
+        )}
 
         {/* Submit Footer */}
         <div className="pt-6 border-t border-slate-200 flex justify-end gap-3">
@@ -350,7 +420,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
             className="px-8 py-2.5 rounded-xl text-xs font-extrabold text-white bg-[#B5111B] hover:bg-[#8F0D15] shadow-md flex items-center gap-2 disabled:opacity-50 transition-all cursor-pointer"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{uploadStatusText || (reportId ? "Update & Save Report" : "Publish Report")}</span>
+            <span>{fullSaveButtonLabel}</span>
           </button>
         </div>
       </form>

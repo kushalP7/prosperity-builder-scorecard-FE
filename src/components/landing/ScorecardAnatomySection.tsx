@@ -6,7 +6,6 @@ export function ScorecardAnatomySection() {
   return (
     <section className="py-16 sm:py-24 bg-white border-t border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-extrabold uppercase tracking-widest text-[#B5111B]">
@@ -16,13 +15,14 @@ export function ScorecardAnatomySection() {
             Anatomy of a Prosperity Builder Scorecard®
           </h2>
           <p className="text-sm text-slate-600 font-normal leading-relaxed">
-            A comprehensive quantitative and qualitative audit designed to provide municipal leaders, economic developers, and planning boards with clear policy direction.
+            A comprehensive quantitative and qualitative audit designed to
+            provide municipal leaders, economic developers, and planning boards
+            with clear policy direction.
           </p>
         </div>
 
         {/* 4-Card Report Structure Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
           {/* Card 1 */}
           <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-3 hover:border-slate-300 transition-colors">
             <div className="text-xs font-extrabold text-[#B5111B] uppercase tracking-wider">
@@ -32,7 +32,8 @@ export function ScorecardAnatomySection() {
               Executive Vision & History
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Framing community vision, historical case study background, and aligning local goals with market reality.
+              Framing community vision, historical case study background, and
+              aligning local goals with market reality.
             </p>
           </div>
 
@@ -45,7 +46,8 @@ export function ScorecardAnatomySection() {
               Scorecard Matrix Gauge
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Overall quality-of-life score speedometer gauge and executive summary across all 12 core category indicators.
+              Overall quality-of-life score speedometer gauge and executive
+              summary across all 12 core category indicators.
             </p>
           </div>
 
@@ -58,7 +60,8 @@ export function ScorecardAnatomySection() {
               12 Category Deep Dives
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Dedicated pages per module featuring national/state comparison tables, local statistics, and policy recommendations.
+              Dedicated pages per module featuring national/state comparison
+              tables, local statistics, and policy recommendations.
             </p>
           </div>
 
@@ -71,16 +74,17 @@ export function ScorecardAnatomySection() {
               3-Phase Action Blueprint
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Action steps for municipal staff, elected officials, and business leaders with ongoing progress monitoring.
+              Action steps for municipal staff, elected officials, and business
+              leaders with ongoing progress monitoring.
             </p>
           </div>
-
         </div>
 
         {/* Clean Executive Quote Banner */}
         <div className="bg-gradient-to-r from-slate-900 via-[#3B070B] to-slate-900 text-white rounded-3xl p-8 sm:p-10 border border-red-950/80 shadow-xl max-w-4xl mx-auto space-y-4 text-center">
           <blockquote className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed max-w-3xl mx-auto italic font-serif">
-            &ldquo;No gimmicks, no redundant reports, and no guesswork about where to get the most value for the money you spend.&rdquo;
+            &ldquo;No gimmicks, no redundant reports, and no guesswork about
+            where to get the most value for the money you spend.&rdquo;
           </blockquote>
           <div className="flex items-center justify-center gap-3 pt-1">
             <div className="w-10 h-10 rounded-full border-2 border-rose-500/50 overflow-hidden shrink-0 bg-slate-800 shadow-md">
@@ -89,14 +93,20 @@ export function ScorecardAnatomySection() {
                 alt="Kathleen Rose"
                 className="w-full h-full object-cover object-center"
                 onError={(e) => {
-                  e.currentTarget.src = "/logo.png"
-                  e.currentTarget.className = "w-full h-full object-contain p-1 bg-white"
+                  e.currentTarget.src = "/logo.png";
+                  e.currentTarget.className =
+                    "w-full h-full object-contain p-1 bg-white";
                 }}
               />
             </div>
             <div className="text-xs text-rose-200/90 font-medium text-left">
-              <span className="font-bold text-white">Kathleen Rose, CCIM, CRE</span>
-              <span className="opacity-80"> • President & Founder, Rose Associates</span>
+              <span className="font-bold text-white">
+                Kathleen Rose, CCIM, CRE
+              </span>
+              <span className="opacity-80">
+                {" "}
+                • President & Founder, Rose Associates
+              </span>
             </div>
           </div>
         </div>
@@ -114,26 +124,41 @@ export function ScorecardAnatomySection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-2">
-              <div className="text-sm font-extrabold text-[#B5111B]">Phase 1: Reality Check</div>
-              <div className="text-xs font-bold text-slate-800">Initial Assessment & 90+ Data Points</div>
+              <div className="text-sm font-extrabold text-[#B5111B]">
+                Phase 1: Reality Check
+              </div>
+              <div className="text-xs font-bold text-slate-800">
+                Initial Assessment & 90+ Data Points
+              </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Onsite self-assessment questionnaire and compiling demographic, economic, and land use indicators.
+                Onsite self-assessment questionnaire and compiling demographic,
+                economic, and land use indicators.
               </p>
             </div>
 
             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-2">
-              <div className="text-sm font-extrabold text-[#B5111B]">Phase 2: Plan Blueprint</div>
-              <div className="text-xs font-bold text-slate-800">Constructing the Strategy</div>
+              <div className="text-sm font-extrabold text-[#B5111B]">
+                Phase 2: Plan Blueprint
+              </div>
+              <div className="text-xs font-bold text-slate-800">
+                Constructing the Strategy
+              </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Prioritizing revitalization vs preservation and assigning actionable goals for municipal staff and council.
+                Prioritizing revitalization vs preservation and assigning
+                actionable goals for municipal staff and council.
               </p>
             </div>
 
             <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-2">
-              <div className="text-sm font-extrabold text-[#B5111B]">Phase 3: Prosperity Building</div>
-              <div className="text-xs font-bold text-slate-800">Tracking Progress & Performance</div>
+              <div className="text-sm font-extrabold text-[#B5111B]">
+                Phase 3: Prosperity Building
+              </div>
+              <div className="text-xs font-bold text-slate-800">
+                Tracking Progress & Performance
+              </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Annual performance reviews, metric updates, and celebrating community progress.
+                Annual performance reviews, metric updates, and celebrating
+                community progress.
               </p>
             </div>
           </div>
@@ -146,21 +171,24 @@ export function ScorecardAnatomySection() {
               Unlock Complete Customized Municipal Dossiers
             </h3>
             <p className="text-xs text-slate-600 max-w-xl mx-auto leading-relaxed">
-              Ordering a scorecard or starting a subscription provides full unredacted report access with complete data tables, custom GIS maps, and peer benchmarks.
+              Ordering a scorecard or starting a subscription provides full
+              unredacted report access with complete data tables, custom GIS
+              maps, and peer benchmarks.
             </p>
           </div>
 
           <div className="flex justify-center">
             <Link
+              // href="/contact" //KP
               href="/pricing"
               className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-6 py-3 rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-md transition-all hover:scale-102"
             >
+              {/* <span>Request Enterprise Consultation</span> */}
               <span>View Subscription Plans & Pricing</span>
             </Link>
           </div>
         </div>
-
       </div>
     </section>
-  )
+  );
 }

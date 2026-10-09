@@ -2,12 +2,14 @@
 
 import * as React from "react"
 import { Link, usePathname } from "@/lib/router-compat"
-import { Menu, X, ChevronDown, Award, Layers, DollarSign } from "lucide-react"
+import { Menu, X, ChevronDown, Award, Layers, DollarSign, Building2 } from "lucide-react"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const [scorecardDropdownOpen, setScorecardDropdownOpen] = React.useState(false)
   const [mobileScorecardOpen, setMobileScorecardOpen] = React.useState(false)
+  const [contactDropdownOpen, setContactDropdownOpen] = React.useState(false)
+  const [mobileContactOpen, setMobileContactOpen] = React.useState(false)
   const pathname = usePathname()
 
   const scorecardSubItems = [
@@ -29,6 +31,21 @@ export function LandingHeader() {
       href: "/pricing",
       icon: DollarSign,
     },
+    // {
+    //   name: "Inquire for Pricing Plans",
+    //   description: "Make an inquiry for pricing plans",
+    //   href: "/contact",
+    //   icon: DollarSign,
+    // }, //KP
+  ];
+
+  const contactSubItems = [
+    {
+      name: "Enterprise Contact",
+      description: "Custom municipal proposal & sales inquiry",
+      href: "/contact",
+      icon: Building2,
+    },
   ]
 
   const navItems = [
@@ -37,11 +54,18 @@ export function LandingHeader() {
       name: "Prosperity Builder Scorecard®",
       href: "/prosperity-builder-scorecard",
       isDropdown: true,
+      dropdownKey: "scorecard" as const,
     },
     { name: "Executive Analytics", href: "/executive-analytics" },
-    { name: "Projects", href: "/project-portfolio" }, // need to uncomment
-    { name: "Media Sphere", href: "/videos" }, // need to uncomment
+    { name: "Projects", href: "/project-portfolio" },
+    { name: "Media Sphere", href: "/videos" },
     { name: "About Us", href: "/about" },
+    // {
+    //   name: "Contact Us",
+    //   href: "/contact",
+    //   isDropdown: true,
+    //   dropdownKey: "contact" as const,
+    // }, //KP
   ]
 
   const isScorecardActive =
@@ -49,12 +73,23 @@ export function LandingHeader() {
     pathname.startsWith("/categories") ||
     pathname.startsWith("/pricing")
 
-  // Auto-expand mobile scorecard accordion if currently on one of its pages
+  const isContactActive =
+    pathname === "/contact" ||
+    pathname.startsWith("/contact") ||
+    pathname.startsWith("/enterprise-contact")
+
+  // Auto-expand mobile accordions if currently on one of their pages
   React.useEffect(() => {
     if (isScorecardActive) {
       setMobileScorecardOpen(true)
     }
   }, [isScorecardActive])
+
+  React.useEffect(() => {
+    if (isContactActive) {
+      setMobileContactOpen(true)
+    }
+  }, [isContactActive])
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith("/#")) {
@@ -100,24 +135,31 @@ export function LandingHeader() {
         <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm font-bold text-slate-700">
           {navItems.map((item) => {
             if (item.isDropdown) {
+              const isScorecard = item.dropdownKey === "scorecard";
+              const isItemActive = isScorecard ? isScorecardActive : isContactActive;
+              const isDropdownOpen = isScorecard ? scorecardDropdownOpen : contactDropdownOpen;
+              const setDropdownOpen = isScorecard ? setScorecardDropdownOpen : setContactDropdownOpen;
+              const subItems = isScorecard ? scorecardSubItems : contactSubItems;
+              const flyoutTitle = isScorecard ? "Scorecard Navigation" : "Contact Options";
+
               return (
                 <div
                   key={item.name}
                   className="relative group py-2"
-                  onMouseEnter={() => setScorecardDropdownOpen(true)}
-                  onMouseLeave={() => setScorecardDropdownOpen(false)}
+                  onMouseEnter={() => setDropdownOpen(true)}
+                  onMouseLeave={() => setDropdownOpen(false)}
                 >
                   <Link
                     href={item.href}
-                    onClick={() => setScorecardDropdownOpen(false)}
-                    className={`transition-colors whitespace-nowrap flex items-center gap-1.5 py-1 ${isScorecardActive
+                    onClick={() => setDropdownOpen(false)}
+                    className={`transition-colors whitespace-nowrap flex items-center gap-1.5 py-1 ${isItemActive
                       ? "text-[#B5111B] font-extrabold"
                       : "hover:text-[#B5111B]"
                       }`}
                   >
                     <span>{item.name}</span>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${scorecardDropdownOpen
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen
                         ? "rotate-180 text-[#B5111B]"
                         : "text-slate-400 group-hover:text-[#B5111B]"
                         }`}
@@ -125,20 +167,20 @@ export function LandingHeader() {
                   </Link>
 
                   {/* Desktop Dropdown Flyout */}
-                  {scorecardDropdownOpen && (
+                  {isDropdownOpen && (
                     <div className="absolute top-full left-0 pt-1.5 w-72 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                       <div className="bg-white rounded-2xl shadow-xl border border-slate-200/90 p-2 space-y-1 ring-1 ring-black/5">
                         <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                          Scorecard Navigation
+                          {flyoutTitle}
                         </div>
-                        {scorecardSubItems.map((sub) => {
+                        {subItems.map((sub) => {
                           const isSubActive = pathname === sub.href;
                           const IconComponent = sub.icon;
                           return (
                             <Link
                               key={sub.href}
                               href={sub.href}
-                              onClick={() => setScorecardDropdownOpen(false)}
+                              onClick={() => setDropdownOpen(false)}
                               className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${isSubActive
                                 ? "bg-red-50 text-[#B5111B]"
                                 : "hover:bg-slate-50 text-slate-800 hover:text-[#B5111B]"
@@ -321,6 +363,54 @@ export function LandingHeader() {
             >
               About Us
             </Link>
+
+            {/* Contact Us with expandable Enterprise Contact */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between rounded-lg p-2.5 hover:bg-red-50 transition-colors">
+                <Link
+                  href="/contact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex-1 transition-colors ${isContactActive
+                    ? "text-[#B5111B] font-extrabold"
+                    : "text-slate-800 hover:text-[#B5111B]"
+                    }`}
+                >
+                  Contact Us
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMobileContactOpen(!mobileContactOpen)}
+                  className="p-1 text-slate-500 hover:text-[#B5111B]"
+                  aria-label="Toggle contact subcategories"
+                >
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${mobileContactOpen ? "rotate-180 text-[#B5111B]" : ""
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {mobileContactOpen && (
+                <div className="pl-4 space-y-1 border-l-2 border-red-200 ml-3 py-1">
+                  {contactSubItems.map((sub) => {
+                    const isSubActive = pathname === sub.href;
+                    return (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`block px-3 py-2 text-xs font-bold rounded-lg transition-colors ${isSubActive
+                          ? "bg-red-50 text-[#B5111B] font-black"
+                          : "text-slate-600 hover:bg-red-50 hover:text-[#B5111B]"
+                          }`}
+                      >
+                        {sub.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">

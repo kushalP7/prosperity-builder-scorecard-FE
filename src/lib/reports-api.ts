@@ -39,6 +39,8 @@ export interface LandingReportItem {
   contentHtml?: string;
   featured?: boolean;
   status: 'draft' | 'published';
+  type?: 'report' | 'newsletter' | string;
+  externalUrl?: string;
   blocks?: ReportSectionBlock[];
   createdAt?: string;
   updatedAt?: string;
@@ -97,6 +99,7 @@ export interface GetReportsOptions {
   limit?: number;
   sortBy?: string;
   year?: string;
+  type?: string;
   signal?: AbortSignal;
 }
 
@@ -110,12 +113,19 @@ export interface PaginatedReportsResponse {
 
 export const reportsApi = {
   // Get all reports with optional filters (Guaranteed Array return)
-  async getReports(status?: string, featured?: boolean, search?: string, signal?: AbortSignal): Promise<LandingReportItem[]> {
+  async getReports(
+    status?: string,
+    featured?: boolean,
+    search?: string,
+    signal?: AbortSignal,
+    type?: string
+  ): Promise<LandingReportItem[]> {
     try {
       const params = new URLSearchParams();
       if (status && status !== 'all') params.append('status', status);
       if (featured) params.append('featured', 'true');
       if (search) params.append('search', search);
+      if (type && type !== 'all') params.append('type', type);
 
       const url = `${API_BASE}/landing-cms/reports?${params.toString()}`;
       const res = await fetch(url, { cache: 'no-store', signal });
@@ -132,6 +142,24 @@ export const reportsApi = {
     }
   },
 
+  // Get newsletter editions
+  async getNewsletters(signal?: AbortSignal, limit = 8): Promise<LandingReportItem[]> {
+    try {
+      const res = await this.getPaginatedReports({
+        status: 'published',
+        type: 'newsletter',
+        limit,
+        signal,
+      });
+      if (res.data && res.data.length > 0) return res.data;
+      // Fallback to getReports if pagination endpoint is filtered
+      return await this.getReports('published', undefined, undefined, signal, 'newsletter');
+    } catch (err) {
+      console.warn('reportsApi.getNewsletters fetch error:', err);
+      return [];
+    }
+  },
+
   // Get paginated reports from server with full query params
   async getPaginatedReports(options: GetReportsOptions = {}): Promise<PaginatedReportsResponse> {
     try {
@@ -143,6 +171,7 @@ export const reportsApi = {
       if (options.limit) params.append('limit', String(options.limit));
       if (options.sortBy) params.append('sortBy', options.sortBy);
       if (options.year && options.year !== 'all') params.append('year', options.year);
+      if (options.type && options.type !== 'all') params.append('type', options.type);
 
       const url = `${API_BASE}/landing-cms/reports?${params.toString()}`;
       const res = await fetch(url, { cache: 'no-store', signal: options.signal });

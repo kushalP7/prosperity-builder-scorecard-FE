@@ -2,7 +2,20 @@
 
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
+import { ArrowRight } from "lucide-react"
 import { PublishedReportsCardsSection } from "@/components/landing/PublishedReportsCardsSection"
+import { reportsApi, LandingReportItem } from "@/lib/reports-api"
+
+function formatEditionDate(dateString?: string): string {
+  if (!dateString) return ""
+  try {
+    const d = new Date(dateString)
+    if (isNaN(d.getTime())) return dateString
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  } catch {
+    return dateString
+  }
+}
 
 export function RoseReportFeaturedSection() {
   const LINKEDIN_SUBSCRIBE_URL =
@@ -14,9 +27,8 @@ export function RoseReportFeaturedSection() {
     {
       id: "driving-automotive-carolinas",
       title: "Driving automotive in the Carolinas",
+      author: "Kathleen Rose, CCIM, CRE",
       date: "Sep 14, 2026",
-      summary:
-        "Did you know that you can now get data from U.S. Census on the automotive industry? As of July 2026, U.S. Inventories were up to $67.2B and shipments up to $73.8B. From batteries to cars, the Carolinas lead in this sector.",
       articleUrl:
         "https://www.linkedin.com/pulse/driving-automotive-carolinas-kathleen-rose-ccim-cre--trzme",
       image: "linkedIn-newsletter/Driving-automotive-in-the-Carolinas.png",
@@ -24,9 +36,8 @@ export function RoseReportFeaturedSection() {
     {
       id: "the-human-moat",
       title: "The Human Moat",
+      author: "Kathleen Rose, CCIM, CRE",
       date: "Aug 29, 2026",
-      summary:
-        "Why experience and reasoning remain irreplaceable in real estate and economic development as artificial intelligence continues to be deployed across land use planning.",
       articleUrl:
         "https://www.linkedin.com/pulse/human-moat-kathleen-rose-ccim-cre--ht0ne",
       image: "linkedIn-newsletter/The-Human-Moat.png",
@@ -34,9 +45,8 @@ export function RoseReportFeaturedSection() {
     {
       id: "whats-up-with-opportunity-zones",
       title: "What's Up with Opportunity Zones?",
+      author: "Kathleen Rose, CCIM, CRE",
       date: "Aug 25, 2026",
-      summary:
-        "Evaluating nationwide Opportunity Zone incentives established to foster private investment in economically distressed communities and how to maximize local capital allocation.",
       articleUrl:
         "https://www.linkedin.com/pulse/whats-up-opportunity-zones-kathleen-rose-ccim-cre--vxhue",
       image: "linkedIn-newsletter/Whats-Up-with-Opportunity-Zones.png",
@@ -44,14 +54,50 @@ export function RoseReportFeaturedSection() {
     {
       id: "longevity",
       title: "Longevity",
+      author: "Kathleen Rose, CCIM, CRE",
       date: "Jul 30, 2026",
-      summary:
-        "Building lasting value and enduring municipal health through balanced land use, sustainable development strategies, and community resilience.",
       articleUrl:
         "https://www.linkedin.com/pulse/longevity-kathleen-rose-ccim-cre--lxlse",
       image: "linkedIn-newsletter/Whats-Up-with-Opportunity-Zones.png",
     },
   ]
+
+  const [dynamicEditions, setDynamicEditions] = React.useState<LandingReportItem[]>([])
+  const [loadingEditions, setLoadingEditions] = React.useState(true)
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    async function loadNewsletters() {
+      try {
+        const data = await reportsApi.getNewsletters(controller.signal, 100)
+        if (!controller.signal.aborted && Array.isArray(data) && data.length > 0) {
+          setDynamicEditions(data)
+        }
+      } catch (err: any) {
+        if (!controller.signal.aborted) {
+          console.warn("Could not load dynamic newsletters:", err)
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingEditions(false)
+        }
+      }
+    }
+    loadNewsletters()
+    return () => controller.abort()
+  }, [])
+
+  const editionsToDisplay =
+    dynamicEditions.length > 0
+      ? dynamicEditions.map((item) => ({
+          id: item.id,
+          title: item.title,
+          author: item.author || "Kathleen Rose, CCIM, CRE",
+          date: formatEditionDate(item.publishedAt),
+          articleUrl: item.externalUrl || item.pdfUrl || LINKEDIN_NEWSLETTER_URL,
+          image: item.coverImage || "/rose_community_hero.jpg",
+        }))
+      : FEATURED_EDITIONS
 
   return (
     <section id="rose-report-spotlight" className="space-y-10">
@@ -132,10 +178,10 @@ export function RoseReportFeaturedSection() {
 
       {/* 2. RECENT EDITIONS */}
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div className="space-y-1">
             <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Sample Newsletter Editions
+              Sample Newsletter <span className="text-[#0A66C2]">Editions</span>
             </h3>
             <p className="text-xs text-slate-500">
               Read recent articles published in The Rose Report on LinkedIn.
@@ -145,54 +191,68 @@ export function RoseReportFeaturedSection() {
             href={LINKEDIN_NEWSLETTER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-semibold text-slate-600 hover:text-[#B5111B] transition-colors"
+            className="text-xs font-semibold text-slate-600 hover:text-[#0A66C2] transition-colors"
           >
             View all on LinkedIn
           </a>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {FEATURED_EDITIONS.map((edition) => (
-            <div
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {editionsToDisplay.map((edition) => (
+            <a
               key={edition.id}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between hover:border-slate-300 transition-colors shadow-2xs"
+              href={edition.articleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative block aspect-[16/10] min-h-[220px] w-full rounded-2xl overflow-hidden bg-slate-900 shadow-2xs hover:shadow-lg hover:shadow-blue-600/20 transition-all duration-300 cursor-pointer select-none border border-slate-200"
             >
-              <div>
-                <div className="aspect-[16/10] w-full bg-slate-100 overflow-hidden">
-                  <img
-                    src={edition.image}
-                    alt={edition.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/rose_community_hero.jpg"
-                    }}
-                  />
+              {/* Base Image */}
+              <img
+                src={edition.image}
+                alt={edition.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                onError={(e) => {
+                  e.currentTarget.src = "/rose_community_hero.jpg"
+                }}
+              />
+
+              {/* Resting State: Dark bottom gradient for high contrast & legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent transition-opacity duration-300 group-hover:opacity-0 pointer-events-none" />
+
+              {/* Resting State Details (Inside the image card) */}
+              <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-1 pointer-events-none z-10">
+                <h4 className="font-bold text-sm sm:text-base leading-snug line-clamp-2 tracking-tight text-white drop-shadow-sm">
+                  {edition.title}
+                </h4>
+                <p className="text-xs text-white/85 font-medium mt-1 drop-shadow-xs">
+                  By {edition.author || "Kathleen Rose, CCIM, CRE"} • {edition.date}
+                </p>
+              </div>
+
+              {/* Hover State: Deep-blue LinkedIn overlay with Read on LinkedIn link & arrow graphic */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#003666] via-[#0A66C2]/95 to-[#0A66C2]/60 text-white p-4 sm:p-5 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 pointer-events-none">
+                <h4 className="text-white font-bold text-sm sm:text-base tracking-tight leading-snug mb-1 line-clamp-2 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                  {edition.title}
+                </h4>
+
+                <div className="text-[11.5px] text-blue-100/90 font-medium mb-3 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+                  <span>By {edition.author || "Kathleen Rose, CCIM, CRE"}</span>
+                  <span className="mx-1">•</span>
+                  <span>{edition.date}</span>
                 </div>
 
-                <div className="p-4 space-y-2">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    {edition.date}
+                <div className="flex items-center justify-between transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                  <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-white">
+                    <span>Read on LinkedIn</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="flex items-center text-white/40">
+                    <div className="w-8 sm:w-12 h-[1px] bg-white/40" />
+                    <ArrowRight className="w-3 h-3 -ml-0.5 text-white/50" />
                   </div>
-                  <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2">
-                    {edition.title}
-                  </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                    {edition.summary}
-                  </p>
                 </div>
               </div>
-
-              <div className="px-4 pb-4 pt-1">
-                <a
-                  href={edition.articleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] transition-colors inline-flex items-center gap-1"
-                >
-                  Read on LinkedIn &rarr;
-                </a>
-              </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>

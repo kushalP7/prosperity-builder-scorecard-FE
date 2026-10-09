@@ -333,6 +333,16 @@ export function LandingFooter() {
                   roseassociates.com
                 </a>
               </div>
+
+              {/* <div className="pt-2"> KP
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-[11px] font-extrabold shadow-sm transition-all"
+                >
+                  <span>Enterprise Inquiry</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div> */}
             </div>
           </div>
         </div>

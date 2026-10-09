@@ -15,6 +15,7 @@ import ExecutiveAnalyticsPage from "@/pages/landing/ExecutiveAnalyticsPage"
 import FrameworkPage from "@/pages/landing/FrameworkPage"
 import GlossaryPage from "@/pages/landing/GlossaryPage"
 import PricingPage from "@/pages/landing/PricingPage"
+import ContactPage from "@/pages/landing/ContactPage"
 import ProcessPage from "@/pages/landing/ProcessPage"
 import ProjectPortfolioPage from "@/pages/landing/ProjectPortfolioPage"
 import ProsperityBuilderScorecardPage from "@/pages/landing/ProsperityBuilderScorecardPage"
@@ -83,7 +84,11 @@ export function App() {
           />
           <Route path="/framework" element={<FrameworkPage />} />
           <Route path="/glossary" element={<GlossaryPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
+          {/* <Route path="/contact" element={<ContactPage />} /> KP */}
+          {/* <Route path="/enterprise-contact" element={<Navigate to="/contact" replace />}/> KP  */}
+          {/* KP */}
+          <Route path="/pricing" element={<PricingPage />} /> 
+          {/* <Route path="/pricing" element={<Navigate to="/contact" replace />} /> KP */}
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/project-portfolio" element={<ProjectPortfolioPage />} />
           <Route
@@ -175,7 +180,7 @@ export function App() {
             element={<FeatureUnderDevelopmentPage />}
           />{" "}
           {/* Future: <PaymentsPage /> */}
-          <Route path="/users" element={<UsersPage />} />{" "}
+          <Route path="/users" element={<FeatureUnderDevelopmentPage />} />{" "}
           {/* Future: <UsersPage /> */}
           <Route
             path="/settings"

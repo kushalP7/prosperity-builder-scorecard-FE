@@ -71,7 +71,7 @@ export function PublishedReportsCardsSection({ embedded = false }: PublishedRepo
     const controller = new AbortController()
     async function fetchReports() {
       try {
-        const data = await reportsApi.getReports("published", true, undefined, controller.signal)
+        const data = await reportsApi.getReports("published", true, undefined, controller.signal, "report")
         if (!controller.signal.aborted) {
           if (Array.isArray(data)) {
             setReports(data)

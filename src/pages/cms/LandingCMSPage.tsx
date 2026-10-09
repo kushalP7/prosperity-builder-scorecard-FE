@@ -742,12 +742,19 @@ export default function LandingCMSPage() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <Link
-                href={`/landing-cms/reports/edit/${report.id}`}
-                className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
-              >
-                {report.title}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/landing-cms/reports/edit/${report.id}`}
+                  className="font-bold text-slate-900 group-hover:text-[#B5111B] transition-colors truncate block"
+                >
+                  {report.title}
+                </Link>
+                {report.type === "newsletter" && (
+                  <span className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-50 text-[#B5111B] border border-rose-200">
+                    Newsletter
+                  </span>
+                )}
+              </div>
               <span className="text-[11px] text-slate-400 truncate block">
                 {report.summary || report.subtitle || `/${report.slug}`}
               </span>
@@ -841,14 +848,15 @@ export default function LandingCMSPage() {
         const report = row.original
         return (
           <div className="inline-flex items-center gap-1.5 justify-end w-full">
-            <Link
-              href={`/report/${report.slug || report.id}`}
+            <a
+              href={report.externalUrl || report.pdfUrl || `/report/${report.slug || report.id}`}
               target="_blank"
+              rel="noopener noreferrer"
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
-              title="Preview report in new tab"
+              title={report.type === "newsletter" ? "Open newsletter article in new tab" : "Preview report in new tab"}
             >
               <Eye className="w-4 h-4" />
-            </Link>
+            </a>
             <Link
               href={`/landing-cms/reports/edit/${report.id}`}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
@@ -1995,7 +2003,7 @@ export default function LandingCMSPage() {
 
                             {/* Description / Summary */}
                             <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed min-h-[34px]">
-                              {report.summary || report.subtitle || "In-depth market intelligence and executive insights into commercial real estate and economic development."}
+                              {report.summary || report.subtitle}
                             </p>
 
                             {/* Metadata Row: Author & Date */}

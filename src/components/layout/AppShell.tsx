@@ -36,6 +36,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     "/",
     "/login",
     "/about",
+    "/contact",
+    "/enterprise-contact",
     "/pricing",
     "/categories",
     "/services",
