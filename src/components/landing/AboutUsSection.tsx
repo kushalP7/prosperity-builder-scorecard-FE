@@ -96,7 +96,7 @@ export function AboutUsSection() {
 
                 <div className="pt-5 border-t border-red-900/50 flex items-center gap-4">
                   <img
-                    src="/kathleen_rose.png"
+                    src="/team/kathleen_rose.png"
                     alt="Kathleen Rose, CCIM, CRE"
                     className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-red-500/40 shadow-md shrink-0"
                   />
@@ -203,14 +203,14 @@ export function AboutUsSection() {
               <div className="w-full md:w-56 lg:w-64 shrink-0 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-slate-900 via-slate-900 to-[#3B0105] rounded-2xl border border-slate-800 shadow-md relative overflow-hidden text-center min-h-[220px]">
                 <div
                   className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-40 scale-150 transition-transform duration-700 group-hover:scale-175"
-                  style={{ backgroundImage: `url('/kathleen_rose.png')` }}
+                  style={{ backgroundImage: `url('/team/kathleen_rose.png')` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
 
                 <div className="relative z-10 space-y-3 w-full flex flex-col items-center">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-2 border-white/90 shadow-2xl overflow-hidden bg-slate-800 group-hover:scale-105 transition-transform duration-300">
                     <img
-                      src="/kathleen_rose.png"
+                      src="/team/kathleen_rose.png"
                       alt="Kathleen Rose, CCIM, CRE"
                       className="w-full h-full object-cover object-center"
                     />
@@ -313,14 +313,14 @@ export function AboutUsSection() {
               <div className="w-full md:w-56 lg:w-64 shrink-0 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-slate-900 via-slate-900 to-[#1F2937] rounded-2xl border border-slate-800 shadow-md relative overflow-hidden text-center min-h-[220px]">
                 <div
                   className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-40 scale-150 transition-transform duration-700 group-hover:scale-175"
-                  style={{ backgroundImage: `url('/daniel_bellot.png')` }}
+                  style={{ backgroundImage: `url('/team/daniel_bellot.png')` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
 
                 <div className="relative z-10 space-y-3 w-full flex flex-col items-center">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-2 border-white/90 shadow-2xl overflow-hidden bg-slate-800 group-hover:scale-105 transition-transform duration-300">
                     <img
-                      src="/daniel_bellot.png"
+                      src="/team/daniel_bellot.png"
                       alt="Daniel Bellot"
                       className="w-full h-full object-cover object-center"
                     />
@@ -423,14 +423,14 @@ export function AboutUsSection() {
               <div className="w-full md:w-56 lg:w-64 shrink-0 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-slate-900 via-slate-900 to-[#3B0105] rounded-2xl border border-slate-800 shadow-md relative overflow-hidden text-center min-h-[220px]">
                 <div
                   className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-40 scale-150 transition-transform duration-700 group-hover:scale-175"
-                  style={{ backgroundImage: `url('/dr_william_mccoy.png')` }}
+                  style={{ backgroundImage: `url('/team/dr_william_mccoy.png')` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent pointer-events-none" />
 
                 <div className="relative z-10 space-y-3 w-full flex flex-col items-center">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-2 border-white/90 shadow-2xl overflow-hidden bg-slate-800 group-hover:scale-105 transition-transform duration-300">
                     <img
-                      src="/dr_william_mccoy.png"
+                      src="/team/dr_william_mccoy.png"
                       alt="Dr. William McCoy"
                       className="w-full h-full object-cover object-center"
                     />

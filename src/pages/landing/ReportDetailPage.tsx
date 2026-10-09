@@ -22,7 +22,7 @@ const FALLBACK_SUMMER_REPORT: LandingReportItem = {
   subtitle: "Strategic Real Estate & Economic Development Decision Audit",
   author: "Kathleen Rose, CCIM, CRE",
   publishedAt: "2026-07-01",
-  coverImage: "/rose_community_hero.jpg",
+  coverImage: "/reports/rose_community_hero.jpg",
   pdfUrl: "https://roseassociates.com/reports/summer-2026.pdf",
   summary: "Comprehensive analysis of municipal growth trends, land use optimization, and real estate market indicators across Southeast developments.",
   contentHtml: `

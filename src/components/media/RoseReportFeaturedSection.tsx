@@ -95,7 +95,7 @@ export function RoseReportFeaturedSection() {
           author: item.author || "Kathleen Rose, CCIM, CRE",
           date: formatEditionDate(item.publishedAt),
           articleUrl: item.externalUrl || item.pdfUrl || LINKEDIN_NEWSLETTER_URL,
-          image: item.coverImage || "/rose_community_hero.jpg",
+          image: item.coverImage || "/reports/rose_community_hero.jpg",
         }))
       : FEATURED_EDITIONS
 
@@ -160,11 +160,11 @@ export function RoseReportFeaturedSection() {
             <div className="flex flex-col items-center text-center">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 mb-3">
                 <img
-                  src="/kathleen_rose.png"
+                  src="/team/kathleen_rose.png"
                   alt="Kathleen Rose, CCIM, CRE"
                   className="w-full h-full object-cover object-center"
                   onError={(e) => {
-                    e.currentTarget.src = "/logo.png"
+                    e.currentTarget.src = "/branding/logo.png"
                     e.currentTarget.className = "w-full h-full object-contain p-2 bg-white"
                   }}
                 />
@@ -212,7 +212,7 @@ export function RoseReportFeaturedSection() {
                 alt={edition.title}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 onError={(e) => {
-                  e.currentTarget.src = "/rose_community_hero.jpg"
+                  e.currentTarget.src = "/reports/rose_community_hero.jpg"
                 }}
               />
 

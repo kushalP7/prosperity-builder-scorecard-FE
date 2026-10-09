@@ -131,7 +131,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Sidebar Header with Brand Logo (Center Aligned) & Mobile Close Button */}
         <div className="relative px-4 py-5 min-h-[4.5rem] flex items-center justify-center border-b border-slate-100 md:border-b-0">
           <Link href="/landing-cms" className="flex items-center justify-center w-full">
-            <img src="/logo.png" alt="Rose Associates" className="max-h-12 w-auto object-contain mx-auto" />
+            <img src="/branding/logo.png" alt="Rose Associates" className="max-h-12 w-auto object-contain mx-auto" />
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

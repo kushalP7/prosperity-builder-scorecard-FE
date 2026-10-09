@@ -390,11 +390,11 @@ export default function ContactPage() {
                 <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full border-2 border-[#B5111B] ring-2 ring-red-100 overflow-hidden shrink-0 bg-slate-800 shadow-sm">
                     <img
-                      src="/kathleen_rose.png"
+                      src="/team/kathleen_rose.png"
                       alt="Kathleen Rose"
                       className="w-full h-full object-cover object-center"
                       onError={(e) => {
-                        e.currentTarget.src = "/logo.png"
+                        e.currentTarget.src = "/branding/logo.png"
                         e.currentTarget.className = "w-full h-full object-contain p-1 bg-white"
                       }}
                     />

@@ -65,12 +65,16 @@ npm run preview
 Rose Associates FE React/
 ├── dist/                      # Production build output
 ├── public/                    # Static assets, branding, partner logos, newsletters
-│   ├── linkedIn-newsletter/
-│   ├── partners/
-│   ├── sample-report/
+│   ├── branding/              # Brand logos (logo.png)
+│   ├── team/                  # Leadership & team photos
+│   ├── sectors/               # Community sector images
+│   ├── reports/               # Report cover images & assets
+│   ├── linkedIn-newsletter/   # Newsletter thumbnails
+│   ├── partners/              # Partner affiliation badges
+│   ├── sample-report/         # Static sample PDF reports
 │   ├── favicon.ico
-│   ├── icon.png
-│   └── logo.png
+│   ├── favicon.png
+│   └── icon.png
 ├── src/
 │   ├── components/            # UI, Layout, CMS, Landing, Charts, Map, Audio Player
 │   │   ├── cms/               # Rich text editor, file dropzone, media & report forms

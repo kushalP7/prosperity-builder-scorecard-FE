@@ -142,7 +142,7 @@ export default function LoginPage() {
               className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl w-fit shadow-xl border border-white/20 hover:scale-105 transition-all block cursor-pointer group"
               title="Return to Home"
             >
-              <img src="/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
+              <img src="/branding/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
             </Link>
 
             <Link
@@ -291,7 +291,7 @@ export default function LoginPage() {
         {/* Mobile Header */}
         <div className="md:hidden pb-6 flex items-center justify-between border-b border-slate-200/80 mb-4">
           <Link href="/">
-            <img src="/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
+            <img src="/branding/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
           </Link>
           <Link
             href="/"

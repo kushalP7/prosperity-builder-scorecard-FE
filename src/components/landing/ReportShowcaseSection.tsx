@@ -273,12 +273,12 @@ export function ReportShowcaseSection() {
                 <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm relative space-y-1 bg-slate-100 p-1">
                   <div className="grid grid-cols-2 gap-1 h-32">
                     <img
-                      src="/rose_community_hero.jpg"
+                      src="/reports/rose_community_hero.jpg"
                       alt="Sanford Historic Downtown"
                       className="w-full h-full object-cover rounded-lg"
                     />
                     <img
-                      src="/rose_report_team.jpg"
+                      src="/reports/rose_report_team.jpg"
                       alt="Kathleen Rose Community Presentation"
                       className="w-full h-full object-cover rounded-lg"
                     />
@@ -299,7 +299,7 @@ export function ReportShowcaseSection() {
 
               <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <img src="/logo.png" alt="Rose Associates" className="h-6 w-auto object-contain" />
+                  <img src="/branding/logo.png" alt="Rose Associates" className="h-6 w-auto object-contain" />
                 </div>
                 <span className="text-[8.5px] font-mono text-slate-400">Page 1 • Official Cover</span>
               </div>

@@ -21,7 +21,7 @@ const DEMO_REPORTS: LandingReportItem[] = [
     subtitle: "Strategic Real Estate & Economic Development Decision Audit",
     author: "Kathleen Rose, CCIM, CRE",
     publishedAt: "2026-07-01",
-    coverImage: "/rose_community_hero.jpg",
+    coverImage: "/reports/rose_community_hero.jpg",
     pdfUrl: "https://roseassociates.com/reports/summer-2026.pdf",
     summary: "A comprehensive audit of municipal growth trends, land use optimization, and real estate market indicators across Southeast developments.",
     featured: true,
@@ -34,7 +34,7 @@ const DEMO_REPORTS: LandingReportItem[] = [
     subtitle: "12-Category Scorecard Benchmark & Policy Blueprint",
     author: "Kathleen Rose, CCIM, CRE",
     publishedAt: "2026-05-15",
-    coverImage: "/rose_report_team.jpg",
+    coverImage: "/reports/rose_report_team.jpg",
     pdfUrl: "https://roseassociates.com/reports/lee-county.pdf",
     summary: "Deep dive evaluation of infrastructure, housing affordability, labor statistics, and municipal growth strategies for Lee County, NC.",
     featured: true,
@@ -47,7 +47,7 @@ const DEMO_REPORTS: LandingReportItem[] = [
     subtitle: "Capital Allocation & Advisory Intelligence",
     author: "Rose Associates Research Team",
     publishedAt: "2026-04-10",
-    coverImage: "/kathleen_rose.png",
+    coverImage: "/team/kathleen_rose.png",
     pdfUrl: "",
     summary: "Market research on commercial real estate yields, downtown revitalization tactics, and public-private economic partnerships.",
     featured: false,
@@ -194,7 +194,7 @@ export default function ReportsPage() {
               {filtered.map((report) => {
                 const formattedDate = formatReportDate(report.publishedAt);
                 const reportHref = `/report/${report.slug || report.id}`;
-                const coverSrc = report.coverImage || "/rose_community_hero.jpg";
+                const coverSrc = report.coverImage || "/reports/rose_community_hero.jpg";
 
                 return (
                   <Link
@@ -208,7 +208,7 @@ export default function ReportsPage() {
                       alt={report.title}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       onError={(e) => {
-                        e.currentTarget.src = "/rose_community_hero.jpg";
+                        e.currentTarget.src = "/reports/rose_community_hero.jpg";
                       }}
                     />
 

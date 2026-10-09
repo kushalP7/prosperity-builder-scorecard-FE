@@ -124,7 +124,7 @@ export function LandingHeader() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
           <img
-            src="/logo.png"
+            src="/branding/logo.png"
             alt="Rose Associates"
             draggable={false}
             className="h-9 sm:h-10 w-auto object-contain select-none pointer-events-none"

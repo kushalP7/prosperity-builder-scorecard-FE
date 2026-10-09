@@ -89,11 +89,11 @@ export function ScorecardAnatomySection() {
           <div className="flex items-center justify-center gap-3 pt-1">
             <div className="w-10 h-10 rounded-full border-2 border-rose-500/50 overflow-hidden shrink-0 bg-slate-800 shadow-md">
               <img
-                src="/kathleen_rose.png"
+                src="/team/kathleen_rose.png"
                 alt="Kathleen Rose"
                 className="w-full h-full object-cover object-center"
                 onError={(e) => {
-                  e.currentTarget.src = "/logo.png";
+                  e.currentTarget.src = "/branding/logo.png";
                   e.currentTarget.className =
                     "w-full h-full object-contain p-1 bg-white";
                 }}

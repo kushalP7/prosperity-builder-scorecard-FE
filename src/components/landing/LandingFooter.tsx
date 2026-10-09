@@ -93,7 +93,7 @@ export function LandingFooter() {
           <div className="space-y-5">
             <Link href="/" className="inline-flex items-center gap-3">
               <img
-                src="/logo.png"
+                src="/branding/logo.png"
                 alt="Rose Associates"
                 className="h-10 w-auto object-contain brightness-0 invert"
               />

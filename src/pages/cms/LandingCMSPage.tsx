@@ -1860,7 +1860,7 @@ export default function LandingCMSPage() {
                                 alt={report.title}
                                 className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
                                 onError={(e) => {
-                                  e.currentTarget.src = "/rose_community_hero.jpg"
+                                  e.currentTarget.src = "/reports/rose_community_hero.jpg"
                                 }}
                               />
                             ) : (
