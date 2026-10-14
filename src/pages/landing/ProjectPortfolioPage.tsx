@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ArrowUp } from "lucide-react"
-import { projectsApi, LandingProjectItem } from "@/lib/projects-api"
+import { projectsApi, LandingProjectItem, COMMUNITY_FOOTPRINT_LOCATIONS, CommunityFootprintLocation } from "@/lib/projects-api"
 import ProjectPortfolioMap from "@/components/landing/ProjectPortfolioMap"
 import ProjectPortfolioSidebar from "@/components/landing/ProjectPortfolioSidebar"
 import { LandingHeader } from "@/components/landing/LandingHeader"
@@ -50,14 +50,52 @@ export default function ProjectPortfolioPage() {
     loadProjects()
   }, [])
 
+  // All category locations to display on map as unified pins
   const displayedProjects = React.useMemo(() => {
-    if (selectedCategory === "all") return projects
-    return projects.filter((p) => p.category === selectedCategory)
+    // 1. Projects loaded from database
+    const dbProjects =
+      selectedCategory === "all"
+        ? projects
+        : projects.filter((p) => p.category === selectedCategory)
+
+    // 2. Built-in geocoded locations so all communities appear immediately
+    const fallbackLocations: LandingProjectItem[] = COMMUNITY_FOOTPRINT_LOCATIONS.filter(
+      (f) => selectedCategory === "all" || f.category === selectedCategory
+    ).map((f) => ({
+      id: f.id,
+      title: f.name,
+      category: f.category,
+      studyType: f.category.replace("Plans", "Plan").replace("Studies", "Study"),
+      latitude: f.latitude,
+      longitude: f.longitude,
+      status: "published",
+    }))
+
+    // Deduplicate: If database already has this title/location, prefer the database entry
+    const existingTitles = new Set(dbProjects.map((p) => p.title.toLowerCase().trim()))
+    const additional = fallbackLocations.filter(
+      (f) => !existingTitles.has(f.title.toLowerCase().trim())
+    )
+
+    const merged = [...dbProjects, ...additional]
+
+    // In "all" view, deduplicate by city name to prevent overlapping pins
+    if (selectedCategory === "all") {
+      const seen = new Set<string>()
+      return merged.filter((p) => {
+        const key = p.title.toLowerCase().split(",")[0].trim()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+    }
+
+    return merged
   }, [projects, selectedCategory])
 
   const handleSelectCommunity = (communityName: string) => {
     const cleanComm = communityName.split(",")[0].trim().toLowerCase()
-    const found = projects.find((p) => p.title.toLowerCase().includes(cleanComm))
+    const found = displayedProjects.find((p) => p.title.toLowerCase().includes(cleanComm))
     if (found) {
       setFocusedProject(found)
     }

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, ChevronDown, Compass, MapPin, Map as MapIcon, Building2, Briefcase, Landmark, Layers } from "lucide-react"
+import { ChevronRight, ChevronDown, Compass, MapPin, Map as MapIcon, Building2, Briefcase, Landmark } from "lucide-react"
 import { PORTFOLIO_CATEGORIES, CATEGORY_COMMUNITIES, LandingProjectItem } from "@/lib/projects-api"
 
 interface ProjectPortfolioSidebarProps {
@@ -18,7 +18,6 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Downtown & Small Area Plans": <Building2 className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
   "Economic Development Strategic Plans": <Briefcase className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
   "Entitlements & Positioning": <Landmark className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Asset/Portfolio Analysis & Strategy": <Layers className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
 }
 
 export default function ProjectPortfolioSidebar({

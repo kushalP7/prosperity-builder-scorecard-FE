@@ -118,14 +118,14 @@ function getGuestName(title?: string): string | null {
   return null;
 }
 
-type MediaTab = "rose-report" | "luminaries" | "additional" | "reports" | "audio";
+type MediaTab = "rose-report" | "luminaries" | "reports" | "audio" | "additional";
 
 const MEDIA_TABS: { id: MediaTab; label: string }[] = [
   { id: "rose-report", label: "The Rose Report" },
   { id: "luminaries", label: "Luminaries Podcasts" },
-  { id: "additional", label: "Additional Videos & Podcasts" },
   { id: "reports", label: "PDF Market Reports" },
   { id: "audio", label: "Audio Podcasts" },
+  { id: "additional", label: "Additional Videos & Podcasts" },
 ];
 
 function MediaSphereContent() {

@@ -477,7 +477,7 @@ export default function LandingCMSPage() {
       studyType: proj.studyType,
       latitude: proj.latitude,
       longitude: proj.longitude,
-      pdfUrl: proj.pdfUrl,
+      pdfUrl: proj.pdfUrl || "",
       featured: proj.featured ?? true,
       status: proj.status,
     })
@@ -536,8 +536,8 @@ export default function LandingCMSPage() {
 
   const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!projectFormData.title || !projectFormData.studyType || !projectFormData.pdfUrl) {
-      alert("Please fill in all required fields (Location, Study Type, and PDF URL).")
+    if (!projectFormData.title || !projectFormData.studyType) {
+      alert("Please fill in the required fields (Location and Study Type).")
       return
     }
 
@@ -2564,11 +2564,12 @@ export default function LandingCMSPage() {
 
               {/* PDF Document */}
               <div className="space-y-2 pt-1 border-t border-slate-100">
-                <label className="font-bold text-slate-700 block">Project PDF Document *</label>
+                <label className="font-bold text-slate-700 block">
+                  Project PDF Document <span className="font-normal text-slate-400 text-[11px]">(Optional for map location dots)</span>
+                </label>
                 <div className="space-y-2">
                   <input
                     type="url"
-                    required
                     value={projectFormData.pdfUrl}
                     onChange={(e) => {
                       cleanupStagedPdf()

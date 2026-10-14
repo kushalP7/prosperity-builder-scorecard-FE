@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Link, usePathname } from "@/lib/router-compat"
-import { Menu, X, ChevronDown, Award, Layers, DollarSign, Building2 } from "lucide-react"
+import { Menu, X, ChevronDown, Award, Layers, DollarSign, Building2, BarChart3 } from "lucide-react"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -24,6 +24,12 @@ export function LandingHeader() {
       description: "12 core community performance modules",
       href: "/categories",
       icon: Layers,
+    },
+    {
+      name: "Executive Analytics",
+      description: "Cross-jurisdiction data dashboards & insights",
+      href: "/executive-analytics",
+      icon: BarChart3,
     },
     {
       name: "Pricing Plans",
@@ -56,7 +62,6 @@ export function LandingHeader() {
       isDropdown: true,
       dropdownKey: "scorecard" as const,
     },
-    { name: "Executive Analytics", href: "/executive-analytics" },
     { name: "Projects", href: "/project-portfolio" },
     { name: "Media Sphere", href: "/videos" },
     { name: "About Us", href: "/about" },
@@ -71,7 +76,8 @@ export function LandingHeader() {
   const isScorecardActive =
     pathname === "/prosperity-builder-scorecard" ||
     pathname.startsWith("/categories") ||
-    pathname.startsWith("/pricing")
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/executive-analytics")
 
   const isContactActive =
     pathname === "/contact" ||
@@ -316,17 +322,6 @@ export function LandingHeader() {
               )}
             </div>
 
-            {/* Executive Analytics */}
-            <Link
-              href="/executive-analytics"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`p-2.5 rounded-lg transition-colors ${pathname === "/executive-analytics"
-                ? "bg-red-50 text-[#B5111B] font-extrabold"
-                : "hover:bg-red-50 hover:text-[#B5111B]"
-                }`}
-            >
-              Executive Analytics
-            </Link>
             {/* need to uncomment */}
             {/* Projects */}
             <Link

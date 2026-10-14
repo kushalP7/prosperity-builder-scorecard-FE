@@ -29,11 +29,17 @@ interface MediaFormProps {
   mediaId?: string;
 }
 
-const CATEGORY_PRESETS = [
+const VIDEO_CATEGORIES = [
   "Luminaries Podcasts",
   "Additional Videos & Podcasts",
+];
+
+const AUDIO_CATEGORIES = [
   "Audio Podcasts",
-  "Market Reports"
+];
+
+const DOCUMENT_CATEGORIES = [
+  "Market Reports",
 ];
 
 export function MediaForm({ mediaId }: MediaFormProps) {
@@ -57,12 +63,21 @@ export function MediaForm({ mediaId }: MediaFormProps) {
   });
 
   const categoryOptions = React.useMemo(() => {
-    const options = CATEGORY_PRESETS.map((cat) => ({ value: cat, label: cat }));
-    if (formState.category && !CATEGORY_PRESETS.includes(formState.category)) {
+    let presets: string[] = [];
+    if (formState.mediaType === "audio") {
+      presets = AUDIO_CATEGORIES;
+    } else if (formState.mediaType === "document") {
+      presets = DOCUMENT_CATEGORIES;
+    } else {
+      presets = VIDEO_CATEGORIES;
+    }
+
+    const options = presets.map((cat) => ({ value: cat, label: cat }));
+    if (formState.category && !presets.includes(formState.category)) {
       options.push({ value: formState.category, label: formState.category });
     }
     return options;
-  }, [formState.category]);
+  }, [formState.mediaType, formState.category]);
 
   const [stagedMediaFile, setStagedMediaFile] = useState<{
     file: File;
@@ -97,13 +112,21 @@ export function MediaForm({ mediaId }: MediaFormProps) {
         const item = await mediaApi.getMediaById(mediaId);
         if (item) {
           const detectedAudioSource = item.audioSource || (isAudioIframe(item.sourceUrl, item.audioSource) ? "iframe" : "upload");
+          const mediaType = item.mediaType || "video";
+          const defaultCategory =
+            mediaType === "audio"
+              ? "Audio Podcasts"
+              : mediaType === "document"
+                ? "Market Reports"
+                : "Luminaries Podcasts";
+
           setFormState({
             title: item.title,
-            mediaType: item.mediaType || "video",
+            mediaType: mediaType,
             videoSource: item.videoSource || "youtube",
             audioSource: detectedAudioSource,
             sourceUrl: item.sourceUrl || "",
-            category: item.category || "Luminaries Podcasts",
+            category: item.category || defaultCategory,
             description: item.description || "",
             featured: item.featured || false,
             status: item.status || "published",

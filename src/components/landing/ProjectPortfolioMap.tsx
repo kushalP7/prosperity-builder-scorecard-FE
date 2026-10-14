@@ -30,7 +30,7 @@ export default function ProjectPortfolioMap({
     setIsClient(true)
   }, [])
 
-  // Custom Rose Associates SVG Map Pin Icon
+  // Custom Rose Associates SVG Map Pin Icon matching shared design
   const createPinIcon = (L: any) => {
     return L.divIcon({
       className: "rose-map-pin-wrapper",
@@ -41,7 +41,8 @@ export default function ProjectPortfolioMap({
           height: 42px;
           cursor: pointer;
           filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35));
-        ">
+          transition: transform 0.2s ease;
+        " onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
           <svg viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
             <path d="M16 0C7.163 0 0 7.163 0 16C0 26.5 16 42 16 42C16 42 32 26.5 32 16C32 7.163 24.837 0 16 0Z" fill="#B5111B"/>
             <circle cx="16" cy="16" r="6" fill="#FFFFFF"/>
@@ -54,16 +55,7 @@ export default function ProjectPortfolioMap({
     })
   }
 
-  // Open every single marker popup on the map
-  const openAllPopups = () => {
-    markersRef.current.forEach((marker) => {
-      if (marker && typeof marker.openPopup === "function") {
-        marker.openPopup()
-      }
-    })
-  }
-
-  // Render Markers
+  // Render Markers on Map
   const renderMarkers = (L: any, map: any) => {
     if (!map) return
 
@@ -71,6 +63,7 @@ export default function ProjectPortfolioMap({
     markersRef.current.clear()
 
     const currentProjects = projectsRef.current || []
+
     if (currentProjects.length === 0) {
       map.setView([35.209, -80.497], 7, { animate: false })
       return
@@ -81,62 +74,43 @@ export default function ProjectPortfolioMap({
     currentProjects.forEach((proj) => {
       if (typeof proj.latitude !== "number" || typeof proj.longitude !== "number") return
 
-      const marker = L.marker([proj.latitude, proj.longitude], { icon: pinIcon }).addTo(map)
+      const marker = L.marker([proj.latitude, proj.longitude], {
+        icon: pinIcon,
+        zIndexOffset: 300,
+      }).addTo(map)
 
-      // Popup Content matching Rose Associates original UI
+      // Popup Content matching the user's shared image
       const popupHtml = `
         <div class="rose-portfolio-popup" style="
-          font-family: var(--font-sans, system-ui, sans-serif);
+          font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
           text-align: center;
-          padding: 6px 8px 4px;
-          min-width: 140px;
-          max-width: 190px;
+          padding: 8px 14px 6px;
+          min-width: 130px;
+          max-width: 220px;
         ">
           <h4 style="
             margin: 0 0 3px;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 13.5px;
+            font-weight: 800;
             color: #0f172a;
+            letter-spacing: -0.01em;
             line-height: 1.25;
           ">${proj.title}</h4>
           
           <p style="
-            margin: 0 0 8px;
-            font-size: 10.5px;
+            margin: 0;
+            font-size: 11px;
             color: #475569;
             font-weight: 500;
-            line-height: 1.3;
-          ">${proj.studyType || ""}</p>
-          
-          <a 
-            href="${proj.pdfUrl || '#'}" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            class="view-project-btn"
-            style="
-              display: inline-block;
-              background-color: #000000;
-              color: #ffffff;
-              font-size: 10.5px;
-              font-weight: 700;
-              padding: 5px 15px;
-              border-radius: 9999px;
-              text-decoration: none;
-              box-shadow: 0 2px 5px rgba(0,0,0,0.22);
-              transition: all 0.2s ease;
-            "
-            onmouseover="this.style.backgroundColor='#B5111B'; this.style.transform='scale(1.03)';"
-            onmouseout="this.style.backgroundColor='#000000'; this.style.transform='scale(1)';"
-          >
-            View Project
-          </a>
+            line-height: 1.35;
+          ">${proj.studyType || proj.category || ""}</p>
         </div>
       `
 
-      // AutoClose: false & CloseOnClick: false keeps all pin popups open simultaneously
+      // autoClose: true ensures only one popup is open at a time without stacking
       marker.bindPopup(popupHtml, {
-        autoClose: false,
-        closeOnClick: false,
+        autoClose: true,
+        closeOnClick: true,
         closeButton: false,
         className: "rose-custom-leaflet-popup",
         offset: [0, 0],
@@ -149,7 +123,7 @@ export default function ProjectPortfolioMap({
       markersRef.current.set(proj.id, marker)
     })
 
-    // Fit map bounds to encompass all pins and open popups nicely
+    // Fit map bounds to encompass all valid coordinates
     const validCoords = currentProjects
       .filter((p) => typeof p.latitude === "number" && typeof p.longitude === "number")
       .map((p) => [p.latitude, p.longitude] as [number, number])
@@ -157,7 +131,7 @@ export default function ProjectPortfolioMap({
     if (validCoords.length > 0) {
       const bounds = L.latLngBounds(validCoords)
       map.fitBounds(bounds, {
-        paddingTopLeft: [40, 80],
+        paddingTopLeft: [40, 60],
         paddingBottomRight: [40, 40],
         maxZoom: 8,
         animate: false,
@@ -165,11 +139,6 @@ export default function ProjectPortfolioMap({
     }
 
     map.invalidateSize()
-
-    // Trigger open all popups immediately and with safety timers
-    openAllPopups()
-    setTimeout(openAllPopups, 80)
-    setTimeout(openAllPopups, 250)
   }
 
   // Initialize Leaflet map
@@ -192,7 +161,7 @@ export default function ProjectPortfolioMap({
         scrollWheelZoom: true,
         zoomControl: true,
         attributionControl: false,
-        closePopupOnClick: false,
+        closePopupOnClick: true,
       })
 
       // OpenStreetMap Carto tiles
@@ -203,11 +172,6 @@ export default function ProjectPortfolioMap({
 
       // Add clean attribution in bottom right
       L.control.attribution({ position: "bottomright" }).addTo(map)
-
-      // Maintain popups on user pan or zoom
-      map.on("zoomend", () => {
-        openAllPopups()
-      })
 
       mapInstanceRef.current = map
 
@@ -275,11 +239,10 @@ export default function ProjectPortfolioMap({
       {projects.length === 0 && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
           <div className="bg-white/95 backdrop-blur-xs border border-slate-200/90 px-4 py-1.5 rounded-full shadow-md text-xs font-semibold text-slate-600">
-            No map pins for this category
+            No locations for this category
           </div>
         </div>
       )}
-
     </div>
   )
 }
