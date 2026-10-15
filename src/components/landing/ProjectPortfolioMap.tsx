@@ -79,7 +79,15 @@ export default function ProjectPortfolioMap({
         zIndexOffset: 300,
       }).addTo(map)
 
-      // Popup Content matching the user's shared image
+      // Show 'View Project' button if the project has a valid PDF file URL; otherwise keep it clean without button
+      const showPdfButton = Boolean(
+        proj.pdfUrl &&
+        typeof proj.pdfUrl === "string" &&
+        proj.pdfUrl.trim() !== "" &&
+        proj.pdfUrl.trim() !== "#"
+      )
+
+      // Popup Content matching the user's shared design
       const popupHtml = `
         <div class="rose-portfolio-popup" style="
           font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
@@ -104,6 +112,32 @@ export default function ProjectPortfolioMap({
             font-weight: 500;
             line-height: 1.35;
           ">${proj.studyType || proj.category || ""}</p>
+          ${showPdfButton ? `
+            <div style="margin-top: 7px;">
+              <a 
+                href="${proj.pdfUrl!.trim()}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="view-project-btn"
+                style="
+                  display: inline-block;
+                  background-color: #000000;
+                  color: #ffffff;
+                  font-size: 10.5px;
+                  font-weight: 700;
+                  padding: 4.5px 13px;
+                  border-radius: 9999px;
+                  text-decoration: none;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                  transition: all 0.2s ease;
+                "
+                onmouseover="this.style.backgroundColor='#B5111B'; this.style.transform='scale(1.03)';"
+                onmouseout="this.style.backgroundColor='#000000'; this.style.transform='scale(1)';"
+              >
+                View Project
+              </a>
+            </div>
+          ` : ''}
         </div>
       `
 
@@ -170,9 +204,6 @@ export default function ProjectPortfolioMap({
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map)
 
-      // Add clean attribution in bottom right
-      L.control.attribution({ position: "bottomright" }).addTo(map)
-
       mapInstanceRef.current = map
 
       // Render markers immediately
@@ -233,7 +264,7 @@ export default function ProjectPortfolioMap({
 
   return (
     <div className="relative isolate z-0 w-full h-[520px] sm:h-[580px] lg:h-[620px] rounded-xl overflow-hidden shadow-sm border border-slate-200 group">
-      <div ref={mapContainerRef} className="w-full h-full z-10" />
+      <div ref={mapContainerRef} className="w-full h-full z-10 [&_.leaflet-control-attribution]:!hidden" />
 
       {/* Subtle notification when category has no map pins */}
       {projects.length === 0 && (

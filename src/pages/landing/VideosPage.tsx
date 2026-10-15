@@ -859,7 +859,7 @@ function MediaSphereContent() {
                           key={podcast.id}
                           className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition space-y-4 text-slate-900"
                         >
-                          <div className="flex items-start gap-3.5">
+                          <div className="flex items-start gap-3.5 min-w-0">
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8F0D15] to-[#B5111B] flex items-center justify-center shrink-0 border border-rose-200 shadow-xs text-white font-black">
                               RA
                             </div>
@@ -884,13 +884,18 @@ function MediaSphereContent() {
                               className="w-full border-0 block bg-white"
                               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                               loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
                             />
                           </div>
 
-                          {podcast.description && (
-                            <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                          {podcast.description ? (
+                            <p className="text-xs text-slate-600 leading-relaxed line-clamp-2 pt-1">
                               {podcast.description}
                             </p>
+                          ) : (
+                            <div className="text-[11px] text-slate-400 font-medium pt-1">
+                              Rose Associates Audio Series
+                            </div>
                           )}
                         </div>
                       );

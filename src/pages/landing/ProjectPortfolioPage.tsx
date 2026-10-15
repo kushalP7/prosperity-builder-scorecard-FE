@@ -65,7 +65,10 @@ export default function ProjectPortfolioPage() {
       id: f.id,
       title: f.name,
       category: f.category,
-      studyType: f.category.replace("Plans", "Plan").replace("Studies", "Study"),
+      studyType: f.category
+        .replace("Plans", "Plan")
+        .replace("Studies", "Study")
+        .replace(/\//g, " / "),
       latitude: f.latitude,
       longitude: f.longitude,
       status: "published",

@@ -26,6 +26,7 @@ export const PORTFOLIO_CATEGORIES = [
   'Downtown & Small Area Plans',
   'Economic Development Strategic Plans',
   'Entitlements & Positioning',
+  'Asset/Portfolio Analysis & Strategy',
 ] as const;
 
 export const CATEGORY_COMMUNITIES: Record<string, string[]> = {
@@ -105,6 +106,11 @@ export const CATEGORY_COMMUNITIES: Record<string, string[]> = {
     'Marvin, NC',
     'Pineville, NC',
     'Wake Forest, NC',
+  ],
+  'Asset/Portfolio Analysis & Strategy': [
+    'Davidson, NC',
+    'Huntersville, NC',
+    'Winston-Salem, NC',
   ],
 };
 
@@ -186,6 +192,11 @@ export const COMMUNITY_FOOTPRINT_LOCATIONS: CommunityFootprintLocation[] = [
   { id: 'footprint-ent-marvin', name: 'Marvin, NC', category: 'Entitlements & Positioning', latitude: 35.0254, longitude: -80.8228 },
   { id: 'footprint-ent-pineville', name: 'Pineville, NC', category: 'Entitlements & Positioning', latitude: 35.0832, longitude: -80.8926 },
   { id: 'footprint-ent-wakeforest', name: 'Wake Forest, NC', category: 'Entitlements & Positioning', latitude: 35.9799, longitude: -78.5097 },
+
+  // Asset / Portfolio Analysis & Strategy
+  { id: 'footprint-apa-davidson', name: 'Davidson, NC', category: 'Asset/Portfolio Analysis & Strategy', latitude: 35.4993, longitude: -80.8487 },
+  { id: 'footprint-apa-huntersville', name: 'Huntersville, NC', category: 'Asset/Portfolio Analysis & Strategy', latitude: 35.4107, longitude: -80.8429 },
+  { id: 'footprint-apa-winstonsalem', name: 'Winston-Salem, NC', category: 'Asset/Portfolio Analysis & Strategy', latitude: 36.0999, longitude: -80.2442 },
 ];
 
 const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';

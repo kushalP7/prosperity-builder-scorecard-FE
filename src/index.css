@@ -192,3 +192,8 @@ img {
 .rose-custom-leaflet-popup a.leaflet-popup-close-button:hover {
   color: #b5111b !important;
 }
+
+/* Hide Leaflet bottom attribution banner */
+.leaflet-control-attribution {
+  display: none !important;
+}

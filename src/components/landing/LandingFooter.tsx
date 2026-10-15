@@ -119,15 +119,12 @@ export function LandingFooter() {
                 </svg>
               </a>
               <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="mailto:info@roseassociates.com"
                 className="w-8 h-8 rounded-xl border border-slate-800 bg-slate-900 hover:bg-[#B5111B] hover:border-[#B5111B] text-slate-300 hover:text-white flex items-center justify-center transition-all shadow-xs"
-                aria-label="Twitter"
+                aria-label="Email"
+                title="Send us an email"
               >
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
+                <Mail className="w-3.5 h-3.5" />
               </a>
               <a
                 href="https://www.youtube.com/@RoseAssociatesNC"

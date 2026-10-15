@@ -20,10 +20,15 @@ export function extractIframeSrc(input?: string): string {
   if (!input) return '';
   const trimmed = input.trim();
   const srcMatch = trimmed.match(/<iframe\b[^>]*\bsrc=["']([^"']+)["']/i);
-  if (srcMatch && srcMatch[1]) {
-    return srcMatch[1];
+  let url = srcMatch && srcMatch[1] ? srcMatch[1] : trimmed;
+
+  // Sanitize and clean up SoundCloud player URLs
+  if (url.includes('w.soundcloud.com/player/')) {
+    // Fix invalid 8-digit color hex like color=FFFFFF00 -> color=%23b5111b
+    url = url.replace(/color=[A-Fa-f0-9]{8}/gi, 'color=%23b5111b');
   }
-  return trimmed;
+
+  return url;
 }
 
 /**
@@ -42,6 +47,7 @@ export function extractIframeHeight(input?: string, fallback: number = 180): num
   if (trimmed.includes('podbean.com')) return 150;
   return fallback;
 }
+
 
 /**
  * Detects whether an audio item is an iframe embed

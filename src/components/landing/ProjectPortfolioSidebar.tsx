@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronRight, ChevronDown, Compass, MapPin, Map as MapIcon, Building2, Briefcase, Landmark } from "lucide-react"
+import { ChevronRight, ChevronDown, Compass, MapPin, Map as MapIcon, Building2, Briefcase, Landmark, Layers } from "lucide-react"
 import { PORTFOLIO_CATEGORIES, CATEGORY_COMMUNITIES, LandingProjectItem } from "@/lib/projects-api"
 
 interface ProjectPortfolioSidebarProps {
@@ -18,12 +18,15 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Downtown & Small Area Plans": <Building2 className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
   "Economic Development Strategic Plans": <Briefcase className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
   "Entitlements & Positioning": <Landmark className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
+  "Asset/Portfolio Analysis & Strategy": <Layers className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
+  "Asset / Portfolio Analysis & Strategy": <Layers className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
 }
 
 export default function ProjectPortfolioSidebar({
   selectedCategory,
   onSelectCategory,
   onSelectCommunity,
+  projects = [],
 }: ProjectPortfolioSidebarProps) {
   // Normalize category name formatting helper
   const formatCategoryLabel = (cat: string) => {
@@ -90,7 +93,20 @@ export default function ProjectPortfolioSidebar({
         {PORTFOLIO_CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat
           const icon = CATEGORY_ICONS[cat] || <Briefcase className="w-4.5 h-4.5 text-white stroke-[2.2]" />
-          const communities = CATEGORY_COMMUNITIES[cat] || []
+          const staticCommunities = CATEGORY_COMMUNITIES[cat] || []
+          const dbProjectsForCat = (projects || [])
+            .filter((p) => p.category === cat)
+            .map((p) => p.title)
+
+          const combinedSet = new Set<string>()
+          const communities: string[] = []
+          for (const item of [...staticCommunities, ...dbProjectsForCat]) {
+            const key = item.toLowerCase().trim()
+            if (!combinedSet.has(key)) {
+              combinedSet.add(key)
+              communities.push(item)
+            }
+          }
 
           return (
             <div key={cat} className="transition-colors">

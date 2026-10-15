@@ -41,6 +41,19 @@ import { DataTable } from "@/components/ui/data-table"
 import { Pagination } from "@/components/ui/pagination"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
 
+function getPdfFilename(url?: string): string {
+  if (!url) return ""
+  if (url.startsWith("blob:")) return ""
+  try {
+    const pathname = new URL(url).pathname
+    const last = pathname.substring(pathname.lastIndexOf("/") + 1)
+    return decodeURIComponent(last)
+  } catch {
+    const last = url.substring(url.lastIndexOf("/") + 1)
+    return decodeURIComponent(last)
+  }
+}
+
 export default function LandingCMSPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = React.useState<"reports" | "media" | "projects">("reports")
@@ -304,7 +317,7 @@ export default function LandingCMSPage() {
         })
         setAvailableReportYears(Array.from(years).sort((a, b) => b.localeCompare(a)))
       }
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   // Server-side Load Reports
@@ -360,7 +373,7 @@ export default function LandingCMSPage() {
         })
         setAvailableMediaYears(Array.from(years).sort((a, b) => b.localeCompare(a)))
       }
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   const loadMedia = React.useCallback(async () => {
@@ -544,7 +557,7 @@ export default function LandingCMSPage() {
     let finalPdfUrl = projectFormData.pdfUrl
 
     // If a PDF file was staged locally, upload it now upon form submit
-    if (stagedPdfFile && projectFormData.pdfUrl === stagedPdfPreviewUrl) {
+    if (stagedPdfFile) {
       setUploadingPdf(true)
       try {
         const res = await projectsApi.uploadPdf(stagedPdfFile)
@@ -565,6 +578,8 @@ export default function LandingCMSPage() {
       } finally {
         setUploadingPdf(false)
       }
+    } else if (finalPdfUrl?.startsWith("blob:")) {
+      finalPdfUrl = editingProject?.pdfUrl || ""
     }
 
     const payload = { ...projectFormData, pdfUrl: finalPdfUrl }
@@ -673,26 +688,26 @@ export default function LandingCMSPage() {
   const reportYears = React.useMemo(() => {
     if (availableReportYears.length > 0) return availableReportYears
     const years = new Set<string>()
-    ;(reports || []).forEach((r) => {
-      const d = r.publishedAt || r.createdAt
-      if (d) {
-        const yr = new Date(d).getFullYear()
-        if (!isNaN(yr)) years.add(String(yr))
-      }
-    })
+      ; (reports || []).forEach((r) => {
+        const d = r.publishedAt || r.createdAt
+        if (d) {
+          const yr = new Date(d).getFullYear()
+          if (!isNaN(yr)) years.add(String(yr))
+        }
+      })
     return Array.from(years).sort((a, b) => b.localeCompare(a))
   }, [availableReportYears, reports])
 
   const mediaYears = React.useMemo(() => {
     if (availableMediaYears.length > 0) return availableMediaYears
     const years = new Set<string>()
-    ;(mediaItems || []).forEach((m) => {
-      const d = m.createdAt || m.updatedAt
-      if (d) {
-        const yr = new Date(d).getFullYear()
-        if (!isNaN(yr)) years.add(String(yr))
-      }
-    })
+      ; (mediaItems || []).forEach((m) => {
+        const d = m.createdAt || m.updatedAt
+        if (d) {
+          const yr = new Date(d).getFullYear()
+          if (!isNaN(yr)) years.add(String(yr))
+        }
+      })
     return Array.from(years).sort((a, b) => b.localeCompare(a))
   }, [availableMediaYears, mediaItems])
 
@@ -774,16 +789,14 @@ export default function LandingCMSPage() {
             type="button"
             onClick={() => handleToggleStatus(report)}
             title="Click to toggle status"
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition hover:opacity-80 cursor-pointer ${
-              report.status === "published"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition hover:opacity-80 cursor-pointer ${report.status === "published"
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : "bg-slate-100 text-slate-700 border-slate-200"
-            }`}
+              }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full ${report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                }`}
             />
             <span className="capitalize">{report.status}</span>
           </button>
@@ -831,10 +844,10 @@ export default function LandingCMSPage() {
           <span className="text-slate-500 font-medium whitespace-nowrap">
             {d
               ? new Date(d).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
               : "Recent"}
           </span>
         )
@@ -982,16 +995,14 @@ export default function LandingCMSPage() {
             type="button"
             onClick={() => handleToggleMediaStatus(item)}
             title="Click to toggle status"
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
-              item.status === "published"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${item.status === "published"
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : "bg-slate-100 text-slate-700 border-slate-200"
-            }`}
+              }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full ${item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                }`}
             />
             <span className="capitalize">{item.status}</span>
           </button>
@@ -1009,9 +1020,8 @@ export default function LandingCMSPage() {
             <button
               type="button"
               onClick={() => handleToggleMediaFeatured(item)}
-              className={`p-1 rounded-lg transition cursor-pointer ${
-                item.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
-              }`}
+              className={`p-1 rounded-lg transition cursor-pointer ${item.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
+                }`}
               title="Toggle featured status"
             >
               <Star className={`w-4 h-4 ${item.featured ? "fill-amber-400 text-amber-500" : ""}`} />
@@ -1041,10 +1051,10 @@ export default function LandingCMSPage() {
           <span className="text-slate-500 font-medium whitespace-nowrap">
             {d
               ? new Date(d).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
               : "Recent"}
           </span>
         )
@@ -1193,9 +1203,8 @@ export default function LandingCMSPage() {
               type="button"
               onClick={() => handleToggleProjectFeatured(proj)}
               title="Toggle visibility on interactive map"
-              className={`p-1.5 rounded-lg transition cursor-pointer ${
-                proj.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
-              }`}
+              className={`p-1.5 rounded-lg transition cursor-pointer ${proj.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
+                }`}
             >
               <Star className={`w-4 h-4 ${proj.featured ? "fill-amber-400 text-amber-500" : ""}`} />
             </button>
@@ -1214,16 +1223,14 @@ export default function LandingCMSPage() {
             <button
               type="button"
               onClick={() => handleToggleProjectStatus(proj)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${
-                proj.status === "published"
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${proj.status === "published"
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                   : "bg-slate-100 text-slate-600 border-slate-200"
-              }`}
+                }`}
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  proj.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${proj.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                  }`}
               />
               <span className="capitalize">{proj.status}</span>
             </button>
@@ -1242,10 +1249,10 @@ export default function LandingCMSPage() {
           <span className="text-slate-500 font-medium whitespace-nowrap">
             {d
               ? new Date(d).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
               : "Recent"}
           </span>
         )
@@ -1329,8 +1336,8 @@ export default function LandingCMSPage() {
             type="button"
             onClick={() => handleTabChange("reports")}
             className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "reports"
-                ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
-                : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
+              ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
+              : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
             <FileText className="w-4 h-4" />
@@ -1341,8 +1348,8 @@ export default function LandingCMSPage() {
             type="button"
             onClick={() => handleTabChange("media")}
             className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "media"
-                ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
-                : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
+              ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
+              : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
             <Film className="w-4 h-4" />
@@ -1353,8 +1360,8 @@ export default function LandingCMSPage() {
             type="button"
             onClick={() => handleTabChange("projects")}
             className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "projects"
-                ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
-                : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
+              ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
+              : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
             <FolderOpen className="w-4 h-4" />
@@ -1399,8 +1406,8 @@ export default function LandingCMSPage() {
                     type="button"
                     onClick={() => setReportViewMode("grid")}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${reportViewMode === "grid"
-                        ? "bg-[#B5111B] text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-800"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
                       }`}
                     title="Grid View"
                   >
@@ -1410,8 +1417,8 @@ export default function LandingCMSPage() {
                     type="button"
                     onClick={() => setReportViewMode("list")}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${reportViewMode === "list"
-                        ? "bg-[#B5111B] text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-800"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
                       }`}
                     title="List View"
                   >
@@ -1469,8 +1476,8 @@ export default function LandingCMSPage() {
                   setReportPage(1)
                 }}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${reportFeaturedOnly
-                    ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
-                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                  ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
+                  : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
                   }`}
               >
                 <Star
@@ -1538,8 +1545,8 @@ export default function LandingCMSPage() {
                     type="button"
                     onClick={() => setMediaViewMode("grid")}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${mediaViewMode === "grid"
-                        ? "bg-[#B5111B] text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-800"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
                       }`}
                     title="Grid View"
                   >
@@ -1549,8 +1556,8 @@ export default function LandingCMSPage() {
                     type="button"
                     onClick={() => setMediaViewMode("list")}
                     className={`p-1.5 rounded-lg transition cursor-pointer ${mediaViewMode === "list"
-                        ? "bg-[#B5111B] text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-800"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
                       }`}
                     title="List View"
                   >
@@ -1581,8 +1588,8 @@ export default function LandingCMSPage() {
                       setMediaPage(1)
                     }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold capitalize transition cursor-pointer shrink-0 ${mediaTypeFilter === type
-                        ? "bg-white text-slate-900 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-500 hover:text-slate-900"
                       }`}
                   >
                     {type === "all" ? "All" : type === "document" ? "PDFs" : type + "s"}
@@ -1628,8 +1635,8 @@ export default function LandingCMSPage() {
                   setMediaPage(1)
                 }}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer select-none shrink-0 ${mediaFeaturedOnly
-                    ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
-                    : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                  ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs font-extrabold"
+                  : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
                   }`}
               >
                 <Star
@@ -1751,8 +1758,8 @@ export default function LandingCMSPage() {
                   setProjectsPage(1)
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${projectsFeaturedOnly
-                    ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold"
-                    : "bg-slate-50/80 text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  ? "bg-amber-100 text-amber-900 border border-amber-300 font-bold"
+                  : "bg-slate-50/80 text-slate-600 border border-slate-200 hover:bg-slate-100"
                   }`}
               >
                 <Star className={`w-3.5 h-3.5 ${projectsFeaturedOnly ? "fill-amber-500 text-amber-500" : ""}`} />
@@ -1964,9 +1971,8 @@ export default function LandingCMSPage() {
                                 title="Edit report status"
                               >
                                 <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-                                  }`}
+                                  className={`w-2 h-2 rounded-full ${report.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                                    }`}
                                 />
                                 <span>{report.status === "published" ? "Published" : "Draft"}</span>
                               </Link>
@@ -2304,9 +2310,8 @@ export default function LandingCMSPage() {
                                 title="Click to toggle status"
                               >
                                 <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
-                                  }`}
+                                  className={`w-2 h-2 rounded-full ${item.status === "published" ? "bg-emerald-500" : "bg-slate-400"
+                                    }`}
                                 />
                                 <span>{item.status === "published" ? "Published" : "Draft"}</span>
                               </button>
@@ -2568,16 +2573,42 @@ export default function LandingCMSPage() {
                   Project PDF Document <span className="font-normal text-slate-400 text-[11px]">(Optional for map location dots)</span>
                 </label>
                 <div className="space-y-2">
-                  <input
-                    type="url"
-                    value={projectFormData.pdfUrl}
-                    onChange={(e) => {
-                      cleanupStagedPdf()
-                      setProjectFormData({ ...projectFormData, pdfUrl: e.target.value })
-                    }}
-                    placeholder="https://.../project-highlights.pdf"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#B5111B] focus:bg-white"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      readOnly={!!stagedPdfFile}
+                      value={
+                        stagedPdfFile
+                          ? stagedPdfFile.name
+                          : projectFormData.pdfUrl?.startsWith("blob:")
+                          ? ""
+                          : projectFormData.pdfUrl
+                      }
+                      onChange={(e) => {
+                        cleanupStagedPdf()
+                        setProjectFormData({ ...projectFormData, pdfUrl: e.target.value })
+                      }}
+                      placeholder={stagedPdfFile ? stagedPdfFile.name : "https://.../project-highlights.pdf or upload local PDF below"}
+                      className={`w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#B5111B] focus:bg-white transition ${
+                        stagedPdfFile
+                          ? "bg-amber-50/70 border-amber-300 text-amber-950 font-bold pr-9 cursor-default"
+                          : ""
+                      }`}
+                    />
+                    {stagedPdfFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          cleanupStagedPdf()
+                          setProjectFormData((prev) => ({ ...prev, pdfUrl: editingProject?.pdfUrl || "" }))
+                        }}
+                        className="absolute right-3 p-1 text-amber-700 hover:text-red-600 rounded-md transition cursor-pointer"
+                        title="Remove selected PDF"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
 
                   {/* Staged file indicator */}
                   {stagedPdfFile && (
@@ -2586,7 +2617,7 @@ export default function LandingCMSPage() {
                       <div className="min-w-0 flex-1">
                         <span className="font-bold block truncate">{stagedPdfFile.name}</span>
                         <span className="text-[10px] text-amber-600 font-semibold">
-                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally
+                          {(stagedPdfFile.size / 1024).toFixed(0)} KB &bull; Staged locally (will upload on save)
                         </span>
                       </div>
                       <button
@@ -2597,6 +2628,24 @@ export default function LandingCMSPage() {
                         }}
                         className="p-1 text-amber-700 hover:text-red-600 rounded-md transition cursor-pointer"
                         title="Remove staged file"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Existing attached PDF indicator */}
+                  {!stagedPdfFile && projectFormData.pdfUrl && !projectFormData.pdfUrl.startsWith("blob:") && (
+                    <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-xs font-medium">
+                      <FileText className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <span className="truncate flex-1 font-semibold text-slate-800">
+                        Current document: {getPdfFilename(projectFormData.pdfUrl)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProjectFormData((prev) => ({ ...prev, pdfUrl: "" }))}
+                        className="p-1 text-slate-400 hover:text-red-600 rounded-md transition cursor-pointer"
+                        title="Remove document link"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -2617,9 +2666,9 @@ export default function LandingCMSPage() {
                       />
                     </label>
 
-                    {projectFormData.pdfUrl && (
+                    {(stagedPdfPreviewUrl || (projectFormData.pdfUrl && !projectFormData.pdfUrl.startsWith("blob:"))) && (
                       <a
-                        href={projectFormData.pdfUrl}
+                        href={stagedPdfPreviewUrl || projectFormData.pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[#B5111B] hover:underline font-bold"
@@ -2651,8 +2700,8 @@ export default function LandingCMSPage() {
                       })
                     }
                     className={`px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-wider transition cursor-pointer ${projectFormData.status === "published"
-                        ? "bg-emerald-500 text-white"
-                        : "bg-slate-200 text-slate-700"
+                      ? "bg-emerald-500 text-white"
+                      : "bg-slate-200 text-slate-700"
                       }`}
                   >
                     {projectFormData.status}
