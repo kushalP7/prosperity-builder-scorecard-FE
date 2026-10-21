@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { sortSections, sortCategories, sortGroups } from "@/lib/scorecardOrder"
 import { apiClient } from "@/lib/api"
 import { toast } from "@/components/ui/toast"
+import { FormulaChipEditor, normalizeFormulaSpacing } from "@/components/ui/FormulaChipEditor"
 
 export default function SectionMakerPage() {
   const {
@@ -1031,36 +1032,11 @@ export default function SectionMakerPage() {
 
             {newGroup.isFormulaOverridden && (
               <div className="space-y-2 mt-2 pt-2 border-t border-border/60">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground">Custom Expression:</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setNewGroup(prev => ({ ...prev, formula: '' }))}
-                      className="text-[11px] text-muted-foreground hover:text-red-500 px-2 py-0.5 transition-colors cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="cursor-pointer text-[11px] h-6 px-2"
-                      onClick={() => {
-                        const defaultExpr = newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value';
-                        setNewGroup(prev => ({ ...prev, formula: defaultExpr }));
-                      }}
-                    >
-                      Reset to Default
-                    </Button>
-                  </div>
-                </div>
-
-                <textarea
-                  rows={3}
-                  className="w-full min-h-[90px] rounded-md border border-input bg-background px-3 py-2 text-xs font-mono font-semibold shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary leading-relaxed resize-y"
+                <FormulaChipEditor
                   value={newGroup.formula !== undefined ? newGroup.formula : (newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value')}
-                  onChange={e => setNewGroup({ ...newGroup, formula: e.target.value })}
+                  onChange={(val) => setNewGroup({ ...newGroup, formula: val })}
+                  availableTokens={formulaColumnsForGroup}
+                  defaultExpression={newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value'}
                   placeholder={newGroup.scoringType === 'boolean' ? 'e.g. Weight * Y_1__N_0_' : 'e.g. Weight * Value'}
                 />
 
@@ -1074,11 +1050,28 @@ export default function SectionMakerPage() {
                           type="button"
                           onClick={() => {
                             const cur = (newGroup.formula ?? (newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value')).trim();
-                            setNewGroup({ ...newGroup, formula: cur ? `${cur} ${op} ` : `${op} ` });
+                            const next = cur ? `${cur} ${op}` : `${op}`;
+                            setNewGroup({ ...newGroup, formula: normalizeFormulaSpacing(next) });
                           }}
                           className="px-2 py-0.5 text-xs font-bold rounded bg-muted/60 hover:bg-muted border border-border/80 text-foreground transition-all cursor-pointer shadow-2xs"
                         >
                           {op}
+                        </button>
+                      ))}
+                      <div className="h-4 w-px bg-border/60 mx-0.5" />
+                      {['10', '100'].map(num => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => {
+                            const cur = (newGroup.formula ?? (newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value')).trim();
+                            const next = cur ? `${cur} ${num}` : `${num}`;
+                            setNewGroup({ ...newGroup, formula: normalizeFormulaSpacing(next) });
+                          }}
+                          className="px-1.5 py-0.5 text-xs font-mono font-semibold rounded bg-muted/40 hover:bg-muted border border-border/70 text-foreground transition-all cursor-pointer shadow-2xs"
+                          title={`Insert number ${num}`}
+                        >
+                          {num}
                         </button>
                       ))}
                     </div>
@@ -1091,8 +1084,8 @@ export default function SectionMakerPage() {
                         type="button"
                         onClick={() => {
                           const cur = (newGroup.formula ?? (newGroup.scoringType === 'boolean' ? 'Weight * Y_1__N_0_' : 'Weight * Value')).trim();
-                          const needsSpace = cur.length > 0 && !cur.endsWith(' ') && !['(', '*', '/', '+', '-'].includes(cur.slice(-1));
-                          setNewGroup({ ...newGroup, formula: `${cur}${needsSpace ? ' ' : ''}${col.token}` });
+                          const next = cur ? `${cur} ${col.token}` : col.token;
+                          setNewGroup({ ...newGroup, formula: normalizeFormulaSpacing(next) });
                         }}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-background border border-slate-300 hover:border-slate-500 hover:bg-muted/30 transition-all cursor-pointer shadow-2xs"
                         title={`Click to insert: ${col.token}`}
