@@ -89,7 +89,12 @@ export const TemplateGroupSchema = z.object({
   id: z.string(),
   label: z.string(),
   description: z.string().optional(),
-  takesValues: z.boolean().default(false),
+  weight: z.number().optional(),
+  highestScore: z.number().optional(),
+  scoringRules: z.array(z.any()).optional(),
+  columnDefaults: z.record(z.string(), z.any()).optional(),
+  scoringType: z.enum(['value', 'boolean']).optional(),
+  formula: z.string().nullable().optional(),
   columns: z.array(TemplateColumnSchema).default([]),
 });
 export type TemplateGroup = z.infer<typeof TemplateGroupSchema>;
@@ -98,7 +103,6 @@ export const TemplateCategorySchema = z.object({
   id: z.string(),
   label: z.string(),
   description: z.string().optional(),
-  takesValues: z.boolean().default(false),
   columns: z.array(TemplateColumnSchema).default([]),
   groups: z.array(TemplateGroupSchema).default([]),
 });
@@ -110,6 +114,12 @@ export const TemplateSectionSchema = z.object({
   description: z.string().optional(),
   accentColor: z.string().optional(),
   icon: z.string().optional(),
+  version: z.number().optional(),
+  isLatest: z.boolean().optional(),
+  status: z.string().optional(),
+  versionGroupId: z.string().optional(),
+  changelog: z.string().optional(),
+  columns: z.array(TemplateColumnSchema).optional(),
   categories: z.array(TemplateCategorySchema).default([]),
 });
 export type TemplateSection = z.infer<typeof TemplateSectionSchema>;
@@ -142,6 +152,7 @@ export type DataRecord = z.infer<typeof DataRecordSchema>;
 export type ProjectStatus = 
   | 'ONBOARDING'
   | 'INTAKE_PENDING'
+  | 'INTAKE_SUBMITTED'
   | 'INGESTION_RUNNING'
   | 'CALCULATED'
   | 'IN_REVIEW'
@@ -241,8 +252,12 @@ export const ProjectSchema = z.object({
   clientName: z.string(),
   clientEmail: z.string().optional(),
   jurisdictionType: z.string().optional(),
+  state: z.string().optional(),
+  county: z.string().optional(),
+  stateFips: z.string().optional(),
+  countyFips: z.string().optional(),
   year: z.number(),
-  status: z.enum(['ONBOARDING', 'INTAKE_PENDING', 'INGESTION_RUNNING', 'CALCULATED', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED']).optional(),
+  status: z.enum(['ONBOARDING', 'INTAKE_PENDING', 'INTAKE_SUBMITTED', 'INGESTION_RUNNING', 'CALCULATED', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED']).optional(),
   packageType: z.string().optional(),
   totalProjectValue: z.number().optional(),
   bypassPayments: z.boolean().optional(),
@@ -262,6 +277,10 @@ export type Project = {
   clientName: string;
   clientEmail?: string;
   jurisdictionType?: string;
+  state?: string;
+  county?: string;
+  stateFips?: string;
+  countyFips?: string;
   year: number;
   status?: ProjectStatus;
   packageType?: string;
@@ -275,6 +294,8 @@ export type Project = {
   paymentMilestones?: any[];
   questionnaireSubmission?: any;
   rollup?: any;
+  deleted?: boolean;
+  deletedAt?: string | null;
 };
 
 // --- Settings ---
@@ -287,6 +308,13 @@ export const RatingBandSchema = z.object({
 });
 export type RatingBand = z.infer<typeof RatingBandSchema>;
 
+export const PlanPricesSchema = z.object({
+  reportPrice: z.number().default(15000),
+  subscriptionPrice: z.number().default(36000),
+  combinedPrice: z.number().default(48000),
+});
+export type PlanPrices = z.infer<typeof PlanPricesSchema>;
+
 export const AppSettingsSchema = z.object({
   companyProfile: z.object({
     name: z.string(),
@@ -295,5 +323,6 @@ export const AppSettingsSchema = z.object({
     phone: z.string().optional(),
   }),
   ratingBands: z.array(RatingBandSchema),
+  planPrices: PlanPricesSchema.optional(),
 });
 export type AppSettings = z.infer<typeof AppSettingsSchema>;

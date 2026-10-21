@@ -7,6 +7,7 @@ import { PieChart as PieChartIcon, Settings2, Hash, AlertCircle, Wallet, Shoppin
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { evaluateWidgetData, calculateGaugeValue } from "@/lib/analyticsEngine"
+import { apiClient } from "@/lib/api"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ComposedChart, Label } from 'recharts'
 
 const COLORS = ['#5C090E', '#8F0D15', '#B5111B', '#C44149', '#D37076', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1'];
@@ -190,21 +191,53 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
   const { projects, widgets, templates, toggleProjectWidget, updateDashboardLayout } = useAppStore()
   const [isConfigOpen, setIsConfigOpen] = React.useState(false)
   const [hoveredRoseSlice, setHoveredRoseSlice] = React.useState<{ widgetId: string; name: string; value: number; percent: string; color: string; x: number; y: number } | null>(null)
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false)
 
   const project = projects.find(p => p.id === projectId)
 
+  React.useEffect(() => {
+    if (projectId && (!project?.data || Object.keys(project.data).length === 0)) {
+      setIsLoadingDetails(true)
+      apiClient.getProject(projectId).then(fresh => {
+        if (fresh && fresh.data && Object.keys(fresh.data).length > 0) {
+          useAppStore.setState(state => ({
+            projects: state.projects.map(p => p.id === projectId ? { ...p, ...fresh, data: fresh.data } : p),
+            activeProject: state.activeProject?.id === projectId ? { ...state.activeProject, ...fresh, data: fresh.data } : state.activeProject
+          }));
+        }
+      }).catch(console.error).finally(() => {
+        setIsLoadingDetails(false)
+      });
+    }
+  }, [projectId, project?.data]);
 
   if (!project) return <div className="p-8">Project not found</div>
 
   const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
-  const enabledWidgets = (project.enabledWidgets && project.enabledWidgets.length > 0)
+  let enabledWidgets = (project.enabledWidgets && project.enabledWidgets.length > 0)
     ? widgets.filter(w => project.enabledWidgets!.includes(w.id))
-    : widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
+    : [];
+  if (enabledWidgets.length === 0) {
+    enabledWidgets = widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
+  }
   const isStatCard = (w: any) => w.chartType === 'stat_card' || (w.title && w.title.endsWith(' Score'));
   const statCards = enabledWidgets.filter(w => isStatCard(w));
   const otherChartsRaw = enabledWidgets.filter(w => !isStatCard(w));
 
   const sectionScores = statCards.map(widget => {
+    const cleanTitle = widget.title.endsWith(' Score') ? widget.title.slice(0, -6).trim() : widget.title.trim();
+    const rollupCat = (project as any).rollup?.categoryScores?.find((cs: any) =>
+      cs.categoryLabel?.toLowerCase() === cleanTitle.toLowerCase() ||
+      cleanTitle.toLowerCase().includes(cs.categoryLabel?.toLowerCase()) ||
+      cs.categoryLabel?.toLowerCase().includes(cleanTitle.toLowerCase())
+    );
+    if (rollupCat && rollupCat.scoreTenScale !== undefined) {
+      return {
+        name: cleanTitle,
+        score: Number(rollupCat.scoreTenScale)
+      };
+    }
+
     const data = evaluateWidgetData(widget, project, templates);
     let totalClient = 0;
     let totalHighest = 0;
@@ -231,15 +264,17 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     const finalScore = Math.min(10, Math.max(0, rawScore));
 
     return {
-      name: widget.title.replace(' Score', '').trim(),
+      name: cleanTitle,
       score: Number(finalScore.toFixed(1))
     };
   });
 
   const scoredSections = sectionScores.filter(s => s.score > 0);
-  const overallScore = scoredSections.length > 0
-    ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
-    : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0);
+  const overallScore = (project as any).rollup?.overallScoreTenScale !== undefined
+    ? Number((project as any).rollup.overallScoreTenScale)
+    : (scoredSections.length > 0
+        ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
+        : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0));
 
   const statCardsSortedByScore = statCards
     .map((widget, index) => ({ widget, score: sectionScores[index]?.score ?? 0 }))
@@ -309,119 +344,116 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     });
   }, [otherChartsWithData]);
 
+  const getWidgetTheme = (title: string) => {
+    const lower = title.toLowerCase();
+
+    if (lower.includes('accessibility') || lower.includes('transportation')) {
+      return { icon: Bus, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
+    }
+    if (lower.includes('arts') || lower.includes('culture')) {
+      return { icon: Palette, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
+    }
+    if (lower.includes('crime') || lower.includes('safety')) {
+      return { icon: Siren, color: '#ef4444', bg: 'bg-red-500/10 text-red-600 border-red-500/20' };
+    }
+    if (lower.includes('education')) {
+      return { icon: GraduationCap, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' };
+    }
+    if (lower.includes('employment') || lower.includes('labor')) {
+      return { icon: Briefcase, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+    }
+    if (lower.includes('goods') || lower.includes('services')) {
+      return { icon: ShoppingBag, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+    }
+    if (lower.includes('healthcare') || lower.includes('wellness')) {
+      return { icon: Heart, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
+    }
+    if (lower.includes('historic') || lower.includes('preservation')) {
+      return { icon: Landmark, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
+    }
+    if (lower.includes('housing')) {
+      return { icon: Home, color: '#2563eb', bg: 'bg-sky-500/10 text-sky-600 border-sky-500/20' };
+    }
+    if (lower.includes('infrastructure')) {
+      return { icon: Building2, color: '#f97316', bg: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
+    }
+    if (lower.includes('open space') || lower.includes('recreation')) {
+      return { icon: Trees, color: '#16a34a', bg: 'bg-green-500/10 text-green-600 border-green-500/20' };
+    }
+    if (lower.includes('planning') || lower.includes('land use')) {
+      return { icon: Map, color: '#7c3aed', bg: 'bg-violet-500/10 text-violet-600 border-violet-500/20' };
+    }
+    if (lower.includes('sustainability') || lower.includes('environment')) {
+      return { icon: Leaf, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+    }
+    if (lower.includes('economic') || lower.includes('vitality') || lower.includes('growth')) {
+      return { icon: TrendingUp, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+    }
+    if (lower.includes('digital') || lower.includes('smart city')) {
+      return { icon: Cpu, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
+    }
+    if (lower.includes('community') || lower.includes('equity')) {
+      return { icon: Users, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
+    }
+
+    const themes = [
+      { icon: Target, color: '#b5111a', bg: 'bg-red-500/10 text-red-600 border-red-500/20' },
+      { icon: Wallet, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
+      { icon: ShoppingCart, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+      { icon: Users, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+      { icon: DollarSign, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+      { icon: PieChartIcon, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
+      { icon: Activity, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' }
+    ];
+    let hash = 0;
+    for (let i = 0; i < title.length; i++) {
+      hash = title.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return themes[Math.abs(hash) % themes.length];
+  }
+
   const renderWidget = (widget: any) => {
-    const data = evaluateWidgetData(widget, project, templates)
-
-    if (data.length === 0) {
-      return (
-        <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-md border border-dashed">
-          <AlertCircle className="h-6 w-6 mb-2 opacity-50" />
-          <span className="text-sm">No data available</span>
-        </div>
-      )
-    }
-
-    const getWidgetTheme = (title: string) => {
-      const lower = title.toLowerCase();
-
-      if (lower.includes('accessibility') || lower.includes('transportation')) {
-        return { icon: Bus, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
-      }
-      if (lower.includes('arts') || lower.includes('culture')) {
-        return { icon: Palette, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
-      }
-      if (lower.includes('crime') || lower.includes('safety')) {
-        return { icon: Siren, color: '#ef4444', bg: 'bg-red-500/10 text-red-600 border-red-500/20' };
-      }
-      if (lower.includes('education')) {
-        return { icon: GraduationCap, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' };
-      }
-      if (lower.includes('employment') || lower.includes('labor')) {
-        return { icon: Briefcase, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
-      }
-      if (lower.includes('goods') || lower.includes('services')) {
-        return { icon: ShoppingBag, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
-      }
-      if (lower.includes('healthcare') || lower.includes('wellness')) {
-        return { icon: Heart, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
-      }
-      if (lower.includes('historic') || lower.includes('preservation')) {
-        return { icon: Landmark, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
-      }
-      if (lower.includes('housing')) {
-        return { icon: Home, color: '#2563eb', bg: 'bg-sky-500/10 text-sky-600 border-sky-500/20' };
-      }
-      if (lower.includes('infrastructure')) {
-        return { icon: Building2, color: '#f97316', bg: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
-      }
-      if (lower.includes('open space') || lower.includes('recreation')) {
-        return { icon: Trees, color: '#16a34a', bg: 'bg-green-500/10 text-green-600 border-green-500/20' };
-      }
-      if (lower.includes('planning') || lower.includes('land use')) {
-        return { icon: Map, color: '#7c3aed', bg: 'bg-violet-500/10 text-violet-600 border-violet-500/20' };
-      }
-      if (lower.includes('sustainability') || lower.includes('environment')) {
-        return { icon: Leaf, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
-      }
-      if (lower.includes('economic') || lower.includes('vitality') || lower.includes('growth')) {
-        return { icon: TrendingUp, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
-      }
-      if (lower.includes('digital') || lower.includes('smart city')) {
-        return { icon: Cpu, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
-      }
-      if (lower.includes('community') || lower.includes('equity')) {
-        return { icon: Users, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
-      }
-
-      const themes = [
-        { icon: Target, color: '#b5111a', bg: 'bg-red-500/10 text-red-600 border-red-500/20' },
-        { icon: Wallet, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
-        { icon: ShoppingCart, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-        { icon: Users, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-        { icon: DollarSign, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-        { icon: PieChartIcon, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
-        { icon: Activity, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' }
-      ];
-      let hash = 0;
-      for (let i = 0; i < title.length; i++) {
-        hash = title.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return themes[Math.abs(hash) % themes.length];
-    }
-
-    const theme = getWidgetTheme(widget.title || "");
-    const ThemeIcon = theme.icon;
-
-    const getPreciseSectionScoreOutOf10 = (originalVal: number) => {
-      if (!widget.categoryId && data.length > 0) {
-        let totalClient = 0;
-        let totalHighest = 0;
-        let hasBoth = false;
-        data.forEach((dp: any) => {
-          if (typeof dp['Client Total Score'] === 'number' && typeof dp['Highest Score'] === 'number') {
-            totalClient += dp['Client Total Score'];
-            totalHighest += dp['Highest Score'];
-            hasBoth = true;
-          }
-        });
-        if (hasBoth && totalHighest > 0) {
-          return Math.min(10, (totalClient / totalHighest) * 10);
-        }
-        const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
-        if (positivePoints.length > 0) {
-          const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
-          return Math.min(10, Math.max(0, avg > 10 ? avg / 10 : avg));
-        }
-      }
-      return Math.min(10, originalVal > 10 ? originalVal / 10 : originalVal);
-    };
+    const cleanTitle = widget.title.endsWith(' Score') ? widget.title.slice(0, -6).trim() : widget.title.trim();
+    const rollupCat = (project as any).rollup?.categoryScores?.find((cs: any) =>
+      cs.categoryLabel?.toLowerCase() === cleanTitle.toLowerCase() ||
+      cleanTitle.toLowerCase().includes(cs.categoryLabel?.toLowerCase()) ||
+      cs.categoryLabel?.toLowerCase().includes(cleanTitle.toLowerCase())
+    );
 
     if (isStatCard(widget)) {
-      let val = calculateGaugeValue(data, widget.aggregation);
-      val = getPreciseSectionScoreOutOf10(val);
+      let val = rollupCat?.scoreTenScale;
+      if (val === undefined) {
+        const data = evaluateWidgetData(widget, project, templates);
+        val = calculateGaugeValue(data, widget.aggregation);
+        if (!widget.categoryId && data.length > 0) {
+          let totalClient = 0;
+          let totalHighest = 0;
+          let hasBoth = false;
+          data.forEach((dp: any) => {
+            if (typeof dp['Client Total Score'] === 'number' && typeof dp['Highest Score'] === 'number') {
+              totalClient += dp['Client Total Score'];
+              totalHighest += dp['Highest Score'];
+              hasBoth = true;
+            }
+          });
+          if (hasBoth && totalHighest > 0) {
+            val = Math.min(10, (totalClient / totalHighest) * 10);
+          } else {
+            const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
+            if (positivePoints.length > 0) {
+              const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
+              val = Math.min(10, Math.max(0, avg > 10 ? avg / 10 : avg));
+            }
+          }
+        }
+      } else {
+        val = Number(val);
+      }
 
-      const cleanTitle = widget.title.endsWith(' Score') ? widget.title.slice(0, -6) : widget.title;
+      val = Math.min(10, Math.max(0, Number(val) || 0));
       const cardTheme = getScoreCardTheme(val);
+      const theme = getWidgetTheme(cleanTitle);
+      const ThemeIcon = theme.icon;
 
       return (
         <div className="flex flex-col w-full h-full min-w-0 overflow-hidden justify-between gap-3">
@@ -450,8 +482,55 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
             {cleanTitle}
           </span>
         </div>
-      )
+      );
     }
+
+    if (isLoadingDetails) {
+      return (
+        <div className="h-[260px] w-full flex flex-col items-center justify-center p-6 animate-pulse">
+          <div className="w-24 h-24 rounded-full border-4 border-muted border-t-primary/70 animate-spin mb-3" />
+          <span className="text-xs text-muted-foreground font-medium">Loading metrics...</span>
+        </div>
+      );
+    }
+
+    const data = evaluateWidgetData(widget, project, templates);
+
+    if (data.length === 0) {
+      return (
+        <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-md border border-dashed">
+          <AlertCircle className="h-6 w-6 mb-2 opacity-50" />
+          <span className="text-sm">No data available</span>
+        </div>
+      );
+    }
+
+    const theme = getWidgetTheme(widget.title || "");
+    const ThemeIcon = theme.icon;
+
+    const getPreciseSectionScoreOutOf10 = (originalVal: number) => {
+      if (!widget.categoryId && data.length > 0) {
+        let totalClient = 0;
+        let totalHighest = 0;
+        let hasBoth = false;
+        data.forEach((dp: any) => {
+          if (typeof dp['Client Total Score'] === 'number' && typeof dp['Highest Score'] === 'number') {
+            totalClient += dp['Client Total Score'];
+            totalHighest += dp['Highest Score'];
+            hasBoth = true;
+          }
+        });
+        if (hasBoth && totalHighest > 0) {
+          return Math.min(10, (totalClient / totalHighest) * 10);
+        }
+        const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
+        if (positivePoints.length > 0) {
+          const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
+          return Math.min(10, Math.max(0, avg > 10 ? avg / 10 : avg));
+        }
+      }
+      return Math.min(10, originalVal > 10 ? originalVal / 10 : originalVal);
+    };
 
     if (widget.chartType === 'speed_gauge') {
       let val = calculateGaugeValue(data, widget.aggregation);
@@ -493,7 +572,14 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
             />
 
             {/* Needle */}
-            <g transform={`rotate(${rotation}, 100, 90)`} className="transition-transform duration-1000 ease-out">
+            <g
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transformOrigin: '100px 90px',
+                transformBox: 'view-box',
+                transition: 'transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            >
               <path d="M 97.5 90 L 100 24 L 102.5 90 Z" fill="#1f2937" />
               <circle cx="100" cy="90" r="7" fill="#1f2937" />
               <circle cx="100" cy="90" r="3" fill="#ffffff" />
@@ -510,7 +596,14 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     }
 
     const donutData = data.map((d: any) => {
-      const val = d.value !== undefined ? d.value : (d['Client Total Score'] !== undefined ? d['Client Total Score'] : 0);
+      let val = d.value;
+      if (val === undefined || val === 0) {
+        if (widget.title.includes('Score Breakdown') && typeof d['Client Total Score'] === 'number') {
+          val = d['Client Total Score'];
+        } else if (widget.title.includes('Value Overview') && typeof d['Value'] === 'number') {
+          val = d['Value'];
+        }
+      }
       return {
         name: d.name || 'Indicator',
         value: Number(val) || 0
@@ -614,7 +707,7 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
                   <p className="text-xs text-center text-muted-foreground">Aggregated performance across all core metrics</p>
                 </div>
                 {(() => {
-                  const val = overallScore;
+                  const val = Number.isFinite(overallScore) ? overallScore : 0;
                   const maxVal = 10;
                   const normalizedVal = Math.min(Math.max(val, 0), maxVal);
                   const rotation = -90 + (normalizedVal / maxVal) * 180;
@@ -632,7 +725,14 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
                         </defs>
                         <path d="M 25 90 A 75 75 0 0 1 175 90" fill="none" stroke="#f1f5f9" strokeWidth="18" strokeLinecap="round" />
                         <path d="M 25 90 A 75 75 0 0 1 175 90" fill="none" stroke="url(#overallGaugeGrad)" strokeWidth="18" strokeLinecap="round" />
-                        <g transform={`rotate(${rotation}, 100, 90)`} className="transition-transform duration-1000 ease-out">
+                        <g
+                          style={{
+                            transform: `rotate(${rotation}deg)`,
+                            transformOrigin: '100px 90px',
+                            transformBox: 'view-box',
+                            transition: 'transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          }}
+                        >
                           <path d="M 97.5 90 L 100 24 L 102.5 90 Z" fill="#1f2937" />
                           <circle cx="100" cy="90" r="7" fill="#1f2937" />
                           <circle cx="100" cy="90" r="3" fill="#ffffff" />

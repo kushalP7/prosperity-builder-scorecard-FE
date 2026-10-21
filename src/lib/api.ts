@@ -1,4 +1,4 @@
-import { Project, AppSettings, TemplateSection, AnalyticsWidget, DataRecord } from './types';
+import { Project, AppSettings, TemplateSection, TemplateCategory, TemplateGroup, TemplateColumn, AnalyticsWidget, DataRecord } from './types';
 
 export interface UserProfile {
   id: string;
@@ -258,9 +258,14 @@ export const apiClient = {
   },
 
   // Projects
-  async getProjects(): Promise<Project[] | null> {
+  async getProjects(params?: { search?: string; page?: number; limit?: number }): Promise<any | null> {
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/projects`);
+      const q = new URLSearchParams();
+      if (params?.search && params.search.trim()) q.set('search', params.search.trim());
+      if (params?.page) q.set('page', String(params.page));
+      if (params?.limit) q.set('limit', String(params.limit));
+      const qs = q.toString() ? `?${q.toString()}` : '';
+      const res = await fetchWithTimeout(`${API_BASE}/projects${qs}`);
       if (!res.ok) return null;
       const json = await res.json();
       return json.data || null;
@@ -320,17 +325,55 @@ export const apiClient = {
     }
   },
 
-  async assignSection(projectId: string, sectionId: string): Promise<boolean> {
+  async restoreProject(id: string): Promise<boolean> {
     try {
-      const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/sections`, {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${id}/restore`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionId }),
       });
       return res.ok;
     } catch {
       return false;
     }
+  },
+
+  // Upload image to backend upload service
+  async uploadImage(file: File, folder: string = 'projects'): Promise<{ url: string; public_id?: string; format?: string; bytes?: number; originalName?: string } | null> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetchWithTimeout(`${API_BASE}/uploads/image?folder=${encodeURIComponent(folder)}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        return null;
+      }
+      return await unpackJson(res);
+    } catch (err) {
+      console.error('apiClient uploadImage error:', err);
+      return null;
+    }
+  },
+
+  async assignSections(projectId: string, sectionIds: string[]): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/sections`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sectionIds }),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async assignSection(projectId: string, sectionId: string): Promise<any> {
+    return this.assignSections(projectId, [sectionId]);
   },
 
   async updateProjectData(projectId: string, nodeId: string, columnId: string, data: DataRecord): Promise<boolean> {
@@ -345,6 +388,19 @@ export const apiClient = {
       return res.ok;
     } catch {
       return false;
+    }
+  },
+
+  async recalculateProject(id: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${id}/recalculate`, {
+        method: 'POST',
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
     }
   },
 
@@ -375,6 +431,186 @@ export const apiClient = {
     }
   },
 
+  async updateSection(id: string, section: Partial<TemplateSection>): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(section),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteSection(id: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${id}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async publishSectionVersion(id: string, changelog?: string): Promise<TemplateSection | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${id}/publish-version`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ changelog }),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getSectionVersions(id: string): Promise<TemplateSection[] | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${id}/versions`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async createCategory(sectionId: string, category: any): Promise<TemplateCategory | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${sectionId}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async updateCategory(id: string, category: any): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/categories/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteCategory(id: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/categories/${id}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async createGroup(categoryId: string, group: any): Promise<TemplateGroup | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/categories/${categoryId}/groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(group),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async updateGroup(id: string, group: any): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/groups/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(group),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteGroup(id: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/groups/${id}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async createColumn(sectionIdOrCategoryId: string, groupId: string | null, column: any): Promise<TemplateColumn | null> {
+    try {
+      const url = `${API_BASE}/templates/sections/${sectionIdOrCategoryId}/columns`;
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(column),
+      });
+      if (!res.ok) {
+        const catUrl = groupId
+          ? `${API_BASE}/templates/categories/${sectionIdOrCategoryId}/columns?groupId=${groupId}`
+          : `${API_BASE}/templates/categories/${sectionIdOrCategoryId}/columns`;
+        const resCat = await fetchWithTimeout(catUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(column),
+        });
+        if (!resCat.ok) return null;
+        const catJson = await resCat.json();
+        return catJson.data || null;
+      }
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async updateColumn(id: string, column: any): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/columns/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(column),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteColumn(id: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/templates/columns/${id}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
   // Settings
   async getSettings(): Promise<AppSettings | null> {
     try {
@@ -389,10 +625,19 @@ export const apiClient = {
 
   async updateSettings(settings: AppSettings): Promise<boolean> {
     try {
+      const payload: any = {
+        companyName: settings.companyProfile?.name || 'Rose Associates',
+        companyAddress: settings.companyProfile?.address,
+        companyPhone: settings.companyProfile?.phone,
+        companyLogoUrl: settings.companyProfile?.logoUrl,
+        companyProfile: settings.companyProfile,
+        ratingBands: settings.ratingBands,
+        planPrices: settings.planPrices,
+      };
       const res = await fetchWithTimeout(`${API_BASE}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
       return res.ok;
     } catch {

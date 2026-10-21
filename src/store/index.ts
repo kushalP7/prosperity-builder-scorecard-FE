@@ -37,7 +37,7 @@ interface AppState {
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { name: string; email: string; password: string; department?: string }) => Promise<boolean>;
   logout: () => void;
-  
+
   // Module-Wise On-Demand Fetchers
   fetchProjects: (force?: boolean) => Promise<void>;
   fetchTemplates: (force?: boolean) => Promise<void>;
@@ -60,25 +60,28 @@ interface AppState {
   createProject: (project: Omit<Project, 'id' | 'assignedSections' | 'data'>) => Promise<void>;
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  restoreProject: (id: string) => Promise<void>;
   updateDashboardLayout: (projectId: string, layout: any[]) => void;
-  
+
   // Project Data Actions
   assignSectionToProject: (projectId: string, sectionId: string) => Promise<void>;
+  assignSectionsToProject: (projectId: string, sectionIds: string[]) => Promise<void>;
   updateProjectData: (projectId: string, nodeId: string, columnId: string, data: DataRecord) => Promise<void>;
 
   // Template Actions
   createTemplateSection: (section: Omit<TemplateSection, 'id' | 'categories'>) => void;
   updateTemplateSection: (id: string, updates: Partial<TemplateSection>) => void;
   deleteTemplateSection: (id: string) => void;
-  
+  publishNewSectionVersion: (sectionId: string, changelog?: string) => Promise<TemplateSection | null>;
+
   createTemplateCategory: (sectionId: string, category: Omit<TemplateCategory, 'id' | 'groups' | 'columns'>) => void;
   updateTemplateCategory: (sectionId: string, categoryId: string, updates: Partial<TemplateCategory>) => void;
   deleteTemplateCategory: (sectionId: string, categoryId: string) => void;
-  
+
   createTemplateGroup: (sectionId: string, categoryId: string, group: Omit<TemplateGroup, 'id' | 'columns'>) => void;
   updateTemplateGroup: (sectionId: string, categoryId: string, groupId: string, updates: Partial<TemplateGroup>) => void;
   deleteTemplateGroup: (sectionId: string, categoryId: string, groupId: string) => void;
-  
+
   createTemplateColumn: (sectionId: string, categoryId: string, groupId: string | null, column: Omit<TemplateColumn, 'id'>) => void;
   updateTemplateColumn: (sectionId: string, categoryId: string, groupId: string | null, columnId: string, updates: Partial<TemplateColumn>) => void;
   deleteTemplateColumn: (sectionId: string, categoryId: string, groupId: string | null, columnId: string) => void;
@@ -117,7 +120,12 @@ const defaultSettings: AppSettings = {
     { label: 'Average', min: 21, max: 70, color: '#E08A15' },
     { label: 'Good', min: 71, max: 90, color: '#4B8B3B' },
     { label: 'Excellent', min: 91, max: 100, color: '#1F6F4A' }
-  ]
+  ],
+  planPrices: {
+    reportPrice: 15000,
+    subscriptionPrice: 36000,
+    combinedPrice: 48000,
+  },
 };
 
 let initializePromise: Promise<void> | null = null;
@@ -195,16 +203,28 @@ export const useAppStore = create<AppState>((set, get) => {
       toast.info('Logged out successfully.');
     },
 
-    // Module-Wise On-Demand Data Loaders
     fetchProjects: async (force = false) => {
       if (get().projectsLoaded && !force) return;
       set({ isLoadingProjects: true });
       try {
         const apiProjects = await apiClient.getProjects();
         if (apiProjects) {
-          set({ projects: apiProjects, projectsLoaded: true });
-          if (apiProjects.length > 0 && !get().activeProject) {
-            set({ activeProject: apiProjects[0] });
+          const currentProjects = get().projects;
+          const list = Array.isArray(apiProjects) ? apiProjects : (apiProjects.data || []);
+          const merged = list.map((apiP: any) => {
+            const current = currentProjects.find(c => c.id === apiP.id);
+            if (current && current.assignedSections?.some(s => Array.isArray(s.categories) && s.categories.length > 0)) {
+              return {
+                ...apiP,
+                assignedSections: current.assignedSections,
+                data: current.data && Object.keys(current.data).length > 0 ? current.data : apiP.data,
+              };
+            }
+            return apiP;
+          });
+          set({ projects: merged, projectsLoaded: true });
+          if (merged.length > 0 && !get().activeProject) {
+            set({ activeProject: merged[0] });
           }
         }
       } catch (err) {
@@ -268,6 +288,7 @@ export const useAppStore = create<AppState>((set, get) => {
               ...apiSettings,
               companyProfile: apiSettings.companyProfile || defaultSettings.companyProfile,
               ratingBands: apiSettings.ratingBands || defaultSettings.ratingBands,
+              planPrices: apiSettings.planPrices || defaultSettings.planPrices,
             },
             settingsLoaded: true,
           });
@@ -304,376 +325,562 @@ export const useAppStore = create<AppState>((set, get) => {
       return initializePromise;
     },
 
-  loadSampleData: async () => {
-    set({ isLoading: true });
-    toast.loading("Loading sample data...");
-    
-    const apiSuccess = await apiClient.loadSampleData();
-    if (apiSuccess) {
-      toast.success("Sample data loaded from NestJS Backend server!");
-    } else {
-      toast.error("Failed to load sample data from server.");
-    }
-    
-    await get().initialize();
-  },
+    loadSampleData: async () => {
+      set({ isLoading: true });
+      toast.loading("Loading sample data...");
 
-  updateSettings: async (settings) => {
-    set({ settings });
-    toast.success("Settings saved successfully!");
-    apiClient.updateSettings(settings);
-  },
-
-  createWidget: (widgetData) => {
-    const newWidget: AnalyticsWidget = {
-      ...widgetData,
-      id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-    };
-    const widgets = [...get().widgets, newWidget];
-    set({ widgets });
-  },
-
-  updateWidget: (id, updates) => {
-    const widgets = get().widgets.map(w => w.id === id ? { ...w, ...updates } : w);
-    set({ widgets });
-  },
-
-  deleteWidget: (id) => {
-    const widgets = get().widgets.filter(w => w.id !== id);
-    set({ widgets });
-  },
-
-  toggleProjectWidget: (projectId, widgetId, enabled) => {
-    const projects = get().projects;
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
-    
-    if (!project.enabledWidgets || project.enabledWidgets.length === 0) {
-      const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
-      const allWidgets = get().widgets;
-      project.enabledWidgets = allWidgets
-        .filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId))
-        .map(w => w.id);
-    }
-
-    if (enabled) {
-      if (!project.enabledWidgets.includes(widgetId)) {
-        project.enabledWidgets.push(widgetId);
+      const apiSuccess = await apiClient.loadSampleData();
+      if (apiSuccess) {
+        toast.success("Sample data loaded from NestJS Backend server!");
+      } else {
+        toast.error("Failed to load sample data from server.");
       }
-    } else {
-      project.enabledWidgets = project.enabledWidgets.filter(w => w !== widgetId);
-    }
-    
-    set({ projects: [...projects] });
-    if (get().activeProject?.id === projectId) {
-      set({ activeProject: { ...project } });
-    }
-    apiClient.updateProject(projectId, { enabledWidgets: project.enabledWidgets });
-  },
 
-  setActiveProject: (id) => {
-    if (!id) {
-      set({ activeProject: null });
-      return;
-    }
-    const project = get().projects.find(p => p.id === id);
-    if (project) {
-      set({ activeProject: project });
-    }
-  },
+      await get().initialize();
+    },
 
-  createProject: async (projectData) => {
-    set({ isSyncing: true });
-    const apiProject = await apiClient.createProject(projectData);
-    if (apiProject) {
-      const updatedProjects = [apiProject, ...get().projects];
-      set({ projects: updatedProjects, activeProject: apiProject, isSyncing: false });
-      toast.success(`Project "${apiProject.name}" created!`);
-    } else {
-      set({ isSyncing: false });
-      toast.error("Failed to create project on server.");
-    }
-  },
+    updateSettings: async (settings) => {
+      set({ settings });
+      toast.success("Settings saved successfully!");
+      apiClient.updateSettings(settings);
+    },
 
-  updateProject: async (id, updates) => {
-    const projects = get().projects;
-    const project = projects.find(p => p.id === id);
-    if (project) {
-      Object.assign(project, updates);
-      set({ projects: [...projects] });
-      if (get().activeProject?.id === id) {
-        set({ activeProject: { ...project } });
+    createWidget: (widgetData) => {
+      const newWidget: AnalyticsWidget = {
+        ...widgetData,
+        id: `w_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      };
+      const widgets = [...get().widgets, newWidget];
+      set({ widgets });
+    },
+
+    updateWidget: (id, updates) => {
+      const widgets = get().widgets.map(w => w.id === id ? { ...w, ...updates } : w);
+      set({ widgets });
+    },
+
+    deleteWidget: (id) => {
+      const widgets = get().widgets.filter(w => w.id !== id);
+      set({ widgets });
+    },
+
+    toggleProjectWidget: (projectId, widgetId, enabled) => {
+      const projects = get().projects;
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
+
+      if (!project.enabledWidgets || project.enabledWidgets.length === 0) {
+        const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
+        const allWidgets = get().widgets;
+        project.enabledWidgets = allWidgets
+          .filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId))
+          .map(w => w.id);
       }
-      toast.success("Project updated!");
-      apiClient.updateProject(id, updates);
-    }
-  },
 
-  updateDashboardLayout: (projectId, layout) => {
-    const projects = get().projects;
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      project.dashboardLayout = layout;
+      if (enabled) {
+        if (!project.enabledWidgets.includes(widgetId)) {
+          project.enabledWidgets.push(widgetId);
+        }
+      } else {
+        project.enabledWidgets = project.enabledWidgets.filter(w => w !== widgetId);
+      }
+
       set({ projects: [...projects] });
       if (get().activeProject?.id === projectId) {
         set({ activeProject: { ...project } });
       }
-      apiClient.updateProject(projectId, { dashboardLayout: layout });
-    }
-  },
+      apiClient.updateProject(projectId, { enabledWidgets: project.enabledWidgets });
+    },
 
-  deleteProject: async (id) => {
-    const project = get().projects.find(p => p.id === id);
-    const projectName = project?.name || 'Project';
-    
-    const success = await apiClient.deleteProject(id);
-    if (success) {
-      const projects = get().projects.filter(p => p.id !== id);
-      set({ projects });
-      if (get().activeProject?.id === id) {
-        set({ activeProject: projects.length > 0 ? projects[0] : null });
+    setActiveProject: (id) => {
+      if (!id) {
+        set({ activeProject: null });
+        return;
       }
-      toast.success(`${projectName} deleted!`);
-    } else {
-      toast.error("Failed to delete project on server.");
-    }
-  },
+      const project = get().projects.find(p => p.id === id);
+      if (project) {
+        set({ activeProject: project });
+      }
+    },
 
-  assignSectionToProject: async (projectId, sectionId) => {
-    const template = get().templates.find(t => t.id === sectionId);
-    if (!template) return;
-    
-    const projects = get().projects;
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
+    createProject: async (projectData) => {
+      set({ isSyncing: true });
+      const apiProject = await apiClient.createProject(projectData);
+      if (apiProject) {
+        const updatedProjects = [apiProject, ...get().projects];
+        set({ projects: updatedProjects, activeProject: apiProject, isSyncing: false });
+        toast.success(`Project "${apiProject.name}" created!`);
+      } else {
+        set({ isSyncing: false });
+        toast.error("Failed to create project on server.");
+      }
+    },
 
-    // Clone the template deeply
-    const clonedSection = JSON.parse(JSON.stringify(template)) as TemplateSection;
-    project.assignedSections.push(clonedSection);
-    
-    set({ projects: [...projects] });
-    if (get().activeProject?.id === projectId) {
-      set({ activeProject: { ...project } });
-    }
-    toast.success(`Assigned "${template.label}" section!`);
-    apiClient.assignSection(projectId, sectionId);
-  },
+    updateProject: async (id, updates) => {
+      const projects = get().projects;
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        Object.assign(project, updates);
+        set({ projects: [...projects] });
+        if (get().activeProject?.id === id) {
+          set({ activeProject: { ...project } });
+        }
+        toast.success("Project updated!");
+        apiClient.updateProject(id, updates);
+      }
+    },
 
-  updateProjectData: async (projectId, nodeId, columnId, data) => {
-    const projects = get().projects;
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
+    updateDashboardLayout: (projectId, layout) => {
+      const projects = get().projects;
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        project.dashboardLayout = layout;
+        set({ projects: [...projects] });
+        if (get().activeProject?.id === projectId) {
+          set({ activeProject: { ...project } });
+        }
+        apiClient.updateProject(projectId, { dashboardLayout: layout });
+      }
+    },
 
-    if (!project.data[nodeId]) {
-      project.data[nodeId] = {};
-    }
-    project.data[nodeId][columnId] = data;
+    deleteProject: async (id) => {
+      const project = get().projects.find(p => p.id === id);
+      const projectName = project?.name || 'Project';
 
-    set({ projects: [...projects] });
-    if (get().activeProject?.id === projectId) {
-      set({ activeProject: { ...project } });
-    }
-    
-    // Background sync to API
-    apiClient.updateProjectData(projectId, nodeId, columnId, data);
-  },
+      const success = await apiClient.deleteProject(id);
+      if (success) {
+        const projects = get().projects.filter(p => p.id !== id);
+        set({ projects });
+        if (get().activeProject?.id === id) {
+          set({ activeProject: projects.length > 0 ? projects[0] : null });
+        }
+        toast.success(`"${projectName}" moved to trash.`);
+      } else {
+        toast.error("Failed to delete project on server.");
+      }
+    },
 
-  // --- Templates ---
+    restoreProject: async (id) => {
+      const success = await apiClient.restoreProject(id);
+      if (success) {
+        await get().fetchProjects(true);
+        toast.success("Project restored successfully!");
+      } else {
+        toast.error("Failed to restore project on server.");
+      }
+    },
 
-  createTemplateSection: (sectionData) => {
-    const templates = get().templates;
-    const newSection: TemplateSection = {
-      ...sectionData,
-      id: `ts_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      categories: [],
-    };
-    templates.push(newSection);
-    set({ templates: [...templates] });
-    toast.success(`Section "${newSection.label}" created!`);
-    apiClient.createSection(sectionData);
-  },
+    assignSectionsToProject: async (projectId, sectionIds) => {
+      if (!sectionIds || sectionIds.length === 0) return;
 
-  updateTemplateSection: (id, updates) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === id);
-    if (section) {
-      Object.assign(section, updates);
-      
+      // First try backend API batch assignment
+      try {
+        const updatedProject = await apiClient.assignSections(projectId, sectionIds);
+        if (updatedProject && updatedProject.id) {
+          const projects = get().projects;
+          const exists = projects.some(p => p.id === projectId);
+          const newProjects = exists
+            ? projects.map(p => p.id === projectId ? { ...p, ...updatedProject } : p)
+            : [...projects, updatedProject];
+
+          set({
+            projects: newProjects,
+            activeProject: { ...(get().activeProject || {}), ...updatedProject },
+          });
+          const count = sectionIds.length;
+          toast.success(`Assigned ${count} section${count === 1 ? '' : 's'} successfully!`);
+          window.dispatchEvent(new CustomEvent('project-section-assigned', { detail: { projectId, sectionIds, project: updatedProject } }));
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to assign sections on backend:', err);
+      }
+
+      // Local optimistic update fallback
+      const templates = get().templates.filter(t => sectionIds.includes(t.id));
+      if (templates.length === 0) return;
+      const projects = get().projects;
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const currentSections = [...(project.assignedSections || [])];
+      for (const t of templates) {
+        const clonedSection = JSON.parse(JSON.stringify(t)) as TemplateSection;
+        const existingIndex = currentSections.findIndex(
+          s => s.id === clonedSection.id ||
+               (clonedSection.versionGroupId && s.versionGroupId === clonedSection.versionGroupId) ||
+               (s.label && clonedSection.label && s.label.trim().toLowerCase() === clonedSection.label.trim().toLowerCase())
+        );
+        if (existingIndex >= 0) {
+          currentSections[existingIndex] = clonedSection;
+        } else {
+          currentSections.push(clonedSection);
+        }
+      }
+
+      const updatedProject = {
+        ...project,
+        assignedSections: currentSections,
+      };
+
+      set({
+        projects: projects.map(p => p.id === projectId ? updatedProject : p),
+        activeProject: updatedProject,
+      });
+      toast.success(`Assigned ${templates.length} section(s)!`);
+      window.dispatchEvent(new CustomEvent('project-section-assigned', { detail: { projectId, sectionIds, project: updatedProject } }));
+    },
+
+    assignSectionToProject: async (projectId, sectionId) => {
+      return get().assignSectionsToProject(projectId, [sectionId]);
+    },
+
+    updateProjectData: async (projectId, nodeId, columnId, data) => {
+      const projects = get().projects;
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
+
+      if (!project.data[nodeId]) {
+        project.data[nodeId] = {};
+      }
+      project.data[nodeId][columnId] = data;
+
+      set({ projects: [...projects] });
+      if (get().activeProject?.id === projectId) {
+        set({ activeProject: { ...project } });
+      }
+
+      // Background sync to API
+      apiClient.updateProjectData(projectId, nodeId, columnId, data);
+    },
+
+    // --- Templates ---
+
+    // --- Templates ---
+
+    createTemplateSection: async (sectionData) => {
+      const tempId = `ts_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const newSection: TemplateSection = {
+        ...sectionData,
+        id: tempId,
+        categories: [],
+      };
+      const templates = [...get().templates, newSection];
+      set({ templates });
+      toast.success(`Section "${newSection.label}" created!`);
+      const created = await apiClient.createSection(sectionData);
+      if (created && created.id) {
+        await get().fetchTemplates(true);
+      }
+    },
+
+    updateTemplateSection: async (id, updates) => {
+      const templates = get().templates;
+      const section = templates.find(s => s.id === id);
+      if (section) {
+        Object.assign(section, updates);
+        const projects = get().projects;
+        const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
+        set({ templates: [...templates], projects: updated ? newProjects : projects });
+        toast.success("Section updated!");
+        await apiClient.updateSection(id, updates);
+      }
+    },
+
+    deleteTemplateSection: async (id) => {
+      const section = get().templates.find(s => s.id === id);
+      const label = section?.label || 'Section';
+      const templates = get().templates.filter(s => s.id !== id);
+      set({ templates });
+      toast.success(`Section "${label}" deleted!`);
+      await apiClient.deleteSection(id);
+    },
+
+    publishNewSectionVersion: async (sectionId, changelog) => {
+      const res = await apiClient.publishSectionVersion(sectionId, changelog);
+      if (res && res.id) {
+        toast.success(`Version ${res.version} published successfully!`);
+        // Optimistically update store templates immediately
+        const currentTemplates = get().templates;
+        const vGroupId = res.versionGroupId || res.id;
+        const updatedTemplates = currentTemplates.map(t => {
+          if ((t.versionGroupId && t.versionGroupId === vGroupId) || t.id === sectionId) {
+            return { ...t, isLatest: false, status: 'archived' };
+          }
+          return t;
+        });
+        const existingIdx = updatedTemplates.findIndex(t => t.id === res.id);
+        if (existingIdx >= 0) {
+          updatedTemplates[existingIdx] = res;
+        } else {
+          updatedTemplates.push(res);
+        }
+        set({ templates: updatedTemplates });
+
+        // Force background refresh from server
+        await get().fetchTemplates(true);
+        return res;
+      } else {
+        toast.error("Failed to publish new section version.");
+        return null;
+      }
+    },
+
+    createTemplateCategory: async (sectionId, categoryData) => {
+      const templates = get().templates;
+      const section = templates.find(s => s.id === sectionId);
+      if (!section) return;
+      const tempId = `tc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const newCategory: TemplateCategory = {
+        ...categoryData,
+        id: tempId,
+        columns: [],
+        groups: [],
+      };
+
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: [...(s.categories || []), newCategory],
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success(`Category "${newCategory.label}" created!`);
+
+      const created = await apiClient.createCategory(sectionId, categoryData);
+      if (created && created.id) {
+        await get().fetchTemplates(true);
+      }
+    },
+
+    updateTemplateCategory: async (sectionId, categoryId, updates) => {
+      const templates = get().templates;
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: (s.categories || []).map(c => c.id === categoryId ? { ...c, ...updates } : c),
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success("Category updated!");
+      await apiClient.updateCategory(categoryId, updates);
+    },
+
+    deleteTemplateCategory: async (sectionId, categoryId) => {
+      const templates = get().templates;
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: (s.categories || []).filter(c => c.id !== categoryId),
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success("Category deleted!");
+      await apiClient.deleteCategory(categoryId);
+    },
+
+    createTemplateGroup: async (sectionId, categoryId, groupData) => {
+      const templates = get().templates;
+      const tempId = `tg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const newGroup: TemplateGroup = {
+        ...groupData,
+        id: tempId,
+        columns: [],
+      };
+
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: (s.categories || []).map(c => {
+              if (c.id === categoryId) {
+                return {
+                  ...c,
+                  groups: [...(c.groups || []), newGroup],
+                };
+              }
+              return c;
+            }),
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success(`Subcategory "${newGroup.label}" created!`);
+
+      const created = await apiClient.createGroup(categoryId, groupData);
+      if (created && created.id) {
+        const finalTemplates = get().templates.map(s => {
+          if (s.id === sectionId) {
+            return {
+              ...s,
+              categories: (s.categories || []).map(c => {
+                if (c.id === categoryId) {
+                  return {
+                    ...c,
+                    groups: (c.groups || []).map(g => g.id === tempId ? { ...g, id: created.id } : g),
+                  };
+                }
+                return c;
+              }),
+            };
+          }
+          return s;
+        });
+        set({ templates: finalTemplates });
+      }
+    },
+
+    updateTemplateGroup: async (sectionId, categoryId, groupId, updates) => {
+      const templates = get().templates;
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: (s.categories || []).map(c => {
+              if (c.id === categoryId) {
+                return {
+                  ...c,
+                  groups: (c.groups || []).map(g => g.id === groupId ? { ...g, ...updates } : g),
+                };
+              }
+              return c;
+            }),
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success("Subcategory updated!");
+      await apiClient.updateGroup(groupId, updates);
+    },
+
+    deleteTemplateGroup: async (sectionId, categoryId, groupId) => {
+      const templates = get().templates;
+      const updatedTemplates = templates.map(s => {
+        if (s.id === sectionId) {
+          return {
+            ...s,
+            categories: (s.categories || []).map(c => {
+              if (c.id === categoryId) {
+                return {
+                  ...c,
+                  groups: (c.groups || []).filter(g => g.id !== groupId),
+                };
+              }
+              return c;
+            }),
+          };
+        }
+        return s;
+      });
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
+      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      toast.success("Subcategory deleted!");
+      await apiClient.deleteGroup(groupId);
+    },
+
+    createTemplateColumn: async (sectionId, categoryId, groupId, columnData) => {
+      const templates = get().templates;
+      const section = templates.find(s => s.id === sectionId);
+      if (!section) return;
+
+      const tempId = `col_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const newColumn: TemplateColumn = {
+        ...columnData,
+        id: tempId,
+      };
+
+      if (!section.columns) section.columns = [];
+      section.columns.push(newColumn);
+
+      // Also sync category for fallback if category exists
+      const category = section.categories?.find(c => c.id === categoryId);
+      if (category) {
+        if (!category.columns) category.columns = [];
+        category.columns.push(newColumn);
+      }
+
       const projects = get().projects;
       const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
       set({ templates: [...templates], projects: updated ? newProjects : projects });
-      toast.success("Section updated!");
+      toast.success(`Column "${newColumn.name}" created!`);
+
+      const created = await apiClient.createColumn(sectionId, groupId, columnData);
+      if (created && created.id) {
+        newColumn.id = created.id;
+        set({ templates: [...get().templates] });
+      }
+    },
+
+    updateTemplateColumn: async (sectionId, categoryId, groupId, columnId, updates) => {
+      const templates = get().templates;
+      const section = templates.find(s => s.id === sectionId);
+      if (!section) return;
+
+      // Update section level column
+      if (section.columns) {
+        const secCol = section.columns.find(c => c.id === columnId);
+        if (secCol) Object.assign(secCol, updates);
+      }
+
+      // Also update category level fallback
+      const category = section.categories?.find(c => c.id === categoryId);
+      if (category && category.columns) {
+        const catCol = category.columns.find(c => c.id === columnId);
+        if (catCol) Object.assign(catCol, updates);
+      }
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
+      set({ templates: [...templates], projects: updated ? newProjects : projects });
+      await apiClient.updateColumn(columnId, updates);
+    },
+
+    deleteTemplateColumn: async (sectionId, categoryId, groupId, columnId) => {
+      const templates = get().templates;
+      const section = templates.find(s => s.id === sectionId);
+      if (!section) return;
+
+      if (section.columns) {
+        section.columns = section.columns.filter(c => c.id !== columnId);
+      }
+
+      const category = section.categories?.find(c => c.id === categoryId);
+      if (category && category.columns) {
+        category.columns = category.columns.filter(c => c.id !== columnId);
+      }
+
+      const projects = get().projects;
+      const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
+      set({ templates: [...templates], projects: updated ? newProjects : projects });
+      await apiClient.deleteColumn(columnId);
     }
-  },
-
-  deleteTemplateSection: (id) => {
-    const section = get().templates.find(s => s.id === id);
-    const label = section?.label || 'Section';
-    const templates = get().templates.filter(s => s.id !== id);
-    set({ templates });
-    toast.success(`Section "${label}" deleted!`);
-  },
-
-  createTemplateCategory: (sectionId, categoryData) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    if (!section) return;
-    const newCategory: TemplateCategory = {
-      ...categoryData,
-      id: `tc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      columns: [],
-      groups: [],
-    };
-    section.categories.push(newCategory);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success(`Category "${newCategory.label}" created!`);
-  },
-
-  updateTemplateCategory: (sectionId, categoryId, updates) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    if (!section) return;
-    const category = section.categories.find(c => c.id === categoryId);
-    if (!category) return;
-    Object.assign(category, updates);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success("Category updated!");
-  },
-
-  deleteTemplateCategory: (sectionId, categoryId) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    if (!section) return;
-    section.categories = section.categories.filter(c => c.id !== categoryId);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success("Category deleted!");
-  },
-
-  createTemplateGroup: (sectionId, categoryId, groupData) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    if (!category) return;
-    const newGroup: TemplateGroup = {
-      ...groupData,
-      id: `tg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      columns: [],
-    };
-    category.groups.push(newGroup);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success(`Subcategory "${newGroup.label}" created!`);
-  },
-
-  updateTemplateGroup: (sectionId, categoryId, groupId, updates) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    const group = category?.groups.find(g => g.id === groupId);
-    if (!group) return;
-    Object.assign(group, updates);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success("Subcategory updated!");
-  },
-
-  deleteTemplateGroup: (sectionId, categoryId, groupId) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    if (!category) return;
-    category.groups = category.groups.filter(g => g.id !== groupId);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success("Subcategory deleted!");
-  },
-
-  createTemplateColumn: (sectionId, categoryId, groupId, columnData) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    if (!category) return;
-
-    const newColumn: TemplateColumn = {
-      ...columnData,
-      id: `col_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-    };
-
-    if (groupId) {
-      const group = category.groups.find(g => g.id === groupId);
-      if (group) group.columns.push(newColumn);
-    } else {
-      category.columns.push(newColumn);
-    }
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates: [...templates], projects: updated ? newProjects : projects });
-    toast.success(`Column "${newColumn.name}" created!`);
-  },
-
-  updateTemplateColumn: (sectionId, categoryId, groupId, columnId, updates) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    if (!category) return;
-
-    let column;
-    if (groupId) {
-      const group = category.groups.find(g => g.id === groupId);
-      column = group?.columns.find(c => c.id === columnId);
-    } else {
-      column = category.columns.find(c => c.id === columnId);
-    }
-    if (!column) return;
-
-    Object.assign(column, updates);
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates, projects: updated ? newProjects : projects });
-  },
-
-  deleteTemplateColumn: (sectionId, categoryId, groupId, columnId) => {
-    const templates = get().templates;
-    const section = templates.find(s => s.id === sectionId);
-    const category = section?.categories.find(c => c.id === categoryId);
-    if (!category) return;
-
-    if (groupId) {
-      const group = category.groups.find(g => g.id === groupId);
-      if (group) group.columns = group.columns.filter(c => c.id !== columnId);
-    } else {
-      category.columns = category.columns.filter(c => c.id !== columnId);
-    }
-    
-    const projects = get().projects;
-    const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-    
-    set({ templates, projects: updated ? newProjects : projects });
-  }
-};
+  };
 });

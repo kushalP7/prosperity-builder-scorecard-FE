@@ -7,7 +7,7 @@ import { FolderOpen, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function GlobalAnalyticsPage() {
-  const { projects, fetchProjects, fetchWidgets, fetchTemplates } = useAppStore()
+  const { projects, fetchProjects, fetchWidgets, fetchTemplates, isLoadingProjects } = useAppStore()
   const [selectedProjectId, setSelectedProjectId] = React.useState<string>("")
 
   React.useEffect(() => {
@@ -37,8 +37,9 @@ export default function GlobalAnalyticsPage() {
               className="w-full pl-10 pr-10 py-2.5 bg-background border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
+              disabled={isLoadingProjects}
             >
-              <option value="" disabled>Select a project...</option>
+              <option value="" disabled>{isLoadingProjects ? "Loading projects..." : "Select a project..."}</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -56,7 +57,22 @@ export default function GlobalAnalyticsPage() {
         </div>
       </div>
 
-      {selectedProjectId ? (
+      {isLoadingProjects ? (
+        <div className="bg-surface rounded-2xl border border-border p-8 shadow-sm animate-pulse space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
+            <div className="space-y-2">
+              <div className="h-6 w-48 bg-slate-200 rounded-md" />
+              <div className="h-4 w-32 bg-slate-100 rounded-md" />
+            </div>
+            <div className="h-10 w-24 bg-slate-200 rounded-xl" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(n => (
+              <div key={n} className="h-28 bg-slate-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      ) : selectedProjectId ? (
         <AnalyticsDashboard projectId={selectedProjectId} />
       ) : (
         <div className="flex items-center justify-center p-12 bg-surface/50 border border-dashed rounded-2xl">

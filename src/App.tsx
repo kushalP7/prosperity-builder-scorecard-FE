@@ -87,7 +87,7 @@ export function App() {
           {/* <Route path="/contact" element={<ContactPage />} /> KP */}
           {/* <Route path="/enterprise-contact" element={<Navigate to="/contact" replace />}/> KP  */}
           {/* KP */}
-          <Route path="/pricing" element={<PricingPage />} /> 
+          <Route path="/pricing" element={<PricingPage />} />
           {/* <Route path="/pricing" element={<Navigate to="/contact" replace />} /> KP */}
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/project-portfolio" element={<ProjectPortfolioPage />} />
@@ -116,39 +116,41 @@ export function App() {
           {/* Admin Dashboard */}
           <Route
             path="/overall-analytics"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<OverallAnalyticsPage />}
           />{" "}
           {/* Future: <OverallAnalyticsPage /> */}
           <Route
             path="/analytics"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<AnalyticsPage />}
           />{" "}
           {/* Future: <AnalyticsPage /> */}
           <Route
             path="/analytics-maker"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<AnalyticsMakerPage />}
           />{" "}
           {/* Future: <AnalyticsMakerPage /> */}
           {/* Projects */}
           <Route
             path="/projects"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<ProjectsPage />}
           />{" "}
           {/* Future: <ProjectsPage /> */}
-          <Route
-            path="/projects/:id/*"
-            element={<FeatureUnderDevelopmentPage />}
-          />{" "}
-          {/* Future: <ProjectLayout /> (data, analytics, intake, calibration) */}
+          <Route path="/projects/:id" element={<ProjectLayout />}>
+            <Route index element={<Navigate to="data" replace />} />
+            <Route path="data" element={<ProjectDataPage />} />
+            <Route path="intake" element={<ProjectIntakePage />} />
+            <Route path="calibration" element={<ProjectCalibrationPage />} />
+            <Route path="analytics" element={<ProjectAnalyticsPage />} />
+          </Route>
           {/* Section Maker */}
           <Route
             path="/section-maker"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<SectionMakerPage />}
           />{" "}
           {/* Future: <SectionMakerPage /> */}
           <Route
-            path="/section-maker/*"
-            element={<FeatureUnderDevelopmentPage />}
+            path="/section-maker/:sectionId/categories/:categoryId"
+            element={<SectionMakerCategoryPage />}
           />{" "}
           {/* Future: <SectionMakerCategoryPage /> */}
           {/* CMS (Active Deliverable) */}
@@ -172,19 +174,19 @@ export function App() {
           {/* Admin Management */}
           <Route
             path="/orders"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<OrdersPage />}
           />{" "}
           {/* Future: <OrdersPage /> */}
           <Route
             path="/payments"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<PaymentsPage />}
           />{" "}
           {/* Future: <PaymentsPage /> */}
-          <Route path="/users" element={<FeatureUnderDevelopmentPage />} />{" "}
+          <Route path="/users" element={<UsersPage />} />{" "}
           {/* Future: <UsersPage /> */}
           <Route
             path="/settings"
-            element={<FeatureUnderDevelopmentPage />}
+            element={<SettingsPage />}
           />{" "}
           {/* Future: <SettingsPage /> */}
           {/* Fallback to Home */}

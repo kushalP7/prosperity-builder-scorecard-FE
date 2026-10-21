@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AlertTriangle, Trash2, Loader2, X } from "lucide-react"
+import { AlertTriangle, Trash2, Loader2, X, FileCheck } from "lucide-react"
 
 export interface ConfirmDialogProps {
   isOpen: boolean
@@ -12,8 +12,10 @@ export interface ConfirmDialogProps {
   itemName?: string
   confirmText?: string
   cancelText?: string
-  variant?: "danger" | "warning"
+  variant?: "danger" | "warning" | "primary"
   isLoading?: boolean
+  loadingText?: string
+  icon?: React.ReactNode
 }
 
 export function ConfirmDialog({
@@ -27,6 +29,8 @@ export function ConfirmDialog({
   cancelText = "Cancel",
   variant = "danger",
   isLoading = false,
+  loadingText,
+  icon,
 }: ConfirmDialogProps) {
   React.useEffect(() => {
     if (isOpen) {
@@ -85,13 +89,19 @@ export function ConfirmDialog({
             className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
               variant === "danger"
                 ? "bg-rose-50 text-[#B5111B] ring-8 ring-rose-50/60"
-                : "bg-amber-50 text-amber-600 ring-8 ring-amber-50/60"
+                : variant === "warning"
+                ? "bg-amber-50 text-amber-600 ring-8 ring-amber-50/60"
+                : "bg-rose-50 text-[#B5111B] ring-8 ring-rose-50/60"
             }`}
           >
-            {variant === "danger" ? (
+            {icon ? (
+              icon
+            ) : variant === "danger" ? (
               <Trash2 className="w-7 h-7" />
-            ) : (
+            ) : variant === "warning" ? (
               <AlertTriangle className="w-7 h-7" />
+            ) : (
+              <FileCheck className="w-7 h-7" />
             )}
           </div>
 
@@ -128,15 +138,15 @@ export function ConfirmDialog({
               onClick={onConfirm}
               disabled={isLoading}
               className={`w-full px-4 py-2.5 rounded-xl text-white text-xs font-black transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60 ${
-                variant === "danger"
-                  ? "bg-[#B5111B] hover:bg-[#8F0D15] shadow-rose-900/10"
-                  : "bg-amber-600 hover:bg-amber-700 shadow-amber-900/10"
+                variant === "warning"
+                  ? "bg-amber-600 hover:bg-amber-700 shadow-amber-900/10"
+                  : "bg-[#B5111B] hover:bg-[#8F0D15] shadow-rose-900/10"
               }`}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Deleting...</span>
+                  <span>{loadingText || (variant === "danger" ? "Deleting..." : "Processing...")}</span>
                 </>
               ) : (
                 <span>{confirmText}</span>

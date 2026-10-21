@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useAppStore } from "@/store"
 import { evaluateWidgetData } from "@/lib/analyticsEngine"
+import { apiClient } from "@/lib/api"
 import {
   Building2,
   Layers,
@@ -132,7 +133,14 @@ function MiniHeaderMeterGauge({ score, maxScore = 10 }: { score: number; maxScor
           strokeLinecap="round"
         />
 
-        <g transform={`rotate(${rotation}, 50, 50)`} className="transition-transform duration-700 ease-out">
+        <g
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            transformOrigin: '50px 50px',
+            transformBox: 'view-box',
+            transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
           <path d="M 48 50 L 50 14 L 52 50 Z" fill="#1f2937" />
           <circle cx="50" cy="50" r="4.5" fill="#1f2937" />
           <circle cx="50" cy="50" r="1.8" fill="#ffffff" />
@@ -143,7 +151,7 @@ function MiniHeaderMeterGauge({ score, maxScore = 10 }: { score: number; maxScor
 }
 
 export function OverallAnalyticsDashboard() {
-  const { projects, widgets, templates } = useAppStore()
+  const { projects, widgets, templates, isLoadingProjects } = useAppStore()
   const [selectedProjectIds, setSelectedProjectIds] = React.useState<string[]>([])
   const [isFilterExpanded, setIsFilterExpanded] = React.useState<boolean>(false)
   const [searchQuery, setSearchQuery] = React.useState<string>("")
@@ -183,6 +191,17 @@ export function OverallAnalyticsDashboard() {
     setExpandedProjectIds(prev =>
       prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
     )
+
+    const proj = projects.find(p => p.id === id)
+    if (proj && (!proj.rollup || !proj.data || Object.keys(proj.data).length === 0)) {
+      apiClient.getProject(id).then((fresh: any) => {
+        if (fresh) {
+          useAppStore.setState(state => ({
+            projects: state.projects.map(p => p.id === id ? { ...p, ...fresh } : p)
+          }))
+        }
+      }).catch(console.error)
+    }
   }
 
   const allExpanded = projects.length > 0 && expandedProjectIds.length === projects.length
@@ -258,6 +277,21 @@ export function OverallAnalyticsDashboard() {
   // Compute overall score & category scores for each selected project
   const projectSummaries = React.useMemo(() => {
     return activeProjects.map(project => {
+      // Prioritize authentic backend scorecard rollup if available
+      const rollup = (project as any).rollup;
+      if (rollup && Array.isArray(rollup.categoryScores) && rollup.categoryScores.length > 0) {
+        const sectionScores = rollup.categoryScores.map((cs: any) => ({
+          name: cs.categoryLabel,
+          score: Number(cs.scoreTenScale || 0),
+        }));
+        const overallScore = Number(rollup.overallScoreTenScale !== undefined ? rollup.overallScoreTenScale : 0);
+        return {
+          project,
+          overallScore,
+          sectionScores,
+        };
+      }
+
       const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
       const enabled = (project.enabledWidgets && project.enabledWidgets.length > 0)
         ? widgets.filter(w => project.enabledWidgets!.includes(w.id))
@@ -331,7 +365,7 @@ export function OverallAnalyticsDashboard() {
           <div>
             <h3 className="text-lg font-bold text-foreground">Active Managed Projects</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Showing {filteredProjectSummaries.length} of {projects.length} included projects
+              {isLoadingProjects ? "Loading projects..." : `Showing ${filteredProjectSummaries.length} of ${projects.length} included projects`}
             </p>
           </div>
 
@@ -382,7 +416,25 @@ export function OverallAnalyticsDashboard() {
           </div>
         </div>
 
-        {filteredProjectSummaries.length === 0 ? (
+        {isLoadingProjects ? (
+          <div className="space-y-3.5">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/60 shadow-sm animate-pulse flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-slate-200 shrink-0" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-44 bg-slate-200 rounded" />
+                    <div className="h-3 w-28 bg-slate-100 rounded" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="h-8 w-24 bg-slate-100 rounded-lg hidden sm:block" />
+                  <div className="h-9 w-20 bg-slate-200 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProjectSummaries.length === 0 ? (
           <div className="p-12 text-center bg-white rounded-xl text-xs text-muted-foreground font-medium">
             No matching projects found for "{searchQuery}". Try searching for another project name or client name.
           </div>
@@ -542,7 +594,14 @@ export function OverallAnalyticsDashboard() {
                                 strokeLinecap="round"
                               />
 
-                              <g transform={`rotate(${projectRotation}, 100, 90)`} className="transition-transform duration-700 ease-out">
+                              <g
+                                style={{
+                                  transform: `rotate(${projectRotation}deg)`,
+                                  transformOrigin: '100px 90px',
+                                  transformBox: 'view-box',
+                                  transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
+                                }}
+                              >
                                 <path d="M 97.5 90 L 100 24 L 102.5 90 Z" fill="#1f2937" />
                                 <circle cx="100" cy="90" r="6" fill="#1f2937" />
                                 <circle cx="100" cy="90" r="2.5" fill="#ffffff" />

@@ -8,17 +8,15 @@ import { Modal } from "@/components/ui/modal"
 import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
-import { 
-  CreditCard, 
-  Clock, 
-  Building2, 
-  Sliders, 
-  CheckCircle2, 
-  Sparkles, 
-  Calendar, 
-  DollarSign, 
-  ShieldCheck, 
-  Bell, 
+import {
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  Sparkles,
+  Calendar,
+  DollarSign,
+  ShieldCheck,
+  Bell,
   Mail,
   Zap,
   Save,
@@ -74,7 +72,7 @@ function BrandRedSelect({ value, onChange, options, className }: BrandRedSelectP
       </button>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-transparent"
           onClick={() => setIsOpen(false)}
         />
@@ -195,7 +193,7 @@ function BrandRedDatePicker({ value, onChange, className }: BrandRedDatePickerPr
       </button>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-transparent"
           onClick={() => setIsOpen(false)}
         />
@@ -296,11 +294,20 @@ export default function SettingsPage() {
     fetchSettings()
   }, [fetchSettings])
 
-  // Admin Plan Price Configuration State (Matches Scorecard Pricing: $18,000 Scorecard, $36,000 Subscription, $45,000 Combined)
-  const [reportPrice, setReportPrice] = React.useState<number>(18000)
-  const [subscriptionPrice, setSubscriptionPrice] = React.useState<number>(36000)
-  const [combinedPrice, setCombinedPrice] = React.useState<number>(45000)
+  // Admin Plan Price Configuration State (Matches Scorecard Pricing: $15,000 Scorecard, $36,000 Subscription, $48,000 Combined)
+  const [reportPrice, setReportPrice] = React.useState<number>(settings?.planPrices?.reportPrice || 15000)
+  const [subscriptionPrice, setSubscriptionPrice] = React.useState<number>(settings?.planPrices?.subscriptionPrice || 36000)
+  const [combinedPrice, setCombinedPrice] = React.useState<number>(settings?.planPrices?.combinedPrice || 48000)
   const [showEditPricingModal, setShowEditPricingModal] = React.useState(false)
+
+  // Keep price state synced when settings load
+  React.useEffect(() => {
+    if (settings?.planPrices) {
+      if (settings.planPrices.reportPrice) setReportPrice(settings.planPrices.reportPrice)
+      if (settings.planPrices.subscriptionPrice) setSubscriptionPrice(settings.planPrices.subscriptionPrice)
+      if (settings.planPrices.combinedPrice) setCombinedPrice(settings.planPrices.combinedPrice)
+    }
+  }, [settings?.planPrices])
 
   // Business Payment Requirements State (Standalone Gateway, ACH Non-Card, Stage Progression Lock)
   const [paymentProvider, setPaymentProvider] = React.useState<"HubSpot Payments" | "Stripe Standalone">("HubSpot Payments")
@@ -319,12 +326,19 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    await updateSettings(settings)
-    
+    await updateSettings({
+      ...settings,
+      planPrices: {
+        reportPrice,
+        subscriptionPrice,
+        combinedPrice,
+      },
+    })
+
     // Simulate updating billing & deadline settings
     setTimeout(() => {
       setIsSaving(false)
-      toast.success("Settings & Partial Payment Deadline updated successfully!")
+      toast.success("Settings & Plan Pricing updated successfully!")
     }, 400)
   }
 
@@ -341,14 +355,14 @@ export default function SettingsPage() {
             System Settings & Preferences
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Configure subscription plan details, partial payment deadlines, company branding, and scorecard rating bands.
+            Configure subscription plan rates, partial payment deadlines, and automated invoicing rules.
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving} 
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold px-6 py-2.5 rounded-xl shadow-xs cursor-pointer transition-all flex items-center gap-2 text-xs sm:text-sm"
           >
             {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
@@ -416,10 +430,10 @@ export default function SettingsPage() {
                   <Calculator className="w-4.5 h-4.5" />
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-[10px] font-extrabold text-[#B5111B] uppercase tracking-wider">Option 02: All-In-One Package</div>
-                  <div className="font-black text-slate-900 text-sm">Total All-In-One Plan (${reportPrice + subscriptionPrice} / Year)</div>
+                  <div className="text-[10px] font-extrabold text-[#B5111B] uppercase tracking-wider">Option 02: Combined Package</div>
+                  <div className="font-black text-slate-900 text-sm">Combined Plan (${combinedPrice.toLocaleString()} Total)</div>
                   <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Complete bundle: ${reportPrice} Report + ${subscriptionPrice} Subscription = ${reportPrice + subscriptionPrice}/yr.
+                    Complete bundle: ${reportPrice.toLocaleString()} Initial Scorecard + ${subscriptionPrice.toLocaleString()} Subscription Updates = ${combinedPrice.toLocaleString()} ($12,000 savings).
                   </p>
                 </div>
               </div>
@@ -433,7 +447,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch pt-1">
-              {/* PLAN 1: Scorecard Only ($18,000 / Report) */}
+              {/* PLAN 1: Scorecard Only ($15,000 / Report) */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 space-y-5 flex flex-col justify-between shadow-2xs">
                 <div className="space-y-4">
                   <div className="space-y-1">
@@ -479,11 +493,14 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* PLAN 2: Scorecard Subscription ($36,000 / 3 Updates) */}
+              {/* PLAN 2: Scorecard Subscription ($36,000 / 3 Updates - Save $9,000) */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 space-y-5 flex flex-col justify-between shadow-2xs">
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <div className="text-[11px] font-black text-[#B5111B] uppercase tracking-wider">Multi-Year Monitoring</div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-black text-[#B5111B] uppercase tracking-wider">Multi-Year Monitoring</span>
+                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">SAVE $9,000</span>
+                    </div>
                     <h3 className="text-lg font-extrabold text-slate-900">Scorecard Subscription</h3>
                     <p className="text-xs text-slate-500 font-semibold">(2 or 5-Yr Update &times; 3)</p>
                     <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
@@ -492,11 +509,14 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 space-y-1">
-                    <div className="text-2xl sm:text-3xl font-black text-slate-900">
-                      ${subscriptionPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl sm:text-3xl font-black text-slate-900">
+                        ${subscriptionPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-xs font-bold text-slate-400 line-through">$45,000</span>
                     </div>
                     <span className="inline-block text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                      $12,000.00 each update &bull; 3 total
+                      $12,000.00 each update &bull; 3 total &bull; Save $9,000
                     </span>
                   </div>
 
@@ -525,18 +545,18 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* PLAN 3: Combined Package ($45,000 / $54k Value) */}
+              {/* PLAN 3: Combined Package ($48,000 / $60k Value - Save $12,000) */}
               <div className="bg-white rounded-2xl border-2 border-[#B5111B] p-5 space-y-5 flex flex-col justify-between shadow-md relative overflow-hidden ring-2 ring-[#B5111B]/10">
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-black text-[#B5111B] uppercase tracking-wider">Turnkey Package</span>
-                      <span className="text-[9px] font-black text-white bg-[#B5111B] px-1.5 py-0.5 rounded">SAVE $9,000</span>
+                      <span className="text-[9px] font-black text-white bg-[#B5111B] px-1.5 py-0.5 rounded">SAVE $12,000</span>
                     </div>
                     <h3 className="text-lg font-extrabold text-slate-900">Combined Package</h3>
-                    <p className="text-xs text-slate-500 font-semibold">($54,000.00 Total Value)</p>
+                    <p className="text-xs text-slate-500 font-semibold">(Initial Scorecard + Subscription Updates)</p>
                     <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
-                      Includes 1x Baseline Scorecard ($18k) + Full 3-Cycle Subscription ($36k).
+                      Includes 1x Initial Scorecard ($15k) + Full 3-Cycle Subscription ($36k).
                     </p>
                   </div>
 
@@ -546,14 +566,14 @@ export default function SettingsPage() {
                         Value Calculation
                       </span>
                       <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
-                        Save $9,000.00
+                        Save $12,000.00
                       </span>
                     </div>
                     <div className="font-extrabold text-slate-900 text-xs flex items-center gap-1 flex-wrap">
-                      <span>$18k Base</span>
+                      <span>$15k Base</span>
                       <span>+</span>
                       <span>$36k Sub (x3)</span>
-                      <span className="text-slate-400 line-through">= $54k Value</span>
+                      <span className="text-slate-400 line-through">= $60k Value</span>
                     </div>
                   </div>
 
@@ -562,17 +582,17 @@ export default function SettingsPage() {
                       <span className="text-2xl sm:text-3xl font-black text-[#B5111B]">
                         ${combinedPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                       </span>
-                      <span className="text-xs font-bold text-slate-400 line-through">$54,000</span>
+                      <span className="text-xs font-bold text-slate-400 line-through">$60,000</span>
                     </div>
                     <span className="inline-block text-[10px] font-bold text-[#B5111B] bg-red-50 px-2.5 py-0.5 rounded-lg border border-red-200/80">
-                      Complete Turnkey Engagement
+                      Complete Turnkey Engagement &bull; $48,000 Total
                     </span>
                   </div>
 
                   <ul className="space-y-2 pt-1 text-xs text-slate-700 font-medium">
                     <li className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
-                      <span>Full Baseline 1x Scorecard ($18k Value)</span>
+                      <span>Full Baseline 1x Scorecard ($15k Value)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
@@ -684,133 +704,6 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* 2-Column Grid Container for Company Profile & Score Rating Bands */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CARD 3: Company Profile (RED THEME) */}
-        <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden border-t-4 border-t-[#B5111B] flex flex-col justify-between">
-          <div>
-            <CardHeader className="bg-slate-50/70 border-b border-slate-200/80 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B5111B] to-rose-700 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-slate-900">Company Profile</CardTitle>
-                  <CardDescription className="text-xs text-slate-500">Your organization details printed on invoices and scorecard reports.</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {(() => {
-                const companyProfile = settings?.companyProfile || {
-                  name: "Rose Associates",
-                  phone: "555-0100",
-                  address: "123 Planning Way"
-                };
-
-                return (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
-                      <input 
-                        type="text" 
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm shadow-xs font-bold text-slate-900 focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B5111B]/20 focus-visible:border-[#B5111B] transition-all"
-                        value={companyProfile.name || ''}
-                        onChange={(e) => updateSettings({
-                          ...settings,
-                          companyProfile: { ...companyProfile, name: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone</label>
-                      <input 
-                        type="text" 
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm shadow-xs font-bold text-slate-900 focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B5111B]/20 focus-visible:border-[#B5111B] transition-all"
-                        value={companyProfile.phone || ''}
-                        onChange={(e) => updateSettings({
-                          ...settings,
-                          companyProfile: { ...companyProfile, phone: e.target.value }
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Address</label>
-                      <input 
-                        type="text" 
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm shadow-xs font-bold text-slate-900 focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B5111B]/20 focus-visible:border-[#B5111B] transition-all"
-                        value={companyProfile.address || ''}
-                        onChange={(e) => updateSettings({
-                          ...settings,
-                          companyProfile: { ...companyProfile, address: e.target.value }
-                        })}
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </div>
-        </Card>
-
-        {/* CARD 4: Score Rating Bands (SLATE/GRAY THEME) */}
-        <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden border-t-4 border-t-slate-700 flex flex-col justify-between">
-          <div>
-            <CardHeader className="bg-slate-50/70 border-b border-slate-200/80 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                  <Sliders className="w-5 h-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-slate-900">Score Rating Bands</CardTitle>
-                  <CardDescription className="text-xs text-slate-500">Rating thresholds used across project analytics and scorecard dashboards.</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {(settings?.ratingBands || []).map((band, idx) => (
-                <div key={idx} className="flex items-center gap-3 sm:gap-4">
-                  <div className="flex-1 space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Label</label>
-                    <input 
-                      type="text" 
-                      value={band.label}
-                      readOnly
-                      className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2 text-xs sm:text-sm font-bold text-slate-900"
-                    />
-                  </div>
-                  <div className="w-16 sm:w-20 space-y-1">
-                    <label className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Min</label>
-                    <input 
-                      type="number" 
-                      value={band.min}
-                      readOnly
-                      className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 text-center"
-                    />
-                  </div>
-                  <div className="w-16 sm:w-20 space-y-1">
-                    <label className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Max</label>
-                    <input 
-                      type="number" 
-                      value={band.max}
-                      readOnly
-                      className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 text-center"
-                    />
-                  </div>
-                  <div className="w-14 sm:w-16 space-y-1">
-                    <label className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Color</label>
-                    <div 
-                      className="w-full h-[38px] rounded-xl border border-slate-300 shadow-2xs"
-                      style={{ backgroundColor: band.color }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </div>
-        </Card>
-      </div>
 
       {/* SETTINGS EMAIL TEMPLATE PREVIEW MODAL */}
       {showEmailPreviewModal && (
@@ -1087,7 +980,7 @@ export default function SettingsPage() {
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
                 <span className="font-extrabold text-slate-700">Combined Package Savings:</span>
                 <span className="font-black text-sm text-emerald-700">
-                  Save ${(reportPrice + subscriptionPrice) - combinedPrice > 0 ? (reportPrice + subscriptionPrice) - combinedPrice : 0} ($54k Value)
+                  Save ${60000 - combinedPrice > 0 ? 60000 - combinedPrice : 12000} ($60k Value)
                 </span>
               </div>
             </div>
@@ -1103,9 +996,17 @@ export default function SettingsPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   setShowEditPricingModal(false);
-                  toast.success(`Plan pricing updated: $${reportPrice} Scorecard, $${subscriptionPrice} Subscription, $${combinedPrice} Combined`);
+                  await updateSettings({
+                    ...settings,
+                    planPrices: {
+                      reportPrice,
+                      subscriptionPrice,
+                      combinedPrice,
+                    },
+                  });
+                  toast.success(`Plan pricing saved: $${reportPrice.toLocaleString()} Scorecard, $${subscriptionPrice.toLocaleString()} Subscription, $${combinedPrice.toLocaleString()} Combined`);
                 }}
                 className="bg-[#B5111B] hover:bg-[#8F0D15] text-white rounded-xl font-bold text-xs"
               >

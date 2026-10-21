@@ -27,8 +27,7 @@ import {
   Database,
   Edit3,
   User,
-  Landmark,
-  ArrowRightCircle
+  Landmark
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -697,46 +696,6 @@ export default function OrdersPage() {
     toast.success("Order payment status updated successfully.");
   };
 
-  // Update Timeline Stage directly
-  const updateTimelineStage = (orderId: string, newStep: number) => {
-    const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    setOrders(prev => prev.map(o => {
-      if (o.id === orderId) {
-        const isNowFull = newStep === 6;
-        const currentDates = { ...(o.stepDates || {}) };
-
-        // Ensure steps up to newStep have dates
-        for (let i = 1; i <= newStep; i++) {
-          if (!currentDates[i] || currentDates[i] === "Pending") {
-            currentDates[i] = todayStr;
-          }
-        }
-
-        return {
-          ...o,
-          timelineStep: newStep,
-          paymentStatus: isNowFull ? 'full' : o.paymentStatus,
-          paidAmount: isNowFull ? o.totalAmount : o.paidAmount,
-          stepDates: currentDates
-        };
-      }
-      return o;
-    }));
-
-    const stepObj = TIMELINE_STEPS.find(s => s.id === newStep);
-    toast.info(`Updated timeline to Stage ${newStep}: ${stepObj?.label}`);
-  };
-
-  // Advance Timeline to Next Stage
-  const advanceTimelineStage = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-    if (order.timelineStep >= 6) {
-      toast.info("Timeline is already at final completed stage.");
-      return;
-    }
-    updateTimelineStage(orderId, order.timelineStep + 1);
-  };
 
   return (
     <div className="space-y-3 sm:space-y-3.5 w-full pb-0">
@@ -1096,13 +1055,12 @@ export default function OrdersPage() {
 
                                 return (
                                   <div key={step.id} className="relative group flex flex-col items-center">
-                                    <button
-                                      onClick={() => updateTimelineStage(order.id, step.id)}
+                                    <div
                                       className={cn(
-                                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 cursor-pointer shadow-2xs",
-                                        isCompleted && "bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-110",
+                                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 shadow-2xs select-none cursor-default",
+                                        isCompleted && "bg-emerald-600 text-white",
                                         isCurrent && "bg-blue-600 text-white ring-4 ring-blue-100 scale-110 shadow-md font-extrabold",
-                                        isUpcoming && "bg-white text-slate-400 border border-slate-300 hover:bg-slate-100 hover:text-slate-700 hover:scale-105"
+                                        isUpcoming && "bg-white text-slate-400 border border-slate-300"
                                       )}
                                       title={`Step ${step.id}: ${step.label} (${isCompleted ? 'Completed' : isCurrent ? 'Active Stage' : 'Pending'})`}
                                     >
@@ -1111,7 +1069,7 @@ export default function OrdersPage() {
                                       ) : (
                                         <span>{step.id}</span>
                                       )}
-                                    </button>
+                                    </div>
 
                                     {/* Tooltip on Hover */}
                                     <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30 pointer-events-none min-w-[150px]">
@@ -1229,17 +1187,6 @@ export default function OrdersPage() {
                                 <span>{isPartial ? "Mark as Paid" : "Mark as Partial"}</span>
                               </button>
 
-                              {/* Advance to Next Step (Replaces Advance Timeline Stage) */}
-                              <button
-                                onClick={() => {
-                                  advanceTimelineStage(order.id);
-                                  setActiveMenuOrderId(null);
-                                }}
-                                className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
-                              >
-                                <ArrowRightCircle className="w-4 h-4 text-blue-600 shrink-0" />
-                                <span>Advance to Next Step</span>
-                              </button>
 
                               {/* View Profile & Account Details */}
                               <button
@@ -1638,7 +1585,7 @@ export default function OrdersPage() {
                     </div>
                     <div>
                       <h3 className="text-base font-extrabold text-slate-900 leading-tight">Customer Roadmap</h3>
-                      <p className="text-xs text-slate-500 font-medium">Track & update project milestones</p>
+                      <p className="text-xs text-slate-500 font-medium">Track project milestone stages</p>
                     </div>
                   </div>
                   <Button
@@ -1686,26 +1633,22 @@ export default function OrdersPage() {
                       return (
                         <div
                           key={step.id}
-                          onClick={() => {
-                            updateTimelineStage(roadmapModalOrder.id, step.id);
-                            setRoadmapModalOrder(prev => prev ? { ...prev, timelineStep: step.id } : null);
-                          }}
-                          className="relative group cursor-pointer"
+                          className="relative"
                         >
                           <div className={cn(
-                            "absolute -left-[35px] top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs",
+                            "absolute -left-[35px] top-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs select-none",
                             isCompleted && "bg-emerald-600 text-white",
                             isCurrent && "bg-blue-600 text-white ring-4 ring-blue-100 scale-110 shadow-md",
-                            isUpcoming && "bg-white text-slate-400 border border-slate-300 group-hover:border-slate-400"
+                            isUpcoming && "bg-white text-slate-400 border border-slate-300"
                           )}>
                             {isCompleted ? <Check className="w-3 h-3 stroke-[3]" /> : step.id}
                           </div>
 
                           <div className={cn(
-                            "p-3.5 rounded-2xl border transition-all",
+                            "p-3.5 rounded-2xl border transition-all select-none",
                             isCurrent && "bg-blue-50/90 border-blue-300 shadow-2xs ring-1 ring-blue-200",
-                            isCompleted && "bg-emerald-50/90 border-emerald-300 shadow-2xs hover:bg-emerald-100/60",
-                            isUpcoming && "bg-white border-slate-200 hover:bg-slate-50"
+                            isCompleted && "bg-emerald-50/90 border-emerald-300 shadow-2xs",
+                            isUpcoming && "bg-white border-slate-200"
                           )}>
                             <div className="flex items-center justify-between gap-1">
                               <span className={cn(
@@ -1753,7 +1696,15 @@ export default function OrdersPage() {
 
                 {/* Drawer Footer */}
                 <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-                  <span className="text-xs text-slate-500 font-medium">Click any step to set active stage</span>
+                  <span className="text-xs text-slate-500 font-medium">Milestone stages update automatically with project progress</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRoadmapModalOrder(null)}
+                    className="text-xs font-bold rounded-xl border-slate-300 hover:bg-white cursor-pointer"
+                  >
+                    Close
+                  </Button>
                 </div>
 
               </div>

@@ -9,7 +9,7 @@ export function PricingSection() {
       id: "scorecard-only",
       name: "Scorecard Only",
       subtitle: "1x Report",
-      price: "$18,000",
+      price: "$15,000",
       cents: ".00",
       billingNote: "One-time comprehensive assessment",
       description:
@@ -36,7 +36,7 @@ export function PricingSection() {
       description:
         "Structured multi-year milestone evaluation providing 3 periodic update reports across a 2-year or 5-year community planning horizon.",
       features: [
-        "3 milestone update scorecard reports",
+        "3 milestone update scorecard reports ($45,000 standalone value)",
         "Initial virtual alignment call for each update cycle",
         "Recalibrated questionnaires tracking community shifts",
         "Presentation & consultation visit for each update milestone",
@@ -46,32 +46,33 @@ export function PricingSection() {
       ctaText: "Select Subscription Plan",
       ctaHref: "/login",
       featured: false,
+      badge: "Save $9,000",
     },
     {
       id: "combined",
       name: "Combined Package",
       subtitle: "(Scorecard Only + Scorecard Subscription)",
-      price: "$45,000",
+      price: "$48,000",
       cents: ".00",
       billingNote: "Complete 4-report bundled lifecycle",
       description:
         "Our complete turnkey advisory partnership combining the initial baseline scorecard assessment with the full 3-cycle multi-year subscription program.",
-        features: [
+      features: [
         "Covers all deliverable points included in Scorecard Only & Scorecard Subscription.",
-        "Full Baseline 1x Scorecard Report ($18,000 Value)",
-        "Full 3-Cycle Subscription Series ($36,000 Value)",
+        "Full Baseline 1x Scorecard Report ($15,000 Value)",
+        "Full 3-Cycle Subscription Series ($36,000 Value • $45,000 Standalone Value)",
       ],
       ctaText: "Select Combined Package",
       ctaHref: "/login",
       featured: true,
-      badge: "Best Value • Save $9,000",
+      badge: "Best Value • Save $12,000",
     },
   ]
 
   return (
     <section id="pricing-section" className="scroll-mt-20 py-14 sm:py-20 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-5xl mx-auto mb-14 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
@@ -90,15 +91,16 @@ export function PricingSection() {
             return (
               <div
                 key={plan.id}
-                className={`relative flex flex-col justify-between rounded-2xl h-full transition-all duration-200 ${
-                  isFeatured
-                    ? "bg-white border-2 border-[#B5111B] shadow-lg z-10"
-                    : "bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-slate-300"
-                }`}
+                className={`relative flex flex-col justify-between rounded-2xl h-full transition-all duration-200 ${isFeatured
+                  ? "bg-white border-2 border-[#B5111B] shadow-lg z-10"
+                  : "bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-slate-300"
+                  }`}
               >
-                {/* Featured Badge - Floating Pill so content starts at identical top baseline */}
-                {isFeatured && plan.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#B5111B] text-white text-[11px] font-bold text-center py-1 px-4 rounded-full uppercase tracking-wider shadow-sm z-20 whitespace-nowrap">
+                {/* Plan Badge - Floating Pill so content starts at identical top baseline */}
+                {plan.badge && (
+                  <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${
+                    isFeatured ? "bg-[#B5111B]" : "bg-emerald-700"
+                  } text-white text-[11px] font-bold text-center py-1 px-4 rounded-full uppercase tracking-wider shadow-sm z-20 whitespace-nowrap`}>
                     {plan.badge}
                   </div>
                 )}
@@ -121,7 +123,22 @@ export function PricingSection() {
                           </p>
                           <div className="mt-1 flex items-center gap-1.5 text-xs">
                             <span className="text-slate-400 line-through font-medium">
-                              $54,000 Total Value
+                              $60,000 Total Value
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 rounded-full text-[11px]">
+                              Save $12,000.00
+                            </span>
+                          </div>
+                        </>
+                      ) : plan.id === "scorecard-subscription" ? (
+                        <>
+                          <p className="text-xs font-semibold text-[#B5111B]">
+                            {plan.subtitle}
+                          </p>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs">
+                            <span className="text-slate-400 line-through font-medium">
+                              $45,000 Standalone Value
                             </span>
                             <span className="text-slate-300">•</span>
                             <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 py-0.5 rounded-full text-[11px]">
@@ -168,18 +185,16 @@ export function PricingSection() {
                         return (
                           <li
                             key={idx}
-                            className={`flex items-start gap-2.5 leading-snug ${
-                              isHighValue
-                                ? "font-semibold text-slate-900"
-                                : "text-slate-700"
-                            }`}
+                            className={`flex items-start gap-2.5 leading-snug ${isHighValue
+                              ? "font-semibold text-slate-900"
+                              : "text-slate-700"
+                              }`}
                           >
                             <Check
-                              className={`w-4 h-4 shrink-0 mt-0.5 ${
-                                isHighValue
-                                  ? "text-[#B5111B] stroke-[2.5]"
-                                  : "text-[#B5111B]"
-                              }`}
+                              className={`w-4 h-4 shrink-0 mt-0.5 ${isHighValue
+                                ? "text-[#B5111B] stroke-[2.5]"
+                                : "text-[#B5111B]"
+                                }`}
                             />
                             <span>
                               {isHighValue ? (
@@ -209,11 +224,10 @@ export function PricingSection() {
                   <div className="pt-8 mt-auto">
                     <Link
                       href={plan.ctaHref}
-                      className={`w-full block py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
-                        isFeatured
-                          ? "bg-[#B5111B] text-white hover:bg-[#960E16] shadow-sm hover:shadow"
-                          : "bg-slate-900 text-white hover:bg-slate-800"
-                      }`}
+                      className={`w-full block py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${isFeatured
+                        ? "bg-[#B5111B] text-white hover:bg-[#960E16] shadow-sm hover:shadow"
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+                        }`}
                     >
                       {plan.ctaText}
                     </Link>

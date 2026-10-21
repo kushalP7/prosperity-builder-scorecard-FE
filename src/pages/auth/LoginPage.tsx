@@ -120,13 +120,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 font-sans selection:bg-rose-100 selection:text-rose-900">
-      
+
       {/* Left Column: Unique Visual Brand & Product Showcase Panel */}
       <div className="hidden md:flex md:w-1/2 lg:w-5/12 text-white flex-col justify-between p-8 lg:p-12 relative overflow-hidden bg-gradient-to-br from-[#090204] via-[#110306] to-[#1a0508] border-r border-rose-950/40 shadow-2xl">
-        
+
         {/* Modern Blueprint / Planning Coordinate Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_35%,#000_60%,transparent_100%)] pointer-events-none" />
-        
+
         {/* Layered Rose Red Atmospheric Glows */}
         <div className="absolute -top-36 -left-36 w-96 h-96 bg-rose-600/20 rounded-full blur-[110px] pointer-events-none" />
         <div className="absolute top-1/2 -right-32 w-80 h-80 bg-red-700/15 rounded-full blur-[100px] pointer-events-none" />
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
         {/* Top & Middle Content Container */}
         <div className="relative z-10 space-y-6">
-          
+
           {/* Logo Badge & Back Link */}
           <div className="flex items-center justify-between">
             <Link
@@ -159,7 +159,7 @@ export default function LoginPage() {
             <h1 className="text-3xl lg:text-[2.5rem] font-black text-white tracking-tight leading-[1.15]">
               Prosperity Builder <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-white to-rose-300">Scorecard</span><sup className="text-base font-semibold text-rose-300 ml-1">®</sup>
             </h1>
-            
+
             <p className="text-xs lg:text-sm text-slate-300/90 leading-relaxed font-normal max-w-md">
               The proprietary analytics engine for assessing municipal master plans, capital investment readiness, and regional prosperity indices.
             </p>
@@ -167,7 +167,7 @@ export default function LoginPage() {
 
           {/* UNIQUE PRODUCT SHOWCASE WIDGET (Live Municipal Scorecard Card) */}
           <div className="relative rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/15 p-4 sm:p-5 shadow-2xl space-y-3.5 hover:border-white/25 transition-all">
-            
+
             {/* Top Badge Row */}
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
@@ -184,7 +184,7 @@ export default function LoginPage() {
                   </div>
                 </div>
               </div>
-              
+
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-extrabold tracking-wide uppercase">
                 <BadgeCheck className="w-3.5 h-3.5" />
                 <span>Calibrated</span>
@@ -202,7 +202,7 @@ export default function LoginPage() {
                   <span>Excellent</span>
                 </div>
               </div>
-              
+
               <div className="col-span-2 space-y-2 pl-1.5">
                 <div>
                   <div className="flex justify-between text-[10px] text-slate-300 font-medium mb-1">
@@ -213,7 +213,7 @@ export default function LoginPage() {
                     <div className="h-full bg-gradient-to-r from-rose-500 to-emerald-400 rounded-full w-[92%]" />
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-[10px] text-slate-300 font-medium mb-1">
                     <span>Land Use & Infrastructure</span>
@@ -287,7 +287,7 @@ export default function LoginPage() {
 
       {/* Right Column: Clean Enterprise Sign In / Register Form */}
       <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-16 bg-white md:bg-slate-50/60 overflow-y-auto">
-        
+
         {/* Mobile Header */}
         <div className="md:hidden pb-6 flex items-center justify-between border-b border-slate-200/80 mb-4">
           <Link href="/">
@@ -303,20 +303,19 @@ export default function LoginPage() {
         </div>
 
         <div className="max-w-md w-full mx-auto my-auto space-y-6">
-          
+
           {/* Header & Mode Switcher */}
           <div className="space-y-4">
-            
+
             {/* Mode Switcher */}
             <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-xs">
               <button
                 type="button"
                 onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  authMode === 'login'
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${authMode === 'login'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Sign In</span>
@@ -324,11 +323,10 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setAuthMode('register'); setErrorMsg(''); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  authMode === 'register'
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${authMode === 'register'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Create Account</span>
@@ -359,7 +357,7 @@ export default function LoginPage() {
           {/* SIGN IN FORM */}
           {authMode === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              
+
               {/* Email Address */}
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-xs font-bold text-slate-700 block">
@@ -453,7 +451,7 @@ export default function LoginPage() {
           ) : (
             /* REGISTER FORM */
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              
+
               {/* Full Name */}
               <div className="space-y-1.5">
                 <label htmlFor="reg-name" className="text-xs font-bold text-slate-700 block">

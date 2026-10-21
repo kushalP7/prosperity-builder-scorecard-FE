@@ -114,20 +114,7 @@ export function addSampleData() {
         conditionalRules: [],
         scoringRule: { kind: 'manual', maxPoints: 10 }
       },
-      {
-        id: `col_${Date.now()}_${sectionIndex}_trend`,
-        name: 'Overall Trend',
-        type: 'number',
-        unit: '',
-        weight: 1,
-        isBonus: false,
-        isReadOnly: false,
-        formulaExpression: '',
-        options: [],
-        validation: { min: 0, max: 20 },
-        conditionalRules: [],
-        scoringRule: { kind: 'manual', maxPoints: 0 }
-      },
+
       {
         id: `col_${Date.now()}_${sectionIndex}_notes`,
         name: 'Local Data Result & Notes',
@@ -593,14 +580,15 @@ export function addSampleData() {
         const groups = catObj.rows.map((r: any, rIdx: number) => ({
           id: `g_${Date.now()}_${sectionIndex}_${cIdx}_${rIdx}`,
           label: r.name,
-          takesValues: false,
+          weight: r.w,
+          highestScore: r.h,
+          scoringType: r.yn !== null ? 'boolean' : 'value',
           columns: []
         }));
 
         categories.push({
           id: catId,
           label: catObj.cat,
-          takesValues: false,
           groups,
           columns
         });
@@ -646,14 +634,12 @@ export function addSampleData() {
       const groups = subMetrics.map((metricName, z) => ({
         id: `g_${Date.now()}_${sectionIndex}_1_${z}`,
         label: metricName,
-        takesValues: false,
         columns: []
       }));
 
       categories.push({
         id: catId,
         label: `Overview`,
-        takesValues: false,
         groups,
         columns
       });
