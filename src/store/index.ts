@@ -58,7 +58,7 @@ interface AppState {
   // Project Actions
   setActiveProject: (id: string | null) => void;
   createProject: (project: Omit<Project, 'id' | 'assignedSections' | 'data'>) => Promise<void>;
-  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<boolean>;
   deleteProject: (id: string) => Promise<void>;
   restoreProject: (id: string) => Promise<void>;
   updateDashboardLayout: (projectId: string, layout: any[]) => void;
@@ -417,16 +417,29 @@ export const useAppStore = create<AppState>((set, get) => {
     },
 
     updateProject: async (id, updates) => {
-      const projects = get().projects;
-      const project = projects.find(p => p.id === id);
-      if (project) {
-        Object.assign(project, updates);
-        set({ projects: [...projects] });
-        if (get().activeProject?.id === id) {
-          set({ activeProject: { ...project } });
+      set({ isSyncing: true });
+      try {
+        const success = await apiClient.updateProject(id, updates);
+        if (success) {
+          const projects = get().projects;
+          const updatedProjects = projects.map(p => p.id === id ? { ...p, ...updates } : p);
+          set({ projects: updatedProjects });
+
+          if (get().activeProject?.id === id) {
+            set({ activeProject: { ...get().activeProject, ...updates } as any });
+          }
+          toast.success("Project updated successfully!");
+          return true;
+        } else {
+          toast.error("Failed to update project on server.");
+          return false;
         }
-        toast.success("Project updated!");
-        apiClient.updateProject(id, updates);
+      } catch (err) {
+        console.error("Error updating project:", err);
+        toast.error("Failed to update project.");
+        return false;
+      } finally {
+        set({ isSyncing: false });
       }
     },
 

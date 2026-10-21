@@ -239,7 +239,7 @@ export default function ProjectsPage() {
     setIsSubmitting(true)
 
     if (editingProjectId) {
-      await updateProject(editingProjectId, {
+      const ok = await updateProject(editingProjectId, {
         name: newProject.name,
         clientName: newProject.clientName,
         year: newProject.year,
@@ -249,6 +249,11 @@ export default function ProjectsPage() {
         stateFips: newProject.stateFips,
         countyFips: newProject.countyFips,
       })
+      if (ok) {
+        setPaginatedProjects(prev =>
+          prev.map(p => (p.id === editingProjectId ? { ...p, ...newProject } : p))
+        )
+      }
     } else {
       await createProject({
         name: newProject.name,
