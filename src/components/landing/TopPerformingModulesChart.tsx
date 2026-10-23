@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
+import { TrendUpIcon } from "@phosphor-icons/react"
 
 export function TopPerformingModulesChart() {
   return (
@@ -8,7 +8,7 @@ export function TopPerformingModulesChart() {
       <div className="space-y-0.5 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <TrendingUp className="w-4.5 h-4.5 text-white" />
+            <TrendUpIcon weight="duotone" className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Top Performing Modules</h3>

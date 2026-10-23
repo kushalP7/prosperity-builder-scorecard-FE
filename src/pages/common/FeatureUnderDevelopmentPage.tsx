@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
-import { Clock, ArrowRight, FileSpreadsheet } from "lucide-react"
+import { ClockIcon, ArrowRightIcon, TableIcon } from "@phosphor-icons/react"
 
 interface FeatureUnderDevelopmentPageProps {
   title?: string
@@ -13,7 +13,7 @@ export function FeatureUnderDevelopmentPage({ title }: FeatureUnderDevelopmentPa
       <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-sm p-8 text-center space-y-6">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-[#B5111B] mx-auto">
-          <Clock className="w-8 h-8 animate-pulse" />
+          <ClockIcon weight="duotone" className="w-8 h-8 animate-pulse" />
         </div>
 
         {/* Text */}
@@ -35,9 +35,9 @@ export function FeatureUnderDevelopmentPage({ title }: FeatureUnderDevelopmentPa
             href="/landing-cms"
             className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white font-medium text-sm transition-colors shadow-sm"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <TableIcon weight="duotone" className="w-4 h-4" />
             <span>Go to Landing CMS</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRightIcon weight="bold" className="w-4 h-4" />
           </Link>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check } from "lucide-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export interface CheckboxProps {
@@ -69,9 +69,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               disabled && "cursor-not-allowed bg-slate-100 border-slate-200"
             )}
           >
-            <Check
+            <CheckIcon
+              weight="bold"
               className={cn(
-                "w-3 h-3 stroke-[3] transition-transform duration-200",
+                "w-3 h-3 transition-transform duration-200",
                 checked ? "scale-100 opacity-100" : "scale-50 opacity-0"
               )}
             />

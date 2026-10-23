@@ -1,7 +1,15 @@
 "use client"
 
-import * as React from "react"
-import { ChevronRight, ChevronDown, Compass, MapPin, Map as MapIcon, Building2, Briefcase, Landmark, Layers } from "lucide-react"
+import {
+  CompassIcon,
+  MapPinIcon,
+  MapTrifoldIcon,
+  BuildingsIcon,
+  BriefcaseIcon,
+  BankIcon,
+  StackIcon,
+  CaretRightIcon,
+} from "@phosphor-icons/react"
 import { PORTFOLIO_CATEGORIES, CATEGORY_COMMUNITIES, LandingProjectItem } from "@/lib/projects-api"
 
 interface ProjectPortfolioSidebarProps {
@@ -13,13 +21,13 @@ interface ProjectPortfolioSidebarProps {
 
 // Standard Rose Associates Category Icons matching the scorecard design system
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  "Corridor/Transportation Studies": <MapPin className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Master/Comprehensive Land Use": <MapIcon className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Downtown & Small Area Plans": <Building2 className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Economic Development Strategic Plans": <Briefcase className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Entitlements & Positioning": <Landmark className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Asset/Portfolio Analysis & Strategy": <Layers className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
-  "Asset / Portfolio Analysis & Strategy": <Layers className="w-4.5 h-4.5 text-white stroke-[2.2]" />,
+  "Corridor/Transportation Studies": <MapPinIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Master/Comprehensive Land Use": <MapTrifoldIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Downtown & Small Area Plans": <BuildingsIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Economic Development Strategic Plans": <BriefcaseIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Entitlements & Positioning": <BankIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Asset/Portfolio Analysis & Strategy": <StackIcon weight="duotone" className="w-5 h-5 text-white" />,
+  "Asset / Portfolio Analysis & Strategy": <StackIcon weight="duotone" className="w-5 h-5 text-white" />,
 }
 
 export default function ProjectPortfolioSidebar({
@@ -67,7 +75,7 @@ export default function ProjectPortfolioSidebar({
                     : "bg-[#B5111B] text-white"
                 }`}
               >
-                <Compass className="w-4.5 h-4.5 text-white stroke-[2.2]" />
+                <CompassIcon weight="duotone" className="w-5 h-5 text-white" />
               </div>
 
               <span
@@ -79,7 +87,8 @@ export default function ProjectPortfolioSidebar({
               </span>
             </div>
 
-            <ChevronRight
+            <CaretRightIcon
+              weight="bold"
               className={`w-4 h-4 shrink-0 transition-transform ${
                 selectedCategory === "all"
                   ? "text-[#B5111B] translate-x-0.5"
@@ -92,7 +101,7 @@ export default function ProjectPortfolioSidebar({
         {/* Categories matching Rose Associates scorecard category styling */}
         {PORTFOLIO_CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat
-          const icon = CATEGORY_ICONS[cat] || <Briefcase className="w-4.5 h-4.5 text-white stroke-[2.2]" />
+          const icon = CATEGORY_ICONS[cat] || <BriefcaseIcon weight="duotone" className="w-5 h-5 text-white" />
           const staticCommunities = CATEGORY_COMMUNITIES[cat] || []
           const dbProjectsForCat = (projects || [])
             .filter((p) => p.category === cat)
@@ -146,7 +155,8 @@ export default function ProjectPortfolioSidebar({
                 </div>
 
                 <div className="flex items-center shrink-0">
-                  <ChevronRight
+                  <CaretRightIcon
+                    weight="bold"
                     className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
                       isSelected
                         ? "text-[#B5111B] rotate-90"

@@ -1,7 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Activity, PieChart, Zap, ShieldCheck } from "lucide-react"
+import {
+  HeartbeatIcon,
+  ChartPieSliceIcon,
+  LightningIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react"
 import { GaugeSpeedometerChart } from "./GaugeSpeedometerChart"
 import { TopPerformingModulesChart } from "./TopPerformingModulesChart"
 import { LowestPerformingModulesChart } from "./LowestPerformingModulesChart"
@@ -32,22 +37,22 @@ export function AnalyticsShowcaseSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           {[
             {
-              icon: <Activity className="w-5 h-5 text-white" />,
+              icon: <HeartbeatIcon weight="duotone" className="w-5 h-5 text-white" />,
               title: "Real-time Insights",
               desc: "Live data from trusted sources & benchmarks"
             },
             {
-              icon: <PieChart className="w-5 h-5 text-white" />,
+              icon: <ChartPieSliceIcon weight="duotone" className="w-5 h-5 text-white" />,
               title: "Advanced Analytics",
               desc: "Radar, trend & distribution charts for deep insights"
             },
             {
-              icon: <Zap className="w-5 h-5 text-white" />,
+              icon: <LightningIcon weight="duotone" className="w-5 h-5 text-white" />,
               title: "Actionable Advisory",
               desc: "Data-driven recommendations to improve performance"
             },
             {
-              icon: <ShieldCheck className="w-5 h-5 text-white" />,
+              icon: <ShieldCheckIcon weight="duotone" className="w-5 h-5 text-white" />,
               title: "Secure & Reliable",
               desc: "Enterprise-grade security and data integrity"
             }

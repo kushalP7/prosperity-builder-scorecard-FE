@@ -2,7 +2,16 @@
 
 import * as React from "react"
 import { useAppStore } from "@/store"
-import { Plus, Trash2, Pencil, PieChart as PieChartIcon, BarChart2, Activity, Hash, FileSpreadsheet } from "lucide-react"
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilSimpleIcon,
+  ChartPieIcon,
+  ChartBarIcon,
+  ActivityIcon,
+  HashIcon,
+  TableIcon
+} from "@phosphor-icons/react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
@@ -79,12 +88,12 @@ export default function AnalyticsMakerPage() {
 
   const getChartIcon = (type: string) => {
     switch (type) {
-      case 'pie_chart': return <PieChartIcon className="h-5 w-5" />
-      case 'bar_chart': return <BarChart2 className="h-5 w-5" />
-      case 'line_chart': return <Activity className="h-5 w-5" />
-      case 'speed_gauge': return <Activity className="h-5 w-5 text-red-500" />
-      case 'stat_card': return <Hash className="h-5 w-5" />
-      default: return <PieChartIcon className="h-5 w-5" />
+      case 'pie_chart': return <ChartPieIcon weight="duotone" className="h-5 w-5" />
+      case 'bar_chart': return <ChartBarIcon weight="duotone" className="h-5 w-5" />
+      case 'line_chart': return <ActivityIcon weight="bold" className="h-5 w-5" />
+      case 'speed_gauge': return <ActivityIcon weight="bold" className="h-5 w-5 text-red-500" />
+      case 'stat_card': return <HashIcon weight="bold" className="h-5 w-5" />
+      default: return <ChartPieIcon weight="duotone" className="h-5 w-5" />
     }
   }
 
@@ -101,7 +110,7 @@ export default function AnalyticsMakerPage() {
           )}
           {document.getElementById("app-header-actions") && createPortal(
             <Button onClick={() => handleOpenModal()}>
-              <Plus className="h-4 w-4 mr-2" />
+              <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
               New Widget
             </Button>,
             document.getElementById("app-header-actions")!
@@ -111,13 +120,13 @@ export default function AnalyticsMakerPage() {
 
       {widgets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-xl bg-surface/50">
-          <PieChartIcon className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+          <ChartPieIcon weight="duotone" className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-foreground">No Widgets Created</h3>
           <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-6">
             Create global chart and metric widgets here. You can enable them for specific projects on the project dashboard.
           </p>
           <Button onClick={() => handleOpenModal()}>
-            <Plus className="h-4 w-4 mr-2" />
+            <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
             Create Your First Widget
           </Button>
         </div>
@@ -137,10 +146,10 @@ export default function AnalyticsMakerPage() {
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenModal(widget)}>
-                    <Pencil className="h-4 w-4" />
+                    <PencilSimpleIcon weight="duotone" className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteWidget(widget.id)}>
-                    <Trash2 className="h-4 w-4" />
+                    <TrashIcon weight="duotone" className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -196,7 +205,7 @@ export default function AnalyticsMakerPage() {
           </div>
 
           <div className="p-4 bg-muted/30 border rounded-lg space-y-4">
-            <h4 className="text-sm font-semibold flex items-center gap-2"><FileSpreadsheet className="w-4 h-4" /> Data Source Mapping</h4>
+            <h4 className="text-sm font-semibold flex items-center gap-2"><TableIcon weight="duotone" className="w-4 h-4" /> Data Source Mapping</h4>
             <div className="space-y-2">
               <label className="text-sm font-medium">Target Section *</label>
               <select className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" value={formData.sectionId || ""} onChange={e => setFormData({ ...formData, sectionId: e.target.value, categoryId: "", columnId: "" })}>

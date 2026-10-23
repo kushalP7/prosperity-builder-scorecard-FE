@@ -1,7 +1,11 @@
-"use client"
-
 import * as React from "react"
-import { AlertTriangle, Trash2, Loader2, X, FileCheck } from "lucide-react"
+import {
+  WarningIcon,
+  TrashIcon,
+  SpinnerGapIcon,
+  XIcon,
+  CheckCircleIcon
+} from "@phosphor-icons/react"
 
 export interface ConfirmDialogProps {
   isOpen: boolean
@@ -80,7 +84,7 @@ export function ConfirmDialog({
           className="absolute right-4 top-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer disabled:opacity-50"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <XIcon weight="bold" className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center text-center">
@@ -97,11 +101,11 @@ export function ConfirmDialog({
             {icon ? (
               icon
             ) : variant === "danger" ? (
-              <Trash2 className="w-7 h-7" />
+              <TrashIcon weight="duotone" className="w-7 h-7" />
             ) : variant === "warning" ? (
-              <AlertTriangle className="w-7 h-7" />
+              <WarningIcon weight="duotone" className="w-7 h-7" />
             ) : (
-              <FileCheck className="w-7 h-7" />
+              <CheckCircleIcon weight="duotone" className="w-7 h-7" />
             )}
           </div>
 
@@ -145,7 +149,7 @@ export function ConfirmDialog({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <SpinnerGapIcon weight="bold" className="w-4 h-4 animate-spin" />
                   <span>{loadingText || (variant === "danger" ? "Deleting..." : "Processing...")}</span>
                 </>
               ) : (

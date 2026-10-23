@@ -7,11 +7,76 @@ import { Outlet } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
-import { ArrowLeft, Check, CheckCircle2, Plus, Layers, ShieldCheck, RefreshCw } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  StackIcon,
+  ArrowsClockwiseIcon
+} from "@phosphor-icons/react"
 
 import { apiClient } from "@/lib/api"
 import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
+
+type StagedMetric = {
+  id?: string
+  source?: string
+  metricLabel?: string
+  metricKey?: string
+  categoryKey?: string
+  extractedValue?: number | string | null
+  unit?: string
+  ingestionStatus?: string
+}
+
+type SyncSummary = {
+  stagedCount: number
+  populatedMatrixCount?: number
+  calculatedRows?: number
+  overallScore?: number
+  bySource: Array<{
+    source: string
+    items: StagedMetric[]
+  }>
+}
+
+function formatSourceLabel(source: string): string {
+  const map: Record<string, string> = {
+    US_CENSUS: 'US Census Bureau',
+    BLS: 'Bureau of Labor Statistics (BLS)',
+    EPA: 'EPA Air Quality',
+    NCDOT_GIS: 'NCDOT GIS',
+    ESRI: 'ESRI / ArcGIS',
+    NC_DPI: 'NC DPI',
+    CDC_PLACES: 'CDC PLACES',
+  }
+  return map[source] || source.replace(/_/g, ' ')
+}
+
+function getApiSourceChipClass(source: string): string {
+  const s = (source || '').toUpperCase()
+  if (s.includes('NCDOT')) return 'bg-sky-100 text-sky-900 border-sky-200'
+  if (s.includes('CENSUS')) return 'bg-teal-100 text-teal-900 border-teal-200'
+  if (s.includes('BLS')) return 'bg-violet-100 text-violet-900 border-violet-200'
+  if (s.includes('EPA')) return 'bg-amber-100 text-amber-900 border-amber-200'
+  if (s.includes('CDC')) return 'bg-rose-100 text-rose-900 border-rose-200'
+  if (s.includes('ESRI')) return 'bg-indigo-100 text-indigo-900 border-indigo-200'
+  return 'bg-slate-100 text-slate-800 border-slate-200'
+}
+
+function groupStagedBySource(staged: StagedMetric[]): SyncSummary['bySource'] {
+  const groups = new Map<string, StagedMetric[]>()
+  for (const item of staged) {
+    const key = item.source || 'UNKNOWN'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(item)
+  }
+  return Array.from(groups.entries())
+    .map(([source, items]) => ({ source, items }))
+    .sort((a, b) => a.source.localeCompare(b.source))
+}
 
 export default function ProjectLayout({
   children,
@@ -32,6 +97,8 @@ export default function ProjectLayout({
   const [isLoadingProject, setIsLoadingProject] = React.useState(!project)
   const [isSyncing, setIsSyncing] = React.useState(false)
   const [syncMessage, setSyncMessage] = React.useState<string | null>(null)
+  const [isSyncResultOpen, setIsSyncResultOpen] = React.useState(false)
+  const [syncSummary, setSyncSummary] = React.useState<SyncSummary | null>(null)
 
   const handleSyncLiveApis = async () => {
     if (!id || isSyncing) return
@@ -43,6 +110,8 @@ export default function ProjectLayout({
     setSyncMessage(null)
     try {
       const res = await apiClient.triggerIngestion(id)
+
+      // Single project refresh after trigger (listeners reuse this via project-synced detail)
       const fresh = await apiClient.getProject(id)
       if (fresh) {
         useAppStore.setState(state => {
@@ -55,9 +124,24 @@ export default function ProjectLayout({
           }
         })
       }
+
+      // Prefer stagedRecords from trigger response — avoids a second staged-data GET
+      const staged: StagedMetric[] = Array.isArray(res?.stagedRecords)
+        ? res.stagedRecords
+        : []
+      const summary: SyncSummary = {
+        stagedCount: res?.stagedCount ?? staged.length,
+        populatedMatrixCount: res?.populatedMatrixCount,
+        calculatedRows: res?.calculatedRows,
+        overallScore: res?.overallScore,
+        bySource: groupStagedBySource(staged),
+      }
+      setSyncSummary(summary)
+      setIsSyncResultOpen(true)
+
       setSyncMessage('APIs Ingested & Calculated!')
       toast.success(res?.message || 'Live APIs synced & scores calculated successfully!')
-      window.dispatchEvent(new CustomEvent('project-synced', { detail: { id, fresh } }))
+      window.dispatchEvent(new CustomEvent('project-synced', { detail: { id, fresh, skipRefetch: true } }))
       setTimeout(() => setSyncMessage(null), 4000)
     } catch (err: any) {
       console.error('Failed to sync live APIs:', err)
@@ -68,9 +152,9 @@ export default function ProjectLayout({
   }
 
   React.useEffect(() => {
-    // If we land on the base route, redirect to data
+    // Base project route opens Client Intake first (workflow step 1)
     if (pathname === `/projects/${id}`) {
-      router.replace(`/projects/${id}/data`)
+      router.replace(`/projects/${id}/intake`)
     }
   }, [pathname, id, router])
 
@@ -124,7 +208,7 @@ export default function ProjectLayout({
         <div className="text-lg font-semibold text-foreground">Project not found</div>
         <p className="text-sm text-muted-foreground">The requested project could not be found or has been removed.</p>
         <Button variant="outline" onClick={() => router.push('/projects')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeftIcon weight="bold" className="w-4 h-4 mr-2" />
           Back to Projects
         </Button>
       </div>
@@ -202,7 +286,7 @@ export default function ProjectLayout({
               className="p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center justify-center shrink-0"
               title="Back to Projects"
             >
-              <ArrowLeft className="h-6 w-6" />
+              <ArrowLeftIcon weight="bold" className="h-6 w-6" />
             </Link>
             <div>
               <div className="flex items-center gap-2.5">
@@ -233,33 +317,15 @@ export default function ProjectLayout({
             size="sm"
             variant="outline"
           >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            <PlusIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
             Assign Section
           </Button>
         </div>
 
         {/* Phase Navigation Tabs & Sync Action Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 mt-5 pb-2.5">
-          {/* Improved Phase Navigation Tabs */}
+          {/* Phase Navigation Tabs — Intake → Executive → Calibration */}
           <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/90 shadow-2xs overflow-x-auto">
-            <Link
-              href={`/projects/${id}/data`}
-              className={cn(
-                "group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition-all duration-150 whitespace-nowrap cursor-pointer select-none",
-                pathname.includes('/data')
-                  ? "bg-white text-slate-900 font-bold shadow-xs border border-slate-200/90"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium"
-              )}
-            >
-              <div className={cn(
-                "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black transition-colors shrink-0",
-                pathname.includes('/data') ? "bg-[#B5111B] text-white shadow-2xs" : "bg-slate-200 text-slate-600 group-hover:bg-slate-300"
-              )}>
-                1
-              </div>
-              <span>Executive Scorecard</span>
-            </Link>
-
             <Link
               href={`/projects/${id}/intake`}
               className={cn(
@@ -273,9 +339,27 @@ export default function ProjectLayout({
                 "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black transition-colors shrink-0",
                 pathname.includes('/intake') ? "bg-[#B5111B] text-white shadow-2xs" : "bg-slate-200 text-slate-600 group-hover:bg-slate-300"
               )}>
-                2
+                1
               </div>
               <span>Client Intake</span>
+            </Link>
+
+            <Link
+              href={`/projects/${id}/data`}
+              className={cn(
+                "group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition-all duration-150 whitespace-nowrap cursor-pointer select-none",
+                pathname.includes('/data')
+                  ? "bg-white text-slate-900 font-bold shadow-xs border border-slate-200/90"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium"
+              )}
+            >
+              <div className={cn(
+                "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black transition-colors shrink-0",
+                pathname.includes('/data') ? "bg-[#B5111B] text-white shadow-2xs" : "bg-slate-200 text-slate-600 group-hover:bg-slate-300"
+              )}>
+                2
+              </div>
+              <span>Executive Scorecard</span>
             </Link>
 
             <Link
@@ -297,12 +381,12 @@ export default function ProjectLayout({
             </Link>
           </div>
 
-          {/* Sync Live APIs & Calculate Button on Top Navbar (Active on Phase 1 & 2) */}
+          {/* Sync Live APIs & Calculate Button (Active on Intake & Executive) */}
           {!pathname.includes('/calibration') && (
             <div className="flex items-center gap-2.5 shrink-0">
               {syncMessage && (
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg flex items-center gap-1.5 animate-in fade-in shadow-2xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-emerald-600" />
                   {syncMessage}
                 </span>
               )}
@@ -320,7 +404,7 @@ export default function ProjectLayout({
                     )}
                     title={!hasAssigned ? "Assign at least one section before calculating" : "Sync live external APIs and recalculate project scores"}
                   >
-                    <RefreshCw className={cn("w-3.5 h-3.5 text-[#B5111B]", isSyncing && "animate-spin")} />
+                    <ArrowsClockwiseIcon weight="bold" className={cn("w-3.5 h-3.5 text-[#B5111B]", isSyncing && "animate-spin")} />
                     <span>{isSyncing ? "Syncing & Calculating..." : "Sync Live APIs & Calculate"}</span>
                   </Button>
                 );
@@ -359,7 +443,7 @@ export default function ProjectLayout({
               <div className="flex items-center justify-between pb-1 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5" />
+                    <StackIcon weight="duotone" className="w-3.5 h-3.5" />
                     Available Sections ({availableTemplates.length})
                   </h5>
                   {availableTemplates.length > 0 && (
@@ -383,7 +467,7 @@ export default function ProjectLayout({
                   >
                     {isAssigning ? (
                       <>
-                        <RefreshCw className="w-3 h-3 mr-1.5 animate-spin" />
+                        <ArrowsClockwiseIcon weight="bold" className="w-3 h-3 mr-1.5 animate-spin" />
                         Assigning...
                       </>
                     ) : (
@@ -427,7 +511,7 @@ export default function ProjectLayout({
                               : "border-slate-300 bg-white group-hover:border-[#B5111B]/60"
                           )}
                         >
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          {isSelected && <CheckIcon weight="bold" className="w-3.5 h-3.5 stroke-[3]" />}
                         </div>
 
                         {/* Color dot */}
@@ -480,7 +564,7 @@ export default function ProjectLayout({
                   >
                     {isAssigning ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        <ArrowsClockwiseIcon weight="bold" className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                         Assigning...
                       </>
                     ) : (
@@ -495,7 +579,7 @@ export default function ProjectLayout({
             {uniqueAssignedSections.length > 0 && (
               <div className="pt-3 border-t border-border/70 space-y-2.5">
                 <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-emerald-600" />
                   Already Assigned ({uniqueAssignedSections.length})
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -504,13 +588,117 @@ export default function ProjectLayout({
                       key={s.id}
                       className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-50/50 border border-emerald-200/60 text-xs font-semibold text-emerald-950"
                     >
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircleIcon weight="duotone" className="h-4 w-4 text-emerald-600 shrink-0" />
                       <span className="truncate">{s.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Sync Live APIs result — data by source */}
+      <Modal
+        isOpen={isSyncResultOpen}
+        onClose={() => setIsSyncResultOpen(false)}
+        title="API Sync Complete"
+        className="max-w-2xl"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Third-party data was ingested and the scorecard was recalculated. Review what was retrieved from each source below.
+          </p>
+
+          {syncSummary && (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center">
+                  <div className="text-base font-black text-slate-900">{syncSummary.stagedCount}</div>
+                  <div className="text-[10px] font-medium text-slate-500 mt-0.5">Staged metrics</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center">
+                  <div className="text-base font-black text-slate-900">{syncSummary.populatedMatrixCount ?? '—'}</div>
+                  <div className="text-[10px] font-medium text-slate-500 mt-0.5">Matrix rows filled</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center">
+                  <div className="text-base font-black text-slate-900">{syncSummary.calculatedRows ?? '—'}</div>
+                  <div className="text-[10px] font-medium text-slate-500 mt-0.5">Rows calculated</div>
+                </div>
+                <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 text-center">
+                  <div className="text-base font-black text-[#B5111B]">
+                    {syncSummary.overallScore != null ? `${syncSummary.overallScore}/10` : '—'}
+                  </div>
+                  <div className="text-[10px] font-medium text-rose-700/80 mt-0.5">Overall score</div>
+                </div>
+              </div>
+
+              <div className="max-h-[50vh] overflow-y-auto space-y-3 pr-1">
+                {syncSummary.bySource.length === 0 ? (
+                  <div className="text-sm text-slate-500 text-center py-8 border border-dashed border-slate-200 rounded-xl">
+                    No staged API records were returned for this run.
+                  </div>
+                ) : (
+                  syncSummary.bySource.map(group => (
+                    <div key={group.source} className="rounded-xl border border-slate-200/90 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200/80">
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold',
+                            getApiSourceChipClass(group.source)
+                          )}
+                        >
+                          {formatSourceLabel(group.source)}
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          {group.items.length} metric{group.items.length === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <ul className="divide-y divide-slate-100">
+                        {group.items.map((item, idx) => (
+                          <li
+                            key={item.id || `${item.metricKey}-${idx}`}
+                            className="flex items-start justify-between gap-3 px-3 py-2 text-xs"
+                          >
+                            <div className="min-w-0">
+                              <div className="font-medium text-slate-900 leading-snug">
+                                {item.metricLabel || item.metricKey || 'Metric'}
+                              </div>
+                              {item.categoryKey && (
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
+                                  {item.categoryKey}
+                                </div>
+                              )}
+                            </div>
+                            <div className="shrink-0 text-right font-mono">
+                              <span className="font-bold text-slate-900">
+                                {item.extractedValue != null && item.extractedValue !== ''
+                                  ? String(item.extractedValue)
+                                  : '—'}
+                              </span>
+                              {item.unit && (
+                                <span className="text-slate-400 ml-1">{item.unit}</span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="flex justify-end pt-1">
+            <Button
+              type="button"
+              onClick={() => setIsSyncResultOpen(false)}
+              className="bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold rounded-xl px-5"
+            >
+              Got it
+            </Button>
           </div>
         </div>
       </Modal>

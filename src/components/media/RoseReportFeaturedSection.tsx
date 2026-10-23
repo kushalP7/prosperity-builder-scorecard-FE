@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
-import { ArrowRight } from "lucide-react"
+import { ArrowRightIcon } from "@phosphor-icons/react"
 import { PublishedReportsCardsSection } from "@/components/landing/PublishedReportsCardsSection"
 import { reportsApi, LandingReportItem } from "@/lib/reports-api"
 
@@ -244,11 +244,11 @@ export function RoseReportFeaturedSection() {
                 <div className="flex items-center justify-between transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-100">
                   <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-white">
                     <span>Read on LinkedIn</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRightIcon className="w-3.5 h-3.5" />
                   </span>
                   <div className="flex items-center text-white/40">
                     <div className="w-8 sm:w-12 h-[1px] bg-white/40" />
-                    <ArrowRight className="w-3 h-3 -ml-0.5 text-white/50" />
+                    <ArrowRightIcon className="w-3 h-3 -ml-0.5 text-white/50" />
                   </div>
                 </div>
               </div>

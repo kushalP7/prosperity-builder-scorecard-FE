@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { CaretDownIcon, CheckIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export interface DropdownOption {
@@ -114,7 +114,8 @@ export function Dropdown({
           {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
           <span className="truncate">{displayLabel}</span>
         </div>
-        <ChevronDown
+        <CaretDownIcon
+          weight="bold"
           className={cn(
             "w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5",
             isOpen && "rotate-180 text-slate-600"
@@ -168,7 +169,7 @@ export function Dropdown({
                   )}
                   <span>{option.label}</span>
                 </div>
-                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0 ml-2" />}
+                {isSelected && <CheckIcon weight="bold" className="w-3.5 h-3.5 text-white shrink-0 ml-2" />}
               </button>
             );
           })}

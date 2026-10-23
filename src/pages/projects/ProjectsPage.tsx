@@ -6,7 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { Spinner, SkeletonCard } from "@/components/ui/loader"
-import { Folder, Plus, Trash2, Pencil, Database, Image as ImageIcon, X, Upload, Search } from "lucide-react"
+import {
+  FolderIcon,
+  PlusIcon,
+  TrashIcon,
+  PencilSimpleIcon,
+  DatabaseIcon,
+  ImageIcon,
+  XIcon,
+  UploadSimpleIcon,
+  MagnifyingGlassIcon
+} from "@phosphor-icons/react"
 import { Link } from "@/lib/router-compat"
 import { createPortal } from "react-dom"
 import { usePermission } from "@/lib/permissions"
@@ -339,7 +349,7 @@ export default function ProjectsPage() {
                 Load Sample Data
               </Button> */}
               <Button onClick={openCreateModal}>
-                <Plus className="h-4 w-4 mr-2" />
+                <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
                 New Project
               </Button>
             </>
@@ -353,7 +363,7 @@ export default function ProjectsPage() {
         <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             <div className="relative flex-1 min-w-0">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
@@ -372,7 +382,7 @@ export default function ProjectsPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   title="Clear search"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <XIcon weight="bold" className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -397,7 +407,7 @@ export default function ProjectsPage() {
         </div>
       ) : paginatedProjects.length === 0 ? (
         <div className="p-12 text-center border border-dashed rounded-2xl bg-white text-muted-foreground space-y-3">
-          <Search className="w-8 h-8 text-slate-300 mx-auto" />
+          <MagnifyingGlassIcon weight="duotone" className="w-8 h-8 text-slate-300 mx-auto" />
           <div className="text-base font-semibold text-slate-700">No Projects Found</div>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             No projects match "{debouncedSearch}". Check your spelling or clear the search to view all projects.
@@ -422,7 +432,7 @@ export default function ProjectsPage() {
               <Card key={project.id} className="group hover:border-primary transition-colors flex flex-col overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-4">
-                    <Link href={`/projects/${project.id}/data`} className="flex-1 hover:underline">
+                    <Link href={`/projects/${project.id}/intake`} className="flex-1 hover:underline">
                       <div className="flex items-center gap-3">
                         {project.image ? (
                           <img
@@ -432,7 +442,7 @@ export default function ProjectsPage() {
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                            <Folder className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <FolderIcon weight="duotone" className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
                         )}
                         <CardTitle className="text-lg leading-tight text-primary">{project.name}</CardTitle>
@@ -445,7 +455,7 @@ export default function ProjectsPage() {
                           title="Edit Project Details"
                           className="text-muted-foreground hover:text-primary transition-colors p-1 mr-1 cursor-pointer"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <PencilSimpleIcon weight="duotone" className="h-4 w-4" />
                         </button>
                       )}
                       {canDelete && (
@@ -454,7 +464,7 @@ export default function ProjectsPage() {
                           title="Delete Project (Admin only)"
                           className="text-muted-foreground hover:text-red-500 transition-colors p-1 cursor-pointer"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <TrashIcon weight="duotone" className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -514,7 +524,7 @@ export default function ProjectsPage() {
                       className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white p-0.5 rounded-full transition-colors"
                       title="Remove Image"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <XIcon weight="bold" className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {isUploadingImage && (
@@ -528,7 +538,7 @@ export default function ProjectsPage() {
                   {isUploadingImage ? (
                     <Spinner className="w-5 h-5 text-primary" />
                   ) : (
-                    <ImageIcon className="w-6 h-6" />
+                    <ImageIcon weight="duotone" className="w-6 h-6" />
                   )}
                 </div>
               )}
@@ -554,7 +564,7 @@ export default function ProjectsPage() {
                     </>
                   ) : (
                     <>
-                      <Upload className="w-3.5 h-3.5" />
+                      <UploadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
                       <span>{newProject.image ? "Change Image" : "Upload Image"}</span>
                     </>
                   )}

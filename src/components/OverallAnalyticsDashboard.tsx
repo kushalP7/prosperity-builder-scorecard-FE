@@ -5,40 +5,40 @@ import { useAppStore } from "@/store"
 import { evaluateWidgetData } from "@/lib/analyticsEngine"
 import { apiClient } from "@/lib/api"
 import {
-  Building2,
-  Layers,
-  Filter,
-  Download,
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  Leaf,
-  TrendingUp,
-  Cpu,
-  Users,
-  Target,
-  Bus,
-  Palette,
-  ShieldAlert,
-  ShieldCheck,
-  Siren,
-  GraduationCap,
-  Briefcase,
-  ShoppingBag,
-  Heart,
-  Landmark,
-  Home,
-  Wrench,
-  Trees,
-  Compass,
-  Map,
-  CheckSquare,
-  Square,
-  SlidersHorizontal,
-  FolderCheck,
-  Gauge
-} from "lucide-react"
+  BuildingsIcon,
+  StackIcon,
+  FunnelIcon,
+  DownloadSimpleIcon,
+  ArrowUpRightIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  MagnifyingGlassIcon,
+  LeafIcon,
+  TrendUpIcon,
+  CpuIcon,
+  UsersIcon,
+  CrosshairIcon,
+  BusIcon,
+  PaletteIcon,
+  ShieldWarningIcon,
+  ShieldCheckIcon,
+  SirenIcon,
+  GraduationCapIcon,
+  BriefcaseIcon,
+  ShoppingBagIcon,
+  HeartIcon,
+  BankIcon,
+  HouseIcon,
+  WrenchIcon,
+  TreeEvergreenIcon,
+  CompassIcon,
+  MapTrifoldIcon,
+  CheckSquareIcon,
+  SquareIcon,
+  SlidersHorizontalIcon,
+  FolderSimpleStarIcon,
+  GaugeIcon
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/lib/router-compat"
 import { cn } from "@/lib/utils"
@@ -223,55 +223,55 @@ export function OverallAnalyticsDashboard() {
     const lower = title.toLowerCase()
 
     if (lower.includes('accessibility') || lower.includes('transportation')) {
-      return { icon: Bus, color: '#2563eb', bg: 'bg-blue-50 text-blue-600' }
+      return { icon: BusIcon, color: '#2563eb', bg: 'bg-blue-50 text-blue-600' }
     }
     if (lower.includes('arts') || lower.includes('culture')) {
-      return { icon: Palette, color: '#7c3aed', bg: 'bg-purple-50 text-purple-600' }
+      return { icon: PaletteIcon, color: '#7c3aed', bg: 'bg-purple-50 text-purple-600' }
     }
     if (lower.includes('crime') || lower.includes('safety')) {
-      return { icon: Siren, color: '#dc2626', bg: 'bg-red-50 text-red-600' }
+      return { icon: SirenIcon, color: '#dc2626', bg: 'bg-red-50 text-red-600' }
     }
     if (lower.includes('education')) {
-      return { icon: GraduationCap, color: '#4f46e5', bg: 'bg-indigo-50 text-indigo-600' }
+      return { icon: GraduationCapIcon, color: '#4f46e5', bg: 'bg-indigo-50 text-indigo-600' }
     }
     if (lower.includes('employment') || lower.includes('labor')) {
-      return { icon: Briefcase, color: '#d97706', bg: 'bg-amber-50 text-amber-600' }
+      return { icon: BriefcaseIcon, color: '#d97706', bg: 'bg-amber-50 text-amber-600' }
     }
     if (lower.includes('goods') || lower.includes('services')) {
-      return { icon: ShoppingBag, color: '#059669', bg: 'bg-emerald-50 text-emerald-600' }
+      return { icon: ShoppingBagIcon, color: '#059669', bg: 'bg-emerald-50 text-emerald-600' }
     }
     if (lower.includes('healthcare') || lower.includes('wellness')) {
-      return { icon: Heart, color: '#db2777', bg: 'bg-pink-50 text-pink-600' }
+      return { icon: HeartIcon, color: '#db2777', bg: 'bg-pink-50 text-pink-600' }
     }
     if (lower.includes('historic') || lower.includes('preservation')) {
-      return { icon: Landmark, color: '#0891b2', bg: 'bg-cyan-50 text-cyan-600' }
+      return { icon: BankIcon, color: '#0891b2', bg: 'bg-cyan-50 text-cyan-600' }
     }
     if (lower.includes('housing')) {
-      return { icon: Home, color: '#0284c7', bg: 'bg-sky-50 text-sky-600' }
+      return { icon: HouseIcon, color: '#0284c7', bg: 'bg-sky-50 text-sky-600' }
     }
     if (lower.includes('infrastructure')) {
-      return { icon: Building2, color: '#ea580c', bg: 'bg-orange-50 text-orange-600' }
+      return { icon: BuildingsIcon, color: '#ea580c', bg: 'bg-orange-50 text-orange-600' }
     }
     if (lower.includes('open space') || lower.includes('recreation')) {
-      return { icon: Trees, color: '#16a34a', bg: 'bg-green-50 text-green-600' }
+      return { icon: TreeEvergreenIcon, color: '#16a34a', bg: 'bg-green-50 text-green-600' }
     }
     if (lower.includes('planning') || lower.includes('land use')) {
-      return { icon: Map, color: '#6d28d9', bg: 'bg-violet-50 text-violet-600' }
+      return { icon: MapTrifoldIcon, color: '#6d28d9', bg: 'bg-violet-50 text-violet-600' }
     }
     if (lower.includes('sustainability') || lower.includes('environment')) {
-      return { icon: Leaf, color: '#059669', bg: 'bg-emerald-50 text-emerald-600' }
+      return { icon: LeafIcon, color: '#059669', bg: 'bg-emerald-50 text-emerald-600' }
     }
     if (lower.includes('economic') || lower.includes('vitality') || lower.includes('growth')) {
-      return { icon: TrendingUp, color: '#d97706', bg: 'bg-amber-50 text-amber-600' }
+      return { icon: TrendUpIcon, color: '#d97706', bg: 'bg-amber-50 text-amber-600' }
     }
     if (lower.includes('digital') || lower.includes('smart city')) {
-      return { icon: Cpu, color: '#0284c7', bg: 'bg-sky-50 text-sky-600' }
+      return { icon: CpuIcon, color: '#0284c7', bg: 'bg-sky-50 text-sky-600' }
     }
     if (lower.includes('community') || lower.includes('equity')) {
-      return { icon: Users, color: '#e11d48', bg: 'bg-rose-50 text-rose-600' }
+      return { icon: UsersIcon, color: '#e11d48', bg: 'bg-rose-50 text-rose-600' }
     }
 
-    return { icon: Target, color: '#2563eb', bg: 'bg-blue-50 text-blue-600' }
+    return { icon: CrosshairIcon, color: '#2563eb', bg: 'bg-blue-50 text-blue-600' }
   }
 
   // Compute overall score & category scores for each selected project
@@ -344,7 +344,7 @@ export function OverallAnalyticsDashboard() {
     })
   }, [activeProjects, widgets, templates])
 
-  // Filter project summaries based on searchQuery (Project Name and Client Name)
+  // FunnelIcon project summaries based on searchQuery (Project Name and Client Name)
   const filteredProjectSummaries = React.useMemo(() => {
     if (!searchQuery.trim()) return projectSummaries
     const query = searchQuery.toLowerCase()
@@ -370,12 +370,12 @@ export function OverallAnalyticsDashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Search Box - Works on Project Name and Client Name */}
+            {/* MagnifyingGlassIcon Box - Works on Project Name and Client Name */}
             <div className="relative flex-1 sm:w-64 md:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <MagnifyingGlassIcon weight="bold" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search project or client name..."
+                placeholder="MagnifyingGlassIcon project or client name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-8 py-2 bg-white rounded-xl text-xs font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
@@ -396,20 +396,20 @@ export function OverallAnalyticsDashboard() {
               variant="ghost"
               className="h-8 gap-1.5 rounded-xl text-xs font-semibold bg-white shadow-sm hover:bg-slate-100"
             >
-              {allExpanded ? <ChevronUp className="w-3.5 h-3.5 text-primary" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
+              {allExpanded ? <CaretUpIcon weight="bold" className="w-3.5 h-3.5 text-primary" /> : <CaretDownIcon weight="bold" className="w-3.5 h-3.5 text-primary" />}
               <span>{allExpanded ? "Collapse All" : "Expand All"}</span>
             </Button>
 
             {/* Export Button */}
             <Button variant="ghost" className="h-8 gap-1.5 rounded-xl text-xs font-semibold bg-white shadow-sm hover:bg-slate-100 hidden sm:flex">
-              <Download className="h-3.5 w-3.5" />
+              <DownloadSimpleIcon weight="bold" className="h-3.5 w-3.5" />
               <span>Export</span>
             </Button>
 
             {/* Manage All Button */}
             <Link href="/projects">
               <Button variant="ghost" className="h-8 gap-1.5 rounded-xl text-xs font-semibold shrink-0 bg-white shadow-sm hover:bg-slate-100">
-                <Building2 className="h-3.5 w-3.5" />
+                <BuildingsIcon weight="duotone" className="h-3.5 w-3.5" />
                 <span>Manage All</span>
               </Button>
             </Link>
@@ -513,7 +513,7 @@ export function OverallAnalyticsDashboard() {
                       )}
                     </div>
 
-                    {/* Right: Overall Score Gauge & Action Buttons */}
+                    {/* Right: Overall Score GaugeIcon & Action Buttons */}
                     <div className="flex items-center gap-3 shrink-0 self-end xl:self-center">
                       <div className="h-7 w-[1px] bg-slate-200/80 mx-0.5 hidden sm:block" />
 
@@ -540,7 +540,7 @@ export function OverallAnalyticsDashboard() {
                         className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-xl transition-colors"
                       >
                         <span>{isExpanded ? "Hide Details" : "View Details"}</span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-indigo-600" /> : <ChevronDown className="w-4 h-4 text-indigo-600" />}
+                        {isExpanded ? <CaretUpIcon weight="bold" className="w-4 h-4 text-indigo-600" /> : <CaretDownIcon weight="bold" className="w-4 h-4 text-indigo-600" />}
                       </button>
                     </div>
                   </div>
@@ -550,11 +550,11 @@ export function OverallAnalyticsDashboard() {
                     <div className="p-6 border-t border-slate-100 bg-[#f8fafc]/60 space-y-6 animate-in slide-in-from-top-2 duration-300">
                       <div className="grid grid-cols-12 gap-6 items-stretch">
 
-                        {/* Left: Project Speed Gauge Card */}
+                        {/* Left: Project Speed GaugeIcon Card */}
                         <div className="col-span-12 lg:col-span-4 bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between items-center text-center">
                           <div className="w-full flex items-center justify-between pb-3 border-b border-slate-100">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                              <Gauge className="w-4 h-4 text-primary" />
+                              <GaugeIcon weight="duotone" className="w-4 h-4 text-primary" />
                               <span>Overall Project Score</span>
                             </div>
                             <span className={cn(
@@ -672,7 +672,7 @@ export function OverallAnalyticsDashboard() {
                         <Link href={`/projects/${ps.project.id}/analytics`}>
                           <Button size="sm" className="gap-2 rounded-xl text-xs font-semibold shadow-sm">
                             Open Project Dashboard
-                            <ArrowUpRight className="w-4 h-4" />
+                            <ArrowUpRightIcon weight="bold" className="w-4 h-4" />
                           </Button>
                         </Link>
                       </div>

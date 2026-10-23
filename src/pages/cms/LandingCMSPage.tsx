@@ -3,34 +3,34 @@
 import * as React from "react"
 import { Link, useRouter } from "@/lib/router-compat"
 import {
-  FileText,
-  Plus,
-  Search,
-  Edit3,
-  Trash2,
-  Eye,
-  Star,
-  Loader2,
-  Film,
-  FolderOpen,
-  Mic,
-  ExternalLink,
-  LayoutGrid,
-  List,
-  Calendar,
-  User,
-  ArrowUpDown,
-  X,
-  Play,
-  Headphones,
-  MapPin,
-  Upload,
-  MoreVertical,
-  Download,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react"
+  FileTextIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  EyeIcon,
+  StarIcon,
+  CircleNotchIcon,
+  FilmStripIcon,
+  FolderOpenIcon,
+  MicrophoneIcon,
+  ArrowSquareOutIcon,
+  SquaresFourIcon,
+  ListBulletsIcon,
+  CalendarBlankIcon,
+  UserIcon,
+  ArrowsDownUpIcon,
+  XIcon,
+  PlayIcon,
+  HeadphonesIcon,
+  MapPinIcon,
+  UploadSimpleIcon,
+  DotsThreeVerticalIcon,
+  DownloadSimpleIcon,
+  WarningCircleIcon,
+  CaretLeftIcon,
+  CaretRightIcon
+} from "@phosphor-icons/react"
 import { reportsApi, LandingReportItem } from "@/lib/reports-api"
 import { mediaApi, LandingMediaItem, getYouTubeThumbnail } from "@/lib/media-api"
 import { projectsApi, LandingProjectItem, PORTFOLIO_CATEGORIES } from "@/lib/projects-api"
@@ -723,7 +723,7 @@ export default function LandingCMSPage() {
     }
   }, [openActionMenuId])
 
-  // TanStack Table Column Definitions for Reports List View
+  // TanStack Table Column Definitions for Reports ListBulletsIcon View
   const reportColumns = React.useMemo<ColumnDef<LandingReportItem>[]>(() => [
     {
       id: "index",
@@ -753,7 +753,7 @@ export default function LandingCMSPage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <FileText className="w-5 h-5 text-[#B5111B]" />
+                <FileTextIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -811,12 +811,12 @@ export default function LandingCMSPage() {
         const report = row.original
         return report.featured ? (
           <span className="inline-flex items-center gap-1 font-bold text-amber-600 text-[11px]">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+            <StarIcon weight="duotone" className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
             <span>Yes</span>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-slate-400 text-[11px]">
-            <Star className="w-3.5 h-3.5" />
+            <StarIcon weight="duotone" className="w-3.5 h-3.5" />
             <span>No</span>
           </span>
         )
@@ -868,14 +868,14 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
               title={report.type === "newsletter" ? "Open newsletter article in new tab" : "Preview report in new tab"}
             >
-              <Eye className="w-4 h-4" />
+              <EyeIcon weight="bold" className="w-4 h-4" />
             </a>
             <Link
               href={`/landing-cms/reports/edit/${report.id}`}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition"
               title="Edit Report"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <PencilSimpleIcon weight="bold" className="w-3.5 h-3.5" />
             </Link>
             <button
               type="button"
@@ -883,7 +883,7 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
               title="Delete Report"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <TrashIcon weight="bold" className="w-3.5 h-3.5" />
             </button>
           </div>
         )
@@ -927,7 +927,7 @@ export default function LandingCMSPage() {
   // Media items are loaded directly from paginated server API
   const filteredMedia = mediaItems
 
-  // TanStack Table Column Definitions for Media List View
+  // TanStack Table Column Definitions for Media ListBulletsIcon View
   const mediaColumns = React.useMemo<ColumnDef<LandingMediaItem>[]>(() => [
     {
       id: "index",
@@ -951,11 +951,11 @@ export default function LandingCMSPage() {
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/60 shadow-2xs bg-slate-100"
             >
               {item.mediaType === "audio" ? (
-                <Mic className="w-4 h-4 text-[#B5111B]" />
+                <MicrophoneIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
               ) : item.mediaType === "document" ? (
-                <FileText className="w-4 h-4 text-[#B5111B]" />
+                <FileTextIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
               ) : (
-                <Film className="w-4 h-4 text-[#B5111B]" />
+                <FilmStripIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -1024,7 +1024,7 @@ export default function LandingCMSPage() {
                 }`}
               title="Toggle featured status"
             >
-              <Star className={`w-4 h-4 ${item.featured ? "fill-amber-400 text-amber-500" : ""}`} />
+              <StarIcon weight="duotone" className={`w-4 h-4 ${item.featured ? "fill-amber-400 text-amber-500" : ""}`} />
             </button>
           </div>
         )
@@ -1077,11 +1077,11 @@ export default function LandingCMSPage() {
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
                 title="Preview media in new tab"
               >
-                <Eye className="w-4 h-4" />
+                <EyeIcon weight="bold" className="w-4 h-4" />
               </a>
             ) : (
               <span className="p-1.5 text-slate-300 cursor-not-allowed" title="No URL available">
-                <Eye className="w-4 h-4" />
+                <EyeIcon weight="bold" className="w-4 h-4" />
               </span>
             )}
             <Link
@@ -1089,7 +1089,7 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
               title="Edit media item"
             >
-              <Edit3 className="w-4 h-4" />
+              <PencilSimpleIcon weight="bold" className="w-4 h-4" />
             </Link>
 
             <button
@@ -1098,7 +1098,7 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition cursor-pointer"
               title="Delete media item"
             >
-              <Trash2 className="w-4 h-4" />
+              <TrashIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
         )
@@ -1206,7 +1206,7 @@ export default function LandingCMSPage() {
               className={`p-1.5 rounded-lg transition cursor-pointer ${proj.featured ? "text-amber-500 hover:bg-amber-50" : "text-slate-300 hover:text-slate-500"
                 }`}
             >
-              <Star className={`w-4 h-4 ${proj.featured ? "fill-amber-400 text-amber-500" : ""}`} />
+              <StarIcon weight="duotone" className={`w-4 h-4 ${proj.featured ? "fill-amber-400 text-amber-500" : ""}`} />
             </button>
           </div>
         )
@@ -1275,7 +1275,7 @@ export default function LandingCMSPage() {
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition"
                 title="View PDF"
               >
-                <Download className="w-3.5 h-3.5" />
+                <DownloadSimpleIcon weight="duotone" className="w-3.5 h-3.5" />
               </a>
             )}
             <button
@@ -1284,7 +1284,7 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
               title="Edit project"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <PencilSimpleIcon weight="bold" className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
@@ -1292,7 +1292,7 @@ export default function LandingCMSPage() {
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
               title="Delete project"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <TrashIcon weight="bold" className="w-3.5 h-3.5" />
             </button>
           </div>
         )
@@ -1340,7 +1340,7 @@ export default function LandingCMSPage() {
               : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileTextIcon weight="duotone" className="w-4 h-4" />
             <span>Reports Module</span>
           </button>
 
@@ -1352,7 +1352,7 @@ export default function LandingCMSPage() {
               : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
-            <Film className="w-4 h-4" />
+            <FilmStripIcon weight="duotone" className="w-4 h-4" />
             <span>Media Sphere</span>
           </button>
 
@@ -1364,7 +1364,7 @@ export default function LandingCMSPage() {
               : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
               }`}
           >
-            <FolderOpen className="w-4 h-4" />
+            <FolderOpenIcon weight="duotone" className="w-4 h-4" />
             <span>Featured Projects</span>
           </button>
         </div>
@@ -1372,16 +1372,16 @@ export default function LandingCMSPage() {
         {/* REPORTS MODULE FILTER & TOOLBAR */}
         {activeTab === "reports" && (
           <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-            {/* Top Row: Search Input + View Mode Toggle + Create Action */}
+            {/* Top Row: MagnifyingGlassIcon Input + View Mode Toggle + Create Action */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              {/* Search Input */}
+              {/* MagnifyingGlassIcon Input */}
               <div className="relative flex-1 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search reports by title, summary or author..."
+                  placeholder="MagnifyingGlassIcon reports by title, summary or author..."
                   className="w-full pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
                 />
                 {searchTerm && (
@@ -1394,7 +1394,7 @@ export default function LandingCMSPage() {
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <XIcon weight="bold" className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -1411,7 +1411,7 @@ export default function LandingCMSPage() {
                       }`}
                     title="Grid View"
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <SquaresFourIcon weight="duotone" className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -1420,9 +1420,9 @@ export default function LandingCMSPage() {
                       ? "bg-[#B5111B] text-white shadow-xs"
                       : "text-slate-500 hover:text-slate-800"
                       }`}
-                    title="List View"
+                    title="ListBulletsIcon View"
                   >
-                    <List className="w-4 h-4" />
+                    <ListBulletsIcon weight="duotone" className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1430,7 +1430,7 @@ export default function LandingCMSPage() {
                   href="/landing-cms/reports/create"
                   className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all hover:scale-102 cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span className="whitespace-nowrap"><span className="hidden sm:inline">Create </span>New Report</span>
                 </Link>
               </div>
@@ -1461,7 +1461,7 @@ export default function LandingCMSPage() {
                   setReportPage(1)
                 }}
                 title="FILTER BY YEAR:"
-                icon={<Calendar className="w-3.5 h-3.5" />}
+                icon={<CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5" />}
                 options={[
                   { value: "all", label: "All Years" },
                   ...reportYears.map((yr) => ({ value: yr, label: yr })),
@@ -1480,7 +1480,7 @@ export default function LandingCMSPage() {
                   : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
                   }`}
               >
-                <Star
+                <StarIcon weight="duotone"
                   className={`w-3.5 h-3.5 ${reportFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
                     }`}
                 />
@@ -1495,7 +1495,7 @@ export default function LandingCMSPage() {
                   setReportPage(1)
                 }}
                 title="SORT REPORTS:"
-                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                icon={<ArrowsDownUpIcon weight="bold" className="w-3.5 h-3.5" />}
                 options={[
                   { value: "newest", label: "Sort by: Newest" },
                   { value: "oldest", label: "Sort by: Oldest" },
@@ -1511,16 +1511,16 @@ export default function LandingCMSPage() {
         {/* MEDIA SPHERE FILTER & TOOLBAR */}
         {activeTab === "media" && (
           <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-            {/* Top Row: Search Input + View Mode Toggle + Action Button */}
+            {/* Top Row: MagnifyingGlassIcon Input + View Mode Toggle + Action Button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              {/* Search Input */}
+              {/* MagnifyingGlassIcon Input */}
               <div className="relative flex-1 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={mediaSearch}
                   onChange={(e) => setMediaSearch(e.target.value)}
-                  placeholder="Search media by title, category or speaker..."
+                  placeholder="MagnifyingGlassIcon media by title, category or speaker..."
                   className="w-full pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
                 />
                 {mediaSearch && (
@@ -1533,7 +1533,7 @@ export default function LandingCMSPage() {
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <XIcon weight="bold" className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -1550,7 +1550,7 @@ export default function LandingCMSPage() {
                       }`}
                     title="Grid View"
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <SquaresFourIcon weight="duotone" className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -1559,9 +1559,9 @@ export default function LandingCMSPage() {
                       ? "bg-[#B5111B] text-white shadow-xs"
                       : "text-slate-500 hover:text-slate-800"
                       }`}
-                    title="List View"
+                    title="ListBulletsIcon View"
                   >
-                    <List className="w-4 h-4" />
+                    <ListBulletsIcon weight="duotone" className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1569,7 +1569,7 @@ export default function LandingCMSPage() {
                   href="/landing-cms/media/create"
                   className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all hover:scale-102 cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span className="whitespace-nowrap"><span className="hidden sm:inline">Add </span>Media Item</span>
                 </Link>
               </div>
@@ -1620,7 +1620,7 @@ export default function LandingCMSPage() {
                   setMediaPage(1)
                 }}
                 title="FILTER BY YEAR:"
-                icon={<Calendar className="w-3.5 h-3.5" />}
+                icon={<CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5" />}
                 options={[
                   { value: "all", label: "All Years" },
                   ...mediaYears.map((yr) => ({ value: yr, label: yr })),
@@ -1639,7 +1639,7 @@ export default function LandingCMSPage() {
                   : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
                   }`}
               >
-                <Star
+                <StarIcon weight="duotone"
                   className={`w-3.5 h-3.5 ${mediaFeaturedOnly ? "text-amber-500 fill-amber-400" : "text-slate-400"
                     }`}
                 />
@@ -1654,7 +1654,7 @@ export default function LandingCMSPage() {
                   setMediaPage(1)
                 }}
                 title="SORT MEDIA:"
-                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                icon={<ArrowsDownUpIcon weight="bold" className="w-3.5 h-3.5" />}
                 options={[
                   { value: "newest", label: "Sort by: Newest" },
                   { value: "oldest", label: "Sort by: Oldest" },
@@ -1671,14 +1671,14 @@ export default function LandingCMSPage() {
         {activeTab === "projects" && (
           <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-              {/* Search */}
+              {/* MagnifyingGlassIcon */}
               <div className="relative flex-1 min-w-0">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={projectsSearch}
                   onChange={(e) => setProjectsSearch(e.target.value)}
-                  placeholder="Search projects by location, study type, or category..."
+                  placeholder="MagnifyingGlassIcon projects by location, study type, or category..."
                   className="w-full pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
                 />
                 {projectsSearch && (
@@ -1691,7 +1691,7 @@ export default function LandingCMSPage() {
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <XIcon weight="bold" className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -1704,7 +1704,7 @@ export default function LandingCMSPage() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                   title="View live portfolio map page"
                 >
-                  <Eye className="w-4 h-4" />
+                  <EyeIcon weight="bold" className="w-4 h-4" />
                   <span className="hidden md:inline">Preview Page</span>
                 </Link>
 
@@ -1713,7 +1713,7 @@ export default function LandingCMSPage() {
                   onClick={openCreateProjectModal}
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2 sm:py-2.5 rounded-xl shadow-xs transition cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span>Add Project</span>
                 </button>
               </div>
@@ -1762,7 +1762,7 @@ export default function LandingCMSPage() {
                   : "bg-slate-50/80 text-slate-600 border border-slate-200 hover:bg-slate-100"
                   }`}
               >
-                <Star className={`w-3.5 h-3.5 ${projectsFeaturedOnly ? "fill-amber-500 text-amber-500" : ""}`} />
+                <StarIcon weight="duotone" className={`w-3.5 h-3.5 ${projectsFeaturedOnly ? "fill-amber-500 text-amber-500" : ""}`} />
                 <span>Map Pins Only</span>
               </button>
 
@@ -1774,7 +1774,7 @@ export default function LandingCMSPage() {
                   setProjectsPage(1)
                 }}
                 title="SORT PROJECTS:"
-                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                icon={<ArrowsDownUpIcon weight="bold" className="w-3.5 h-3.5" />}
                 options={[
                   { value: "newest", label: "Sort by: Newest" },
                   { value: "oldest", label: "Sort by: Oldest" },
@@ -1793,7 +1793,7 @@ export default function LandingCMSPage() {
         <div>
           {loading && reports.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+              <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading reports from database...</span>
             </div>
           ) : error ? (
@@ -1809,7 +1809,7 @@ export default function LandingCMSPage() {
             </div>
           ) : reports.length === 0 && !loading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
-              <FileText className="w-12 h-12 text-slate-300 mx-auto" />
+              <FileTextIcon weight="duotone" className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Reports Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 No reports match your active search terms and filter criteria.
@@ -1818,7 +1818,7 @@ export default function LandingCMSPage() {
                 href="/landing-cms/reports/create"
                 className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
               >
-                <Plus className="w-4 h-4" />
+                <PlusIcon weight="bold" className="w-4 h-4" />
                 <span>Create New Report</span>
               </Link>
             </div>
@@ -1829,7 +1829,7 @@ export default function LandingCMSPage() {
                 {/* Active Fetching / Updating Records Overlay */}
                 {loading && (
                   <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center gap-2.5 rounded-2xl animate-in fade-in duration-150">
-                    <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+                    <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
                     <span className="text-xs font-bold text-slate-700">Updating records...</span>
                   </div>
                 )}
@@ -1872,7 +1872,7 @@ export default function LandingCMSPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
-                                <FileText className="w-10 h-10 text-rose-400 mb-2 opacity-80" />
+                                <FileTextIcon weight="duotone" className="w-10 h-10 text-rose-400 mb-2 opacity-80" />
                                 <span className="text-xs font-bold line-clamp-2 px-2">{report.title}</span>
                               </div>
                             )}
@@ -1889,7 +1889,7 @@ export default function LandingCMSPage() {
                               className="w-8 h-8 rounded-full bg-slate-900/65 hover:bg-slate-900/85 text-white flex items-center justify-center transition shadow-md cursor-pointer backdrop-blur-xs"
                               title="Actions Menu"
                             >
-                              <MoreVertical className="w-4 h-4 text-white" />
+                              <DotsThreeVerticalIcon weight="bold" className="w-4 h-4 text-white" />
                             </button>
 
                             {/* Dropdown Menu */}
@@ -1904,7 +1904,7 @@ export default function LandingCMSPage() {
                                   onClick={() => setOpenActionMenuId(null)}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <Eye className="w-4 h-4 text-slate-500" />
+                                  <EyeIcon weight="bold" className="w-4 h-4 text-slate-500" />
                                   <span>Preview</span>
                                 </Link>
 
@@ -1913,7 +1913,7 @@ export default function LandingCMSPage() {
                                   onClick={() => setOpenActionMenuId(null)}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <Edit3 className="w-4 h-4 text-slate-500" />
+                                  <PencilSimpleIcon weight="bold" className="w-4 h-4 text-slate-500" />
                                   <span>Edit</span>
                                 </Link>
 
@@ -1925,8 +1925,8 @@ export default function LandingCMSPage() {
                                     onClick={() => setOpenActionMenuId(null)}
                                     className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                   >
-                                    <Download className="w-4 h-4 text-slate-500" />
-                                    <span>Download</span>
+                                    <DownloadSimpleIcon weight="duotone" className="w-4 h-4 text-slate-500" />
+                                    <span>DownloadSimpleIcon</span>
                                   </a>
                                 )}
 
@@ -1940,7 +1940,7 @@ export default function LandingCMSPage() {
                                   }}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <AlertCircle className="w-4 h-4 text-red-600" />
+                                  <WarningCircleIcon weight="duotone" className="w-4 h-4 text-red-600" />
                                   <span>{report.status === "published" ? "Move to Draft" : "Publish"}</span>
                                 </button>
 
@@ -1952,7 +1952,7 @@ export default function LandingCMSPage() {
                                   }}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <TrashIcon weight="bold" className="w-4 h-4 text-red-600" />
                                   <span>Delete</span>
                                 </button>
                               </div>
@@ -1985,7 +1985,7 @@ export default function LandingCMSPage() {
                                     className="inline-flex items-center gap-1 hover:text-[#B5111B] transition-colors"
                                     title="Edit featured status"
                                   >
-                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                                    <StarIcon weight="duotone" className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
                                     <span>Featured</span>
                                   </Link>
                                 </>
@@ -2015,11 +2015,11 @@ export default function LandingCMSPage() {
                             {/* Metadata Row: Author & Date */}
                             <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500 pt-2 border-t border-slate-100/90">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <UserIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="truncate">{report.author || "Kathleen Rose, CCIM, CRE"}</span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0 text-slate-500">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="whitespace-nowrap">{dateStr}</span>
                               </div>
                             </div>
@@ -2069,7 +2069,7 @@ export default function LandingCMSPage() {
                   href="/landing-cms/reports/create"
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span>Create New Report</span>
                 </Link>
               }
@@ -2083,12 +2083,12 @@ export default function LandingCMSPage() {
         <div>
           {mediaLoading && mediaItems.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+              <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading Media Sphere items...</span>
             </div>
           ) : mediaItems.length === 0 && !mediaLoading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
-              <Film className="w-12 h-12 text-slate-300 mx-auto" />
+              <FilmStripIcon weight="duotone" className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Media Sphere Items Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 No media items match your search terms and filter criteria.
@@ -2097,7 +2097,7 @@ export default function LandingCMSPage() {
                 href="/landing-cms/media/create"
                 className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
               >
-                <Plus className="w-4 h-4" />
+                <PlusIcon weight="bold" className="w-4 h-4" />
                 <span>Add First Media Item</span>
               </Link>
             </div>
@@ -2108,7 +2108,7 @@ export default function LandingCMSPage() {
                 {/* Active Fetching / Updating Records Overlay */}
                 {mediaLoading && (
                   <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center gap-2.5 rounded-2xl animate-in fade-in duration-150">
-                    <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+                    <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
                     <span className="text-xs font-bold text-slate-700">Updating records...</span>
                   </div>
                 )}
@@ -2138,10 +2138,10 @@ export default function LandingCMSPage() {
                                   />
                                   {/* Subtle dark vignette overlay */}
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 pointer-events-none" />
-                                  {/* Centered Frosted Glass Play Button */}
+                                  {/* Centered Frosted Glass PlayIcon Button */}
                                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                                      <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                      <PlayIcon weight="bold" className="w-5 h-5 fill-current ml-0.5 text-white" />
                                     </div>
                                   </div>
                                 </div>
@@ -2150,7 +2150,7 @@ export default function LandingCMSPage() {
                                 <div className="w-full h-full relative bg-gradient-to-br from-slate-900 via-[#131b2e] to-slate-950 flex items-center justify-center overflow-hidden">
                                   <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
                                   <div className="relative z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                                    <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                    <PlayIcon weight="bold" className="w-5 h-5 fill-current ml-0.5 text-white" />
                                   </div>
                                 </div>
                               )
@@ -2171,9 +2171,9 @@ export default function LandingCMSPage() {
                                   ))}
                                 </div>
 
-                                {/* Centered Circular Play Button */}
+                                {/* Centered Circular PlayIcon Button */}
                                 <div className="relative z-10 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border-2 border-white text-white flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:border-[#B5111B] group-hover:bg-[#B5111B] transition-all duration-300">
-                                  <Play className="w-5 h-5 fill-current ml-0.5 text-white" />
+                                  <PlayIcon weight="bold" className="w-5 h-5 fill-current ml-0.5 text-white" />
                                 </div>
                               </div>
                             )}
@@ -2187,7 +2187,7 @@ export default function LandingCMSPage() {
                                 </svg>
 
                                 <div className="relative z-10 w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-white/95 backdrop-blur-xs shadow-xs border border-rose-200/70 flex items-center justify-center group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
-                                  <FileText className="w-8 h-8 text-[#B5111B] stroke-[1.8]" />
+                                  <FileTextIcon weight="duotone" className="w-8 h-8 text-[#B5111B] stroke-[1.8]" />
                                 </div>
                               </div>
                             )}
@@ -2197,17 +2197,17 @@ export default function LandingCMSPage() {
                           <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
                             {item.mediaType === "video" ? (
                               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
-                                <Play className="w-3 h-3 fill-white text-white" />
+                                <PlayIcon weight="bold" className="w-3 h-3 fill-white text-white" />
                                 <span>Video</span>
                               </div>
                             ) : item.mediaType === "document" ? (
                               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 text-slate-700 border border-slate-200/80 text-xs font-semibold shadow-xs">
-                                <FileText className="w-3.5 h-3.5 text-slate-600" />
+                                <FileTextIcon weight="duotone" className="w-3.5 h-3.5 text-slate-600" />
                                 <span>Document</span>
                               </div>
                             ) : (
                               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-semibold shadow-xs">
-                                <Headphones className="w-3.5 h-3.5 text-white" />
+                                <HeadphonesIcon weight="duotone" className="w-3.5 h-3.5 text-white" />
                                 <span>Audio</span>
                               </div>
                             )}
@@ -2224,7 +2224,7 @@ export default function LandingCMSPage() {
                               className="w-8 h-8 rounded-full bg-slate-900/65 hover:bg-slate-900/85 text-white flex items-center justify-center transition shadow-md cursor-pointer backdrop-blur-xs"
                               title="Actions Menu"
                             >
-                              <MoreVertical className="w-4 h-4 text-white" />
+                              <DotsThreeVerticalIcon weight="bold" className="w-4 h-4 text-white" />
                             </button>
 
                             {/* Dropdown Menu */}
@@ -2241,7 +2241,7 @@ export default function LandingCMSPage() {
                                     onClick={() => setOpenActionMenuId(null)}
                                     className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                   >
-                                    <Eye className="w-4 h-4 text-slate-500" />
+                                    <EyeIcon weight="bold" className="w-4 h-4 text-slate-500" />
                                     <span>Preview</span>
                                   </a>
                                 )}
@@ -2251,7 +2251,7 @@ export default function LandingCMSPage() {
                                   onClick={() => setOpenActionMenuId(null)}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <Edit3 className="w-4 h-4 text-slate-500" />
+                                  <PencilSimpleIcon weight="bold" className="w-4 h-4 text-slate-500" />
                                   <span>Edit</span>
                                 </Link>
 
@@ -2263,8 +2263,8 @@ export default function LandingCMSPage() {
                                     onClick={() => setOpenActionMenuId(null)}
                                     className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                   >
-                                    <Download className="w-4 h-4 text-slate-500" />
-                                    <span>Download</span>
+                                    <DownloadSimpleIcon weight="duotone" className="w-4 h-4 text-slate-500" />
+                                    <span>DownloadSimpleIcon</span>
                                   </a>
                                 )}
 
@@ -2278,7 +2278,7 @@ export default function LandingCMSPage() {
                                   }}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <AlertCircle className="w-4 h-4 text-slate-500" />
+                                  <WarningCircleIcon weight="duotone" className="w-4 h-4 text-slate-500" />
                                   <span>{item.status === "published" ? "Move to Draft" : "Publish"}</span>
                                 </button>
 
@@ -2290,7 +2290,7 @@ export default function LandingCMSPage() {
                                   }}
                                   className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                 >
-                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <TrashIcon weight="bold" className="w-4 h-4 text-red-600" />
                                   <span>Delete</span>
                                 </button>
                               </div>
@@ -2325,7 +2325,7 @@ export default function LandingCMSPage() {
                                     className="inline-flex items-center gap-1 hover:text-[#B5111B] transition-colors cursor-pointer"
                                     title="Click to unpin from featured"
                                   >
-                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                                    <StarIcon weight="duotone" className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
                                     <span>Featured</span>
                                   </button>
                                 </>
@@ -2355,11 +2355,11 @@ export default function LandingCMSPage() {
                             {/* Metadata Row: Author / Speaker & Date (Footer) */}
                             <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500 pt-2 border-t border-slate-100/90 mt-auto">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <UserIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="truncate">Rose Associates</span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0 text-slate-500">
-                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                 <span className="whitespace-nowrap">{formatMediaDate(item.createdAt)}</span>
                               </div>
                             </div>
@@ -2409,7 +2409,7 @@ export default function LandingCMSPage() {
                   href="/landing-cms/media/create"
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span>Add First Media Item</span>
                 </Link>
               }
@@ -2423,12 +2423,12 @@ export default function LandingCMSPage() {
         <div className="space-y-4">
           {projectsLoading && projects.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+              <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-600">Loading portfolio projects...</span>
             </div>
           ) : projects.length === 0 && !projectsLoading ? (
             <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
-              <FolderOpen className="w-12 h-12 text-slate-300 mx-auto" />
+              <FolderOpenIcon weight="duotone" className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Projects Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 No projects match your active search terms and filter criteria.
@@ -2438,7 +2438,7 @@ export default function LandingCMSPage() {
                 onClick={openCreateProjectModal}
                 className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <PlusIcon weight="bold" className="w-4 h-4" />
                 <span>Add First Project</span>
               </button>
             </div>
@@ -2467,7 +2467,7 @@ export default function LandingCMSPage() {
                   onClick={openCreateProjectModal}
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon weight="bold" className="w-4 h-4" />
                   <span>Add First Project</span>
                 </button>
               }
@@ -2482,7 +2482,7 @@ export default function LandingCMSPage() {
           <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#B5111B]" />
+                <MapPinIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
                 <h3 className="text-base font-bold text-slate-900">
                   {editingProject ? "Edit Portfolio Project" : "Add Portfolio Project"}
                 </h3>
@@ -2492,7 +2492,7 @@ export default function LandingCMSPage() {
                 onClick={closeProjectModal}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <XIcon weight="bold" className="w-5 h-5" />
               </button>
             </div>
 
@@ -2605,7 +2605,7 @@ export default function LandingCMSPage() {
                         className="absolute right-3 p-1 text-amber-700 hover:text-red-600 rounded-md transition cursor-pointer"
                         title="Remove selected PDF"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <XIcon weight="bold" className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -2613,7 +2613,7 @@ export default function LandingCMSPage() {
                   {/* Staged file indicator */}
                   {stagedPdfFile && (
                     <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-medium">
-                      <FileText className="w-4 h-4 text-amber-600 shrink-0" />
+                      <FileTextIcon weight="duotone" className="w-4 h-4 text-amber-600 shrink-0" />
                       <div className="min-w-0 flex-1">
                         <span className="font-bold block truncate">{stagedPdfFile.name}</span>
                         <span className="text-[10px] text-amber-600 font-semibold">
@@ -2629,7 +2629,7 @@ export default function LandingCMSPage() {
                         className="p-1 text-amber-700 hover:text-red-600 rounded-md transition cursor-pointer"
                         title="Remove staged file"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <XIcon weight="bold" className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
@@ -2637,7 +2637,7 @@ export default function LandingCMSPage() {
                   {/* Existing attached PDF indicator */}
                   {!stagedPdfFile && projectFormData.pdfUrl && !projectFormData.pdfUrl.startsWith("blob:") && (
                     <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-xs font-medium">
-                      <FileText className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <FileTextIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span className="truncate flex-1 font-semibold text-slate-800">
                         Current document: {getPdfFilename(projectFormData.pdfUrl)}
                       </span>
@@ -2647,16 +2647,16 @@ export default function LandingCMSPage() {
                         className="p-1 text-slate-400 hover:text-red-600 rounded-md transition cursor-pointer"
                         title="Remove document link"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <XIcon weight="bold" className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
 
-                  {/* Upload button & preview */}
+                  {/* UploadSimpleIcon button & preview */}
                   <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold cursor-pointer transition">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{stagedPdfFile ? "Choose Different PDF" : "Upload Local PDF"}</span>
+                      <UploadSimpleIcon weight="duotone" className="w-3.5 h-3.5" />
+                      <span>{stagedPdfFile ? "Choose Different PDF" : "UploadSimpleIcon Local PDF"}</span>
                       <input
                         type="file"
                         accept="application/pdf,.pdf"
@@ -2673,7 +2673,7 @@ export default function LandingCMSPage() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[#B5111B] hover:underline font-bold"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <ArrowSquareOutIcon weight="bold" className="w-3 h-3" />
                         <span>Preview PDF</span>
                       </a>
                     )}
@@ -2726,7 +2726,7 @@ export default function LandingCMSPage() {
                 >
                   {uploadingPdf ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />
                       <span>Uploading PDF...</span>
                     </>
                   ) : (

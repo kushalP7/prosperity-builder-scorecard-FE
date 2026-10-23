@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUp } from "lucide-react"
+import { ArrowUpIcon } from "@phosphor-icons/react"
 import { projectsApi, LandingProjectItem, COMMUNITY_FOOTPRINT_LOCATIONS, CommunityFootprintLocation } from "@/lib/projects-api"
 import ProjectPortfolioMap from "@/components/landing/ProjectPortfolioMap"
 import ProjectPortfolioSidebar from "@/components/landing/ProjectPortfolioSidebar"
@@ -176,7 +176,7 @@ export default function ProjectPortfolioPage() {
           title="Back to Top"
           aria-label="Back to Top"
         >
-          <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+          <ArrowUpIcon weight="bold" className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
         </button>
       )}
     </div>

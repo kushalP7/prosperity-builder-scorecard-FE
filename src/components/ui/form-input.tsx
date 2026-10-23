@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertCircle } from "lucide-react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -38,7 +38,7 @@ export function FormInput({
       />
       {error && (
         <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <WarningCircleIcon weight="duotone" className="w-3.5 h-3.5 shrink-0" />
           <span>{error}</span>
         </p>
       )}
@@ -67,7 +67,7 @@ export function FormField({
       {children}
       {error && (
         <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <WarningCircleIcon weight="duotone" className="w-3.5 h-3.5 shrink-0" />
           <span>{error}</span>
         </p>
       )}

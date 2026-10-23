@@ -3,11 +3,11 @@
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
 import {
-  FileText,
-  Loader2,
-  ArrowLeft,
-  ArrowRight
-} from "lucide-react"
+  FileTextIcon,
+  SpinnerGapIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+} from "@phosphor-icons/react"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { reportsApi, LandingReportItem } from "@/lib/reports-api"
@@ -120,7 +120,7 @@ export default function ReportsPage() {
               href="/"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#B5111B] transition-colors mb-1"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeftIcon weight="bold" className="w-4 h-4" />
               <span>Back to Home</span>
             </Link>
 
@@ -181,12 +181,12 @@ export default function ReportsPage() {
           {/* Grid */}
           {loading ? (
             <div className="py-16 text-center flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+              <SpinnerGapIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
               <span className="text-xs font-bold text-slate-500">Loading reports...</span>
             </div>
           ) : filtered.length === 0 ? (
             <div className="border border-slate-200 rounded-2xl p-12 text-center bg-slate-50 space-y-3">
-              <FileText className="w-10 h-10 text-slate-400 mx-auto" />
+              <FileTextIcon weight="duotone" className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-sm font-bold text-slate-600">No reports found matching your query.</p>
             </div>
           ) : (
@@ -243,11 +243,11 @@ export default function ReportsPage() {
                       <div className="flex items-center justify-between transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-100">
                         <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-white">
                           <span>Read Report</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRightIcon className="w-3.5 h-3.5" />
                         </span>
                         <div className="flex items-center text-white/40">
                           <div className="w-8 sm:w-12 h-[1px] bg-white/40" />
-                          <ArrowRight className="w-3 h-3 -ml-0.5 text-white/50" />
+                          <ArrowRightIcon className="w-3 h-3 -ml-0.5 text-white/50" />
                         </div>
                       </div>
                     </div>

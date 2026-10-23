@@ -1,11 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { Link } from "@/lib/router-compat"
-import { ChevronLeft, ChevronRight, ShieldCheck, Layers, Activity, Sparkles, Download } from "lucide-react"
+import {
+  ShieldCheckIcon,
+  StackIcon,
+  GaugeIcon,
+  SparkleIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  DownloadSimpleIcon,
+} from "@phosphor-icons/react"
+import { EnterpriseContactModal } from "@/components/landing/EnterpriseContactModal"
 
 export function ReportShowcaseSection() {
   const [activeFannedPage, setActiveFannedPage] = React.useState<number>(2)
+  const [contactModalOpen, setContactModalOpen] = React.useState<boolean>(false)
 
   return (
     <section id="report-showcase" className="scroll-mt-20 py-12 sm:py-16 bg-gradient-to-b from-slate-100 via-white to-slate-50 text-slate-900 border-b border-slate-200/90 relative overflow-hidden">
@@ -28,15 +37,15 @@ export function ReportShowcaseSection() {
             className="p-2 rounded-xl bg-white text-[#B5111B] border border-slate-200 hover:bg-red-50 hover:border-red-200 transition-all cursor-pointer shadow-2xs flex items-center gap-1 text-xs font-bold"
             aria-label="Previous Page"
           >
-            <ChevronLeft className="w-4 h-4 text-[#B5111B]" />
+            <CaretLeftIcon weight="bold" className="w-4 h-4 text-[#B5111B]" />
             <span className="hidden xs:inline">Prev</span>
           </button>
 
           <button
             onClick={() => setActiveFannedPage(1)}
             className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${activeFannedPage === 1
-                ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
           >
             Page 1: Cover
@@ -44,8 +53,8 @@ export function ReportShowcaseSection() {
           <button
             onClick={() => setActiveFannedPage(2)}
             className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${activeFannedPage === 2
-                ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
           >
             Page 2: Matrix
@@ -53,8 +62,8 @@ export function ReportShowcaseSection() {
           <button
             onClick={() => setActiveFannedPage(3)}
             className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${activeFannedPage === 3
-                ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              ? "bg-[#B5111B] text-white shadow-xs ring-2 ring-[#B5111B]/20"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
           >
             Page 3: Roadmap
@@ -66,7 +75,7 @@ export function ReportShowcaseSection() {
             aria-label="Next Page"
           >
             <span className="hidden xs:inline">Next</span>
-            <ChevronRight className="w-4 h-4 text-[#B5111B]" />
+            <CaretRightIcon weight="bold" className="w-4 h-4 text-[#B5111B]" />
           </button>
         </div>
 
@@ -78,7 +87,7 @@ export function ReportShowcaseSection() {
             className="md:hidden absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
             aria-label="Previous Page"
           >
-            <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            <CaretLeftIcon weight="bold" className="w-6 h-6" />
           </button>
 
           <button
@@ -86,25 +95,25 @@ export function ReportShowcaseSection() {
             className="md:hidden absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-40 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-[#B5111B] border-2 border-[#B5111B] shadow-xl flex items-center justify-center hover:bg-[#B5111B] hover:text-white transition-all cursor-pointer"
             aria-label="Next Page"
           >
-            <ChevronRight className="w-6 h-6 stroke-[2.5]" />
+            <CaretRightIcon weight="bold" className="w-6 h-6" />
           </button>
 
           {/* ANNOTATION 1 (Top Left) */}
           <div
             onClick={() => setActiveFannedPage(1)}
             className={`hidden md:flex flex-col items-start gap-1 lg:gap-1.5 absolute top-0 left-0 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 1
-                ? "opacity-100 scale-105 z-50 pointer-events-auto"
-                : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
+              ? "opacity-100 scale-105 z-50 pointer-events-auto"
+              : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
             <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl transition-all duration-300 ${activeFannedPage === 1
-                ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
-                : "bg-white/95 border border-slate-300 shadow-sm"
+              ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
+              : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
               <h4 className="text-xs font-black tracking-tight flex items-center gap-1.5 lg:gap-2">
                 <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 1 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <ShieldCheck className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                  <ShieldCheckIcon weight="duotone" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
                 <span className={activeFannedPage === 1 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   Official 12-Step Guide Cover
@@ -132,13 +141,13 @@ export function ReportShowcaseSection() {
           <div
             onClick={() => setActiveFannedPage(2)}
             className={`hidden md:flex flex-col items-end gap-1 lg:gap-1.5 absolute top-1 md:top-2 right-0 lg:-right-2 xl:-right-4 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
-                ? "opacity-100 scale-105 z-50 pointer-events-auto"
-                : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
+              ? "opacity-100 scale-105 z-50 pointer-events-auto"
+              : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
             <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl text-right transition-all duration-300 relative ${activeFannedPage === 2
-                ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
-                : "bg-white/95 border border-slate-300 shadow-sm"
+              ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
+              : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
               <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-1.5 lg:gap-2">
                 <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
@@ -146,7 +155,7 @@ export function ReportShowcaseSection() {
                 </span>
                 <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Layers className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                  <StackIcon weight="duotone" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
               </h4>
               <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
@@ -172,18 +181,18 @@ export function ReportShowcaseSection() {
           <div
             onClick={() => setActiveFannedPage(2)}
             className={`hidden md:flex flex-col items-start gap-1 lg:gap-1.5 absolute bottom-2 md:bottom-4 left-0 lg:-left-2 xl:-left-4 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 2
-                ? "opacity-100 scale-105 z-50 pointer-events-auto"
-                : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
+              ? "opacity-100 scale-105 z-50 pointer-events-auto"
+              : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
             <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl transition-all duration-300 relative ${activeFannedPage === 2
-                ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
-                : "bg-white/95 border border-slate-300 shadow-sm"
+              ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
+              : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
               <h4 className="text-xs font-black tracking-tight flex items-center gap-1.5 lg:gap-2">
                 <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 2 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Activity className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                  <GaugeIcon weight="duotone" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
                 <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
                   Quality of Life Score Dial
@@ -212,8 +221,8 @@ export function ReportShowcaseSection() {
           <div
             onClick={() => setActiveFannedPage(3)}
             className={`hidden md:flex flex-col items-end gap-1 lg:gap-1.5 absolute bottom-0 right-0 max-w-[200px] lg:max-w-[250px] xl:max-w-[280px] cursor-pointer transition-all duration-500 ${activeFannedPage === 3
-                ? "opacity-100 scale-105 z-50 pointer-events-auto"
-                : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
+              ? "opacity-100 scale-105 z-50 pointer-events-auto"
+              : "opacity-75 scale-95 z-30 hover:opacity-100 hover:scale-100 pointer-events-auto"
               }`}
           >
             <svg viewBox="0 0 160 70" className="w-24 md:w-28 lg:w-32 xl:w-36 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible mr-4 lg:mr-6">
@@ -228,8 +237,8 @@ export function ReportShowcaseSection() {
               <polygon points="45 25, 57 30, 50 36" fill={activeFannedPage === 3 ? "#B5111B" : "#64748B"} />
             </svg>
             <div className={`p-2.5 lg:p-3 xl:p-3.5 rounded-2xl text-right transition-all duration-300 ${activeFannedPage === 3
-                ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
-                : "bg-white/95 border border-slate-300 shadow-sm"
+              ? "bg-white border-2 border-[#B5111B] shadow-2xl ring-4 ring-[#B5111B]/15"
+              : "bg-white/95 border border-slate-300 shadow-sm"
               }`}>
               <h4 className="text-xs font-black tracking-tight flex items-center justify-end gap-1.5 lg:gap-2">
                 <span className={activeFannedPage === 3 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
@@ -237,12 +246,12 @@ export function ReportShowcaseSection() {
                 </span>
                 <span className={`p-1 lg:p-1.5 rounded-lg flex items-center justify-center transition-colors ${activeFannedPage === 3 ? "bg-[#B5111B] text-white shadow-xs" : "bg-slate-100 text-slate-500"
                   }`}>
-                  <Sparkles className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                  <SparkleIcon weight="duotone" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
               </h4>
               <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pr-0.5 ${activeFannedPage === 3 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
-                Reality Check → Plan Blueprint → Prosperity Building implementation chevrons.
+                Reality Check → Plan Blueprint → Prosperity Building implementation.
               </p>
             </div>
           </div>
@@ -254,8 +263,8 @@ export function ReportShowcaseSection() {
             <div
               onClick={() => setActiveFannedPage(1)}
               className={`absolute left-[1%] xs:left-[2%] sm:left-[4%] md:left-[5%] lg:left-[8%] top-2 w-[275px] xs:w-[310px] sm:w-[330px] md:w-[310px] lg:w-[350px] h-[500px] xs:h-[520px] sm:h-[540px] md:h-[520px] lg:h-[560px] bg-white text-slate-900 rounded-2xl p-4 xs:p-6 space-y-3.5 cursor-pointer transition-all duration-500 ease-out origin-bottom-left flex flex-col justify-between ${activeFannedPage === 1
-                  ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] ring-4 ring-[#B5111B]/30 border-2 border-[#B5111B] opacity-100"
-                  : "z-10 -rotate-6 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
+                ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] ring-4 ring-[#B5111B]/30 border-2 border-[#B5111B] opacity-100"
+                : "z-10 -rotate-6 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}
             >
               <div className="h-1.5 bg-[#A48256] w-full rounded-full" />
@@ -309,8 +318,8 @@ export function ReportShowcaseSection() {
             <div
               onClick={() => setActiveFannedPage(2)}
               className={`absolute top-0 w-[285px] xs:w-[325px] sm:w-[350px] md:w-[330px] lg:w-[380px] h-[520px] xs:h-[550px] sm:h-[570px] md:h-[540px] lg:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-4 sm:p-5 space-y-2 cursor-pointer transition-all duration-500 ease-out origin-bottom-center flex flex-col justify-between overflow-hidden ${activeFannedPage === 2
-                  ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
-                  : "z-20 rotate-4 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
+                ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
+                : "z-20 rotate-4 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}
             >
               {/* Top Gold Accent Bar */}
@@ -620,8 +629,8 @@ export function ReportShowcaseSection() {
             <div
               onClick={() => setActiveFannedPage(3)}
               className={`absolute right-[1%] xs:right-[2%] sm:right-[4%] md:right-[5%] lg:right-[8%] top-0 w-[285px] xs:w-[325px] sm:w-[350px] md:w-[310px] lg:w-[380px] h-[520px] xs:h-[550px] sm:h-[570px] md:h-[520px] lg:h-[600px] bg-white text-slate-900 rounded-2xl p-3.5 xs:p-5 sm:p-6 cursor-pointer transition-all duration-500 ease-out origin-bottom-right flex flex-col justify-between overflow-hidden ${activeFannedPage === 3
-                  ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
-                  : "z-10 rotate-8 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
+                ? "z-30 scale-102 sm:scale-108 rotate-0 shadow-[0_35px_90px_-15px_rgba(0,0,0,0.6)] border-4 border-[#8F0D15] ring-4 ring-[#B5111B]/30 opacity-100"
+                : "z-10 rotate-8 scale-98 border border-slate-200 shadow-xl opacity-90 hover:opacity-100 hover:scale-100"
                 }`}
             >
               <div className="h-1 bg-[#A48256] w-full rounded-full shrink-0" />
@@ -703,14 +712,23 @@ export function ReportShowcaseSection() {
         </div>
 
         <div className="text-center pt-2">
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={() => setContactModalOpen(true)}
             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white font-extrabold text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer hover:scale-102"
           >
-            <Download className="w-4 h-4 text-white" />
+            <DownloadSimpleIcon weight="bold" className="w-4 h-4 text-white" />
             <span>Buy Subscription to Generate Certified Reports</span>
-          </Link>
+          </button>
         </div>
+
+        {/* Enterprise Contact Modal */}
+        <EnterpriseContactModal
+          isOpen={contactModalOpen}
+          onClose={() => setContactModalOpen(false)}
+          title="Buy Subscription & Certified Reports Inquiry"
+          subtitle="Please fill out your details below to discuss subscription pricing and certified report generation."
+        />
       </div>
     </section>
   )

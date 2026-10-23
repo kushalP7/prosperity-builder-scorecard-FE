@@ -2,37 +2,20 @@
 
 import * as React from "react"
 import {
-  Users,
-  User,
-  Search,
-  Filter,
-  Plus,
-  ShieldCheck,
-  UserCheck,
-  BarChart2,
-  Eye,
-  MoreVertical,
-  Edit3,
-  Trash2,
-  Key,
-  Power,
-  Building2,
-  Mail,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  X,
-  ShieldAlert,
-  ChevronRight,
-  ChevronDown,
-  Check,
-  FolderOpen,
-  Calendar,
-  Sparkles,
-  Database
-} from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+  UsersIcon,
+  UserIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  EyeIcon,
+  DotsThreeVerticalIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  KeyIcon,
+  PowerIcon,
+  ClockIcon,
+  WarningCircleIcon,
+  XIcon
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { Dropdown } from "@/components/ui/dropdown"
@@ -40,6 +23,8 @@ import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import { apiClient } from "@/lib/api"
 import { useAppStore } from "@/store"
+import { DataTable } from "@/components/ui/data-table"
+import { ColumnDef, SortingState } from "@tanstack/react-table"
 
 export type UserRole = 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
 export type UserStatus = 'active' | 'pending' | 'suspended';
@@ -124,6 +109,8 @@ export default function UsersPage() {
   const [selectedRole, setSelectedRole] = React.useState<string>("all");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const [pageSize, setPageSize] = React.useState(ITEMS_PER_PAGE);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   // Current user's authenticated role
   const userRole = (currentUser?.role as UserRole) || 'client_viewer';
@@ -176,7 +163,7 @@ export default function UsersPage() {
   // Reset page to 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedRole, selectedStatus]);
+  }, [searchQuery, selectedRole, selectedStatus, pageSize, sorting]);
 
   // RBAC Permission Check Helpers
   const isSuperAdmin = userRole === 'super_admin';
@@ -205,7 +192,7 @@ export default function UsersPage() {
 
   // Filtered Users List
   const filteredUsers = React.useMemo(() => {
-    return users.filter(user => {
+    let rows = users.filter(user => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -216,14 +203,25 @@ export default function UsersPage() {
 
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [users, searchQuery, selectedRole, selectedStatus]);
+
+    if (sorting.length > 0) {
+      const { id, desc } = sorting[0];
+      rows = [...rows].sort((a, b) => {
+        const av = (a as any)[id];
+        const bv = (b as any)[id];
+        return desc
+          ? String(bv ?? "").localeCompare(String(av ?? ""))
+          : String(av ?? "").localeCompare(String(bv ?? ""));
+      });
+    }
+    return rows;
+  }, [users, searchQuery, selectedRole, selectedStatus, sorting]);
 
   // Pagination Logic
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
   const paginatedUsers = React.useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredUsers, currentPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
 
   // Metrics
   const totalCount = users.length;
@@ -400,6 +398,179 @@ export default function UsersPage() {
     }
   };
 
+  const userColumns = React.useMemo<ColumnDef<UserData>[]>(() => [
+    {
+      accessorKey: "name",
+      header: "User Details",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex items-center gap-2.5">
+            <div
+              onClick={() => setProfileDrawerUser(user)}
+              className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-500 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer hover:bg-slate-200/70 hover:scale-105 transition-all"
+            >
+              <UserIcon weight="duotone" className="w-4 h-4 text-slate-500" />
+            </div>
+            <div>
+              <div
+                onClick={() => setProfileDrawerUser(user)}
+                className="font-bold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer"
+              >
+                {user.name}
+              </div>
+              <div className="text-[11px] text-slate-400 font-medium">{user.email}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "role",
+      header: "Role & Permissions",
+      cell: ({ row }) => renderRoleBadge(row.original.role),
+    },
+    {
+      accessorKey: "department",
+      header: "Department",
+      cell: ({ row }) => (
+        <span className="text-slate-700 font-bold text-xs">{row.original.department}</span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => renderStatusBadge(row.original.status),
+    },
+    {
+      accessorKey: "lastActive",
+      header: "Last Active",
+      cell: ({ row }) => (
+        <span className="text-slate-500 text-[11px] font-semibold">{row.original.lastActive}</span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      enableSorting: false,
+      cell: ({ row }) => {
+        const user = row.original;
+        const isLowerRow = paginatedUsers.length >= 4 && row.index >= paginatedUsers.length - 2 && row.index > 1;
+        return (
+          <div className="text-right relative">
+            <div className="inline-block text-left">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setActiveMenuUserId(activeMenuUserId === user.id ? null : user.id)}
+                className="w-7 h-7 p-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                title="Actions"
+              >
+                <DotsThreeVerticalIcon weight="bold" className="w-3.5 h-3.5" />
+              </Button>
+
+              {activeMenuUserId === user.id && (
+                <div className={cn(
+                  "absolute w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 text-left",
+                  isLowerRow ? "bottom-full mb-1 right-4" : "top-10 right-4"
+                )}>
+                  <div className="px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
+                    User Actions:
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setProfileDrawerUser(user);
+                      setActiveMenuUserId(null);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <EyeIcon weight="duotone" className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>View Activity Drawer</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleOpenEditUser(user);
+                      setActiveMenuUserId(null);
+                    }}
+                    disabled={!canEditUser(user)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
+                      canEditUser(user)
+                        ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                        : "text-slate-300 cursor-not-allowed"
+                    )}
+                  >
+                    <PencilSimpleIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>Edit Details</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleResetPassword(user);
+                      setActiveMenuUserId(null);
+                    }}
+                    disabled={!canEditUser(user)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
+                      canEditUser(user)
+                        ? "text-slate-700 hover:bg-amber-50 hover:text-amber-900"
+                        : "text-slate-300 cursor-not-allowed"
+                    )}
+                  >
+                    <KeyIcon weight="duotone" className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Reset Password</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleToggleUserStatus(user);
+                      setActiveMenuUserId(null);
+                    }}
+                    disabled={!canToggleStatus(user)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
+                      canToggleStatus(user)
+                        ? user.status === 'active'
+                          ? "text-slate-700 hover:bg-rose-50 hover:text-rose-900"
+                          : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-900"
+                        : "text-slate-300 cursor-not-allowed"
+                    )}
+                  >
+                    <PowerIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>{user.status === 'active' ? 'Suspend Access' : 'Activate User'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (!canDeleteUser(user)) {
+                        toast.error(`Permission Denied: Only Admins can delete users.`);
+                      } else {
+                        setDeletingUser(user);
+                      }
+                      setActiveMenuUserId(null);
+                    }}
+                    disabled={!canDeleteUser(user)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer border-t border-slate-100 mt-1 pt-1.5",
+                      canDeleteUser(user)
+                        ? "text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                        : "text-slate-300 cursor-not-allowed"
+                    )}
+                  >
+                    <TrashIcon weight="duotone" className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                    <span>Delete User</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+  ], [activeMenuUserId, paginatedUsers.length, userRole]);
+
   return (
     <div className="space-y-3 sm:space-y-3.5 w-full pb-0">
 
@@ -407,7 +578,7 @@ export default function UsersPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-[#7c0d15]/10 text-[#7c0d15] border border-[#7c0d15]/20">
-            <Users className="w-5 h-5 text-[#b5111b]" />
+            <UsersIcon weight="duotone" className="w-5 h-5 text-[#b5111b]" />
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">Users Management</h1>
@@ -430,15 +601,14 @@ export default function UsersPage() {
             />
           )}
 
-          {/* Main Table Card Container */}
-          <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-        {/* Controls Toolbar */}
-        <div className="p-3 bg-slate-50/70 border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+          {/* Toolbar + shared DataTable (no outer card — DataTable has its own chrome) */}
+          <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
 
           {/* Search Input & Role Tabs */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <MagnifyingGlassIcon weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search user name, email, department..."
@@ -451,7 +621,7 @@ export default function UsersPage() {
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <XIcon weight="bold" className="w-3 h-3" />
                 </button>
               )}
             </div>
@@ -508,275 +678,29 @@ export default function UsersPage() {
               )}
               title={canAddUser ? "Add New User" : `Restricted to Super Admin / Project Lead (Current: ${userRole.toUpperCase()})`}
             >
-              <Plus className="w-3.5 h-3.5" />
+              <PlusIcon weight="bold" className="w-3.5 h-3.5" />
               <span>Add New User</span>
             </Button>
           </div>
         </div>
 
-        {/* Users Table */}
-        <div className="overflow-x-auto min-h-[360px]">
-          <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                <th className="px-3.5 py-2.5">User Details</th>
-                <th className="px-3.5 py-2.5">Role & Permissions</th>
-                <th className="px-3.5 py-2.5">Department</th>
-                <th className="px-3.5 py-2.5">Status</th>
-                <th className="px-3.5 py-2.5">Last Active</th>
-                <th className="px-3.5 py-2.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-              {isLoadingUsers ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-400 font-medium">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="w-6 h-6 border-2 border-[#b5111b] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-xs">Loading team members...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : paginatedUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-400 font-medium">
-                    No users matching your filters found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedUsers.map((user, index) => {
-                  const isLowerRow = paginatedUsers.length >= 4 && index >= paginatedUsers.length - 2 && index > 1;
-
-                  return (
-                    <tr
-                      key={user.id}
-                      className="hover:bg-slate-50/70 transition-colors group cursor-default"
-                    >
-                      {/* User Details */}
-                      <td className="px-3.5 py-2.5 align-middle">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            onClick={() => setProfileDrawerUser(user)}
-                            className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-500 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer hover:bg-slate-200/70 hover:scale-105 transition-all"
-                          >
-                            <User className="w-4 h-4 text-slate-500" />
-                          </div>
-                          <div>
-                            <div
-                              onClick={() => setProfileDrawerUser(user)}
-                              className="font-bold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer"
-                            >
-                              {user.name}
-                            </div>
-                            <div className="text-[11px] text-slate-400 font-medium">{user.email}</div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Role & Permissions */}
-                      <td className="px-3.5 py-2.5 align-middle">
-                        {renderRoleBadge(user.role)}
-                      </td>
-
-                      {/* Department */}
-                      <td className="px-3.5 py-2.5 align-middle text-slate-700 font-bold text-xs">
-                        {user.department}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-3.5 py-2.5 align-middle">
-                        {renderStatusBadge(user.status)}
-                      </td>
-
-                      {/* Last Active */}
-                      <td className="px-3.5 py-2.5 align-middle">
-                        <span className="text-slate-500 text-[11px] font-semibold">{user.lastActive}</span>
-                      </td>
-
-                      {/* Actions Column (3-Dots Dropdown with Smart Positioning) */}
-                      <td className="px-3.5 py-2.5 align-middle text-right relative">
-                        <div className="inline-block text-left">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setActiveMenuUserId(activeMenuUserId === user.id ? null : user.id)}
-                            className="w-7 h-7 p-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center justify-center cursor-pointer transition-colors"
-                            title="Actions"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5" />
-                          </Button>
-
-                          {/* Dropdown Menu (Smart Upward/Downward Direction) */}
-                          {activeMenuUserId === user.id && (
-                            <div className={cn(
-                              "absolute w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 text-left",
-                              isLowerRow ? "bottom-full mb-1 right-4" : "top-10 right-4"
-                            )}>
-                              <div className="px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
-                                User Actions:
-                              </div>
-
-                              {/* View Full Profile / Activity */}
-                              <button
-                                onClick={() => {
-                                  setProfileDrawerUser(user);
-                                  setActiveMenuUserId(null);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                <span>View Activity Drawer</span>
-                              </button>
-
-                              {/* Edit Details */}
-                              <button
-                                onClick={() => {
-                                  handleOpenEditUser(user);
-                                  setActiveMenuUserId(null);
-                                }}
-                                disabled={!canEditUser(user)}
-                                className={cn(
-                                  "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                                  canEditUser(user)
-                                    ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                                    : "text-slate-300 cursor-not-allowed"
-                                )}
-                              >
-                                <Edit3 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                                <span>Edit Details</span>
-                              </button>
-
-                              {/* Reset Password */}
-                              <button
-                                onClick={() => {
-                                  handleResetPassword(user);
-                                  setActiveMenuUserId(null);
-                                }}
-                                disabled={!canEditUser(user)}
-                                className={cn(
-                                  "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                                  canEditUser(user)
-                                    ? "text-slate-700 hover:bg-amber-50 hover:text-amber-900"
-                                    : "text-slate-300 cursor-not-allowed"
-                                )}
-                              >
-                                <Key className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                <span>Reset Password</span>
-                              </button>
-
-                              {/* Toggle Status (Active / Deactivate) */}
-                              <button
-                                onClick={() => {
-                                  handleToggleUserStatus(user);
-                                  setActiveMenuUserId(null);
-                                }}
-                                disabled={!canToggleStatus(user)}
-                                className={cn(
-                                  "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                                  canToggleStatus(user)
-                                    ? user.status === 'active'
-                                      ? "text-slate-700 hover:bg-rose-50 hover:text-rose-900"
-                                      : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-900"
-                                    : "text-slate-300 cursor-not-allowed"
-                                )}
-                              >
-                                <Power className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                                <span>{user.status === 'active' ? 'Suspend Access' : 'Activate User'}</span>
-                              </button>
-
-                              {/* Delete User */}
-                              <button
-                                onClick={() => {
-                                  if (!canDeleteUser(user)) {
-                                    toast.error(`Permission Denied: Only Admins can delete users.`);
-                                  } else {
-                                    setDeletingUser(user);
-                                  }
-                                  setActiveMenuUserId(null);
-                                }}
-                                disabled={!canDeleteUser(user)}
-                                className={cn(
-                                  "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer border-t border-slate-100 mt-1 pt-1.5",
-                                  canDeleteUser(user)
-                                    ? "text-rose-600 hover:bg-rose-50 hover:text-rose-800"
-                                    : "text-slate-300 cursor-not-allowed"
-                                )}
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                                <span>Delete User</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Table Pagination Bar (Matches Orders Page Design Exactly) */}
-        {filteredUsers.length > 0 && (
-          <div className="px-4 py-2.5 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium text-slate-600">
-            <div>
-              Showing <span className="font-bold text-slate-900">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{" "}
-              <span className="font-bold text-slate-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}</span> of{" "}
-              <span className="font-bold text-slate-900">{filteredUsers.length}</span> users
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs"
-                title="First Page"
-              >
-                &laquo;
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs"
-              >
-                &lsaquo; Prev
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    "w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center shadow-2xs",
-                    currentPage === page
-                      ? "bg-[#B5111B] text-white shadow-md font-extrabold scale-105"
-                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs"
-              >
-                Next &rsaquo;
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs"
-                title="Last Page"
-              >
-                &raquo;
-              </button>
-            </div>
-          </div>
-        )}
-      </Card>
+        <DataTable
+          columns={userColumns}
+          data={paginatedUsers}
+          totalItems={filteredUsers.length}
+          page={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          isLoading={isLoadingUsers}
+          emptyMessage="No users matching your filters found."
+        />
+      </div>
 
       {/* MODAL 1: Add New User Modal */}
       {isAddUserOpen && (
@@ -956,7 +880,7 @@ export default function UsersPage() {
           <div className="space-y-4 text-left">
             <div className="flex items-center gap-3 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900">
               <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 font-bold">
-                <AlertCircle className="w-5 h-5 text-rose-600" />
+                <WarningCircleIcon weight="duotone" className="w-5 h-5 text-rose-600" />
               </div>
               <div>
                 <h4 className="text-xs font-bold">Warning: Permanent Deletion</h4>
@@ -1002,7 +926,7 @@ export default function UsersPage() {
               <div className="p-4 sm:p-5 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200/80 text-slate-500 flex items-center justify-center shadow-2xs">
-                    <User className="w-5 h-5 text-slate-500" />
+                    <UserIcon weight="duotone" className="w-5 h-5 text-slate-500" />
                   </div>
                   <div>
                     <h3 className="text-base font-extrabold text-slate-900 leading-tight">{profileDrawerUser.name}</h3>
@@ -1015,7 +939,7 @@ export default function UsersPage() {
                   onClick={() => setProfileDrawerUser(null)}
                   className="w-8 h-8 p-0 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <XIcon weight="bold" className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -1042,7 +966,7 @@ export default function UsersPage() {
                 {/* Account Activity Timeline */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-500" /> Recent Security & Audit Logs
+                    <ClockIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500" /> Recent Security & Audit Logs
                   </h4>
 
                   <div className="space-y-2 border-l-2 border-slate-200 ml-2 pl-4 py-1">

@@ -1,6 +1,6 @@
 "use client"
 
-import { Gauge } from "lucide-react"
+import { GaugeIcon } from "@phosphor-icons/react"
 
 export function GaugeSpeedometerChart({ score = 6.4, max = 10, percentage = "64%" }: {
   score?: number
@@ -12,7 +12,7 @@ export function GaugeSpeedometerChart({ score = 6.4, max = 10, percentage = "64%
       <div className="space-y-0.5 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Gauge className="w-4.5 h-4.5 text-white" />
+            <GaugeIcon weight="duotone" className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Overall Project Score</h3>

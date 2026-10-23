@@ -3,12 +3,11 @@
 import * as React from "react"
 import { Link, useParams } from "@/lib/router-compat"
 import { 
-  FileText, 
-  Download, 
-  ArrowLeft, 
-  Share2, 
-  Loader2
-} from "lucide-react"
+  FileTextIcon, 
+  DownloadSimpleIcon, 
+  ArrowLeftIcon, 
+  ShareNetworkIcon,
+} from "@phosphor-icons/react"
 import { RoseLoader } from "@/components/ui/loader"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
@@ -99,7 +98,7 @@ export default function ReportDetailPage() {
         <LandingHeader />
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 py-20">
           <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
-            <FileText className="w-7 h-7" />
+            <FileTextIcon weight="duotone" className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">
             {report?.status === "draft" ? "Report Currently in Draft Mode" : "Report Not Found"}
@@ -134,7 +133,7 @@ export default function ReportDetailPage() {
                 href="/reports"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#B5111B] transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeftIcon weight="bold" className="w-4 h-4" />
                 <span>Back to All Reports</span>
               </Link>
             </div>
@@ -164,7 +163,7 @@ export default function ReportDetailPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-slate-100 text-slate-400 text-xs font-bold text-center">
-                    <FileText className="w-10 h-10 text-[#B5111B] mb-2" />
+                    <FileTextIcon weight="duotone" className="w-10 h-10 text-[#B5111B] mb-2" />
                     <span>Rose Associates Publication</span>
                   </div>
                 )}
@@ -188,7 +187,7 @@ export default function ReportDetailPage() {
                   onClick={handleShare}
                   className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-semibold flex items-center gap-1.5 transition-all text-xs cursor-pointer border border-slate-300 shadow-2xs"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
+                  <ShareNetworkIcon weight="bold" className="w-3.5 h-3.5" />
                   <span>{copied ? "Link Copied!" : "Share"}</span>
                 </button>
 
@@ -199,7 +198,7 @@ export default function ReportDetailPage() {
                     rel="noopener noreferrer"
                     className="px-4 py-1.5 rounded-lg bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold flex items-center gap-2 transition-all text-xs shadow-xs"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <DownloadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
                     <span>Download PDF</span>
                   </a>
                 )}
@@ -375,7 +374,7 @@ export default function ReportDetailPage() {
                   <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-lg bg-slate-900 text-white p-4 space-y-4">
                     <div className="flex justify-between items-center px-2">
                       <span className="text-xs font-bold flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-[#B5111B]" />
+                        <FileTextIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
                         <span>Embedded Report Reader</span>
                       </span>
                       <a href={block.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[#B5111B] underline">
@@ -410,10 +409,10 @@ export default function ReportDetailPage() {
                         className="p-4 rounded-xl bg-slate-100 hover:bg-[#B5111B] hover:text-white transition-all border border-slate-200 flex items-center justify-between text-xs font-bold group"
                       >
                         <span className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-[#B5111B] group-hover:text-white" />
+                          <FileTextIcon weight="duotone" className="w-4 h-4 text-[#B5111B] group-hover:text-white" />
                           <span>{f.name}</span>
                         </span>
-                        <Download className="w-4 h-4" />
+                        <DownloadSimpleIcon weight="bold" className="w-4 h-4" />
                       </a>
                     ))}
                   </div>

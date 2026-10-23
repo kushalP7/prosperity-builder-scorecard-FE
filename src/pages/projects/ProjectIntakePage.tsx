@@ -8,13 +8,11 @@ import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  CheckCircle2,
-  Save,
-  Send,
-  ClipboardList,
-  Info,
-  Sparkles
-} from "lucide-react"
+  CheckCircleIcon,
+  FloppyDiskIcon,
+  PaperPlaneRightIcon,
+  InfoIcon
+} from "@phosphor-icons/react"
 import { Spinner } from "@/components/ui/loader"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 
@@ -400,7 +398,7 @@ export default function ProjectIntakePage() {
       {/* Action Bar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-slate-600">
-          <Info className="w-4 h-4 text-[#B5111B] shrink-0" />
+          <InfoIcon weight="duotone" className="w-4 h-4 text-[#B5111B] shrink-0" />
           <span>Fill in the fields below or use Auto-Fill to populate realistic local baseline values. No external APIs are called.</span>
         </div>
         <div className="flex items-center gap-2.5">
@@ -421,7 +419,7 @@ export default function ProjectIntakePage() {
             disabled={saving || isSubmitted}
             className="flex items-center gap-1.5 text-xs h-9 px-3.5 border-slate-300 text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
           >
-            <Save className="w-3.5 h-3.5 text-slate-500" />
+            <FloppyDiskIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500" />
             {saving ? 'Saving...' : 'Save Draft'}
           </Button>
           <Button
@@ -430,7 +428,7 @@ export default function ProjectIntakePage() {
             disabled={submitting || isSubmitted}
             className="bg-[#B5111B] hover:bg-[#9B0F17] text-white flex items-center gap-1.5 text-xs h-9 px-4 font-semibold shadow-xs cursor-pointer disabled:opacity-50"
           >
-            <Send className="w-3.5 h-3.5" />
+            <PaperPlaneRightIcon weight="bold" className="w-3.5 h-3.5" />
             {submitting ? 'Submitting...' : isSubmitted ? 'Intake Submitted' : 'Submit Questionnaire'}
           </Button>
         </div>
@@ -465,7 +463,7 @@ export default function ProjectIntakePage() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {isCatComplete ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#B5111B]" />
+                    <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B]" />
                   ) : (
                     <span className="text-[10px] text-slate-400 font-mono">
                       {catAnswered}/{cat.questions?.length || 0}

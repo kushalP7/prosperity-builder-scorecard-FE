@@ -1,7 +1,7 @@
 "use client"
 
 import { Link } from "@/lib/router-compat"
-import { Check } from "lucide-react"
+import { CheckIcon } from "@phosphor-icons/react"
 
 export function PricingSection() {
   const plans = [
@@ -190,9 +190,10 @@ export function PricingSection() {
                               : "text-slate-700"
                               }`}
                           >
-                            <Check
+                            <CheckIcon
+                              weight="bold"
                               className={`w-4 h-4 shrink-0 mt-0.5 ${isHighValue
-                                ? "text-[#B5111B] stroke-[2.5]"
+                                ? "text-[#B5111B]"
                                 : "text-[#B5111B]"
                                 }`}
                             />

@@ -1,5 +1,12 @@
 "use client"
-import { Layers, TrendingUp, Building2, Check, ArrowRight } from "lucide-react"
+import {
+  StackIcon,
+  TrendUpIcon,
+  BuildingsIcon,
+  CheckIcon,
+  ArrowRightIcon,
+} from "@phosphor-icons/react"
+import { Link } from "@/lib/router-compat"
 
 export function AdvisoryServicesSection() {
   return (
@@ -25,8 +32,8 @@ export function AdvisoryServicesSection() {
           <div className="bg-white rounded-2xl border border-slate-200/90 p-6 space-y-4 shadow-2xs hover:shadow-md hover:border-[#B5111B]/40 transition-all flex flex-col justify-between group">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                  <Layers className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-red-50/80 border border-red-200/60 text-[#B5111B] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-red-100/70 group-hover:border-red-300 transition-all shadow-2xs">
+                  <StackIcon weight="duotone" className="w-6 h-6 text-[#B5111B]" />
                 </div>
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
                   Land Use & Real Estate Advisory
@@ -55,7 +62,7 @@ export function AdvisoryServicesSection() {
                       key={i}
                       className="text-[11px] bg-slate-50 border border-slate-200/80 rounded-md px-2 py-0.5 text-slate-700 font-medium flex items-center gap-1"
                     >
-                      <Check className="w-3 h-3 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3 h-3 text-[#B5111B] shrink-0" />
                       <span>{item}</span>
                     </span>
                   ))}
@@ -63,23 +70,21 @@ export function AdvisoryServicesSection() {
               </div>
             </div>
 
-            <a
-              href="https://roseassociates.com/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/project-portfolio"
               className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] inline-flex items-center gap-1.5 pt-2 group-hover:translate-x-1 transition-transform"
             >
               <span>Explore Advisory</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+              <ArrowRightIcon weight="bold" className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Service 2: Economic Development */}
           <div className="bg-white rounded-2xl border border-slate-200/90 p-6 space-y-4 shadow-2xs hover:shadow-md hover:border-[#B5111B]/40 transition-all flex flex-col justify-between group">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                  <TrendingUp className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-red-50/80 border border-red-200/60 text-[#B5111B] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-red-100/70 group-hover:border-red-300 transition-all shadow-2xs">
+                  <TrendUpIcon weight="duotone" className="w-6 h-6 text-[#B5111B]" />
                 </div>
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
                   Economic Development
@@ -110,7 +115,7 @@ export function AdvisoryServicesSection() {
                       key={i}
                       className="text-[11px] bg-slate-50 border border-slate-200/80 rounded-md px-2 py-0.5 text-slate-700 font-medium flex items-center gap-1"
                     >
-                      <Check className="w-3 h-3 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3 h-3 text-[#B5111B] shrink-0" />
                       <span>{item}</span>
                     </span>
                   ))}
@@ -118,23 +123,21 @@ export function AdvisoryServicesSection() {
               </div>
             </div>
 
-            <a
-              href="https://roseassociates.com/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/prosperity-builder-scorecard"
               className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] inline-flex items-center gap-1.5 pt-2 group-hover:translate-x-1 transition-transform"
             >
               <span>Explore Advisory</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+              <ArrowRightIcon weight="bold" className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Service 3: Commercial Real Estate */}
           <div className="bg-white rounded-2xl border border-slate-200/90 p-6 space-y-4 shadow-2xs hover:shadow-md hover:border-[#B5111B]/40 transition-all flex flex-col justify-between group">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                  <Building2 className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-red-50/80 border border-red-200/60 text-[#B5111B] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-red-100/70 group-hover:border-red-300 transition-all shadow-2xs">
+                  <BuildingsIcon weight="duotone" className="w-6 h-6 text-[#B5111B]" />
                 </div>
                 <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
                   Commercial Real Estate
@@ -164,7 +167,7 @@ export function AdvisoryServicesSection() {
                       key={i}
                       className="text-[11px] bg-slate-50 border border-slate-200/80 rounded-md px-2 py-0.5 text-slate-700 font-medium flex items-center gap-1"
                     >
-                      <Check className="w-3 h-3 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3 h-3 text-[#B5111B] shrink-0" />
                       <span>{item}</span>
                     </span>
                   ))}
@@ -172,15 +175,13 @@ export function AdvisoryServicesSection() {
               </div>
             </div>
 
-            <a
-              href="https://roseassociates.com/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/project-portfolio"
               className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] inline-flex items-center gap-1.5 pt-2 group-hover:translate-x-1 transition-transform"
             >
               <span>Explore Advisory</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+              <ArrowRightIcon weight="bold" className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>

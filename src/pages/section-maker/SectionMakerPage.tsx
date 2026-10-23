@@ -6,7 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { Link } from "@/lib/router-compat"
-import { Plus, Trash2, Pencil, Settings2, GitBranch, History, CheckCircle2 } from "lucide-react"
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilSimpleIcon,
+  GearIcon,
+  GitBranchIcon,
+  ClockCounterClockwiseIcon,
+  CheckCircleIcon
+} from "@phosphor-icons/react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 import { sortSections, sortCategories, sortGroups } from "@/lib/scorecardOrder"
@@ -480,7 +488,7 @@ export default function SectionMakerPage() {
         }}
           className="bg-[#B5111B] text-white hover:bg-[#9B0F17] font-semibold px-4 py-2 rounded-lg shadow-sm cursor-pointer"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
           Add Section Template
         </Button>,
         document.getElementById('app-header-actions')!
@@ -548,7 +556,7 @@ export default function SectionMakerPage() {
                   </h3>
                   <div className="inline-flex items-center gap-1.5 shrink-0">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs">
-                      <GitBranch className="w-3.5 h-3.5 text-[#B5111B]" />
+                      <GitBranchIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B]" />
                       <span>v{activeSection.version || 1}</span>
                       <span className="text-[10px] text-emerald-600 font-extrabold uppercase">&bull; Active</span>
                     </span>
@@ -558,7 +566,7 @@ export default function SectionMakerPage() {
                       className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 font-semibold underline underline-offset-2 cursor-pointer ml-0.5 py-0.5"
                       title="View historical versions of this section"
                     >
-                      <History className="w-3.5 h-3.5" />
+                      <ClockCounterClockwiseIcon weight="duotone" className="w-3.5 h-3.5" />
                       <span>History</span>
                     </button>
                   </div>
@@ -578,19 +586,19 @@ export default function SectionMakerPage() {
                   className="cursor-pointer border-emerald-600/70 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 font-bold shadow-xs"
                   title="Freeze this snapshot and publish a new version for future projects"
                 >
-                  <GitBranch className="h-4 w-4 text-emerald-600 mr-1.5" />
+                  <GitBranchIcon weight="bold" className="h-4 w-4 text-emerald-600 mr-1.5" />
                   Publish Version {(activeSection.version || 1) + 1}
                 </Button>
                 {activeSection.categories?.length > 0 && (
                   <Link href={`/section-maker/${activeSection.id}/categories/${activeSection.categories[0].id}`}>
                     <Button variant="outline" size="sm" className="cursor-pointer shadow-xs">
-                      <Settings2 className="h-4 w-4 text-muted-foreground mr-1.5" />
+                      <GearIcon weight="duotone" className="h-4 w-4 text-muted-foreground mr-1.5" />
                       Table Schema (Columns)
                     </Button>
                   </Link>
                 )}
                 <Button variant="outline" size="sm" onClick={() => openEditSection(activeSection)} className="cursor-pointer shadow-xs">
-                  <Pencil className="h-4 w-4 text-muted-foreground mr-1.5" />
+                  <PencilSimpleIcon weight="duotone" className="h-4 w-4 text-muted-foreground mr-1.5" />
                   Edit Section
                 </Button>
                 <Button
@@ -599,7 +607,7 @@ export default function SectionMakerPage() {
                   onClick={() => deleteTemplateSection(activeSection.id)}
                   className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200 shadow-xs"
                 >
-                  <Trash2 className="h-4 w-4 text-red-500 mr-1.5" />
+                  <TrashIcon weight="duotone" className="h-4 w-4 text-red-500 mr-1.5" />
                   Delete Section
                 </Button>
               </div>
@@ -617,10 +625,10 @@ export default function SectionMakerPage() {
                         </div>
                         <div className="flex gap-1 shrink-0">
                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 cursor-pointer" onClick={(e) => openEditCategory(activeSection.id, category, e)}>
-                            <Pencil className="h-3 w-3 text-muted-foreground" />
+                            <PencilSimpleIcon weight="duotone" className="h-3 w-3 text-muted-foreground" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteTemplateCategory(activeSection.id, category.id); }}>
-                            <Trash2 className="h-3 w-3 text-red-500" />
+                            <TrashIcon weight="duotone" className="h-3 w-3 text-red-500" />
                           </Button>
                         </div>
                       </CardTitle>
@@ -653,10 +661,10 @@ export default function SectionMakerPage() {
                             </div>
                             <div className="flex gap-1 shrink-0">
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-background cursor-pointer" onClick={(e) => openEditGroup(activeSection.id, category.id, group, e)}>
-                                <Pencil className="h-3 w-3 text-muted-foreground" />
+                                <PencilSimpleIcon weight="duotone" className="h-3 w-3 text-muted-foreground" />
                               </Button>
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-background cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteTemplateGroup(activeSection.id, category.id, group.id); }}>
-                                <Trash2 className="h-3 w-3 text-red-500" />
+                                <TrashIcon weight="duotone" className="h-3 w-3 text-red-500" />
                               </Button>
                             </div>
                           </div>
@@ -692,7 +700,7 @@ export default function SectionMakerPage() {
                             setIsGroupModalOpen(true);
                           }}
                         >
-                          <Plus className="h-3.5 w-3.5 mr-1" />
+                          <PlusIcon weight="bold" className="h-3.5 w-3.5 mr-1" />
                           Add Sub-Category
                         </Button>
                         <span className="text-xs text-muted-foreground font-medium">
@@ -713,7 +721,7 @@ export default function SectionMakerPage() {
                   setIsCategoryModalOpen(true)
                 }}
               >
-                <Plus className="h-6 w-6 mb-2 text-[#B5111B]" />
+                <PlusIcon weight="bold" className="h-6 w-6 mb-2 text-[#B5111B]" />
                 <span className="font-semibold text-foreground">Add Category</span>
               </Button>
             </div>
@@ -891,7 +899,7 @@ export default function SectionMakerPage() {
                     });
                   }}
                 >
-                  <Plus className="h-3 w-3 mr-1" /> Add Column
+                  <PlusIcon weight="bold" className="h-3 w-3 mr-1" /> Add Column
                 </Button>
               )}
             </div>
@@ -989,7 +997,7 @@ export default function SectionMakerPage() {
                         }}
                         title="Remove column"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <TrashIcon weight="duotone" className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
@@ -1101,7 +1109,7 @@ export default function SectionMakerPage() {
                 <div className="text-xs pt-1">
                   {rowFormulaValidation.status === 'valid' && (
                     <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50/60 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded border border-emerald-200/50">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircleIcon weight="duotone" className="h-4 w-4 text-emerald-600 shrink-0" />
                       <span className="font-medium">Valid Formula</span>
                     </div>
                   )}
@@ -1150,7 +1158,7 @@ export default function SectionMakerPage() {
                   ]
                 })}
               >
-                <Plus className="h-3 w-3 mr-1" /> Add Rule
+                <PlusIcon weight="bold" className="h-3 w-3 mr-1" /> Add Rule
               </Button>
             </div>
 
@@ -1296,7 +1304,7 @@ export default function SectionMakerPage() {
                         }}
                         title="Delete rule"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <TrashIcon weight="duotone" className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -1321,7 +1329,7 @@ export default function SectionMakerPage() {
         <div className="space-y-4">
           <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
             <div className="flex items-center gap-2 font-bold text-sm text-emerald-800">
-              <GitBranch className="w-4 h-4 text-emerald-600" />
+              <GitBranchIcon weight="bold" className="w-4 h-4 text-emerald-600" />
               <span>v{activeSection?.version || 1} &rarr; v{(activeSection?.version || 1) + 1}</span>
             </div>
             <p className="leading-relaxed">

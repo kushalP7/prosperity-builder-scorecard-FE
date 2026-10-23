@@ -1,13 +1,11 @@
-"use client"
-
 import * as React from "react"
-import { Loader2 } from "lucide-react"
+import { SpinnerGapIcon } from "@phosphor-icons/react"
 import { useLocation } from "react-router-dom"
 import { useAppStore } from "@/store"
 import { cn } from "@/lib/utils"
 
 export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
-  return <Loader2 className={`animate-spin text-current ${className}`} />
+  return <SpinnerGapIcon weight="bold" className={`animate-spin text-current ${className}`} />
 }
 
 export interface RoseLoaderProps {

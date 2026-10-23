@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "@/lib/router-compat"
 import { useAppStore } from "@/store"
-import { ArrowUp } from "lucide-react"
+import { ArrowUpIcon } from "@phosphor-icons/react"
 import { RoseLoader } from "@/components/ui/loader"
 
 import { LandingHeader } from "@/components/landing/LandingHeader"
@@ -85,7 +85,7 @@ export default function LandingPage() {
           title="Back to Top"
           aria-label="Back to Top"
         >
-          <ArrowUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+          <ArrowUpIcon weight="bold" className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
         </button>
       )}
     </div>

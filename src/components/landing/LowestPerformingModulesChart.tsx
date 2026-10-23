@@ -1,5 +1,4 @@
-"use client"
-import { TrendingDown } from "lucide-react"
+import { TrendDownIcon } from "@phosphor-icons/react"
 
 export function LowestPerformingModulesChart() {
   return (
@@ -7,7 +6,7 @@ export function LowestPerformingModulesChart() {
       <div className="space-y-0.5 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-xs">
-            <TrendingDown className="w-4.5 h-4.5 text-white" />
+            <TrendDownIcon weight="duotone" className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Lowest Performing Modules</h3>

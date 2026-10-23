@@ -1,21 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  List, 
-  ListOrdered, 
-  Quote, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight, 
-  Link as LinkIcon, 
-  Heading1,
-  Heading2,
-  Heading3
-} from "lucide-react"
+import {
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+  ListBulletsIcon,
+  ListNumbersIcon,
+  QuotesIcon,
+  TextAlignLeftIcon,
+  TextAlignCenterIcon,
+  TextAlignRightIcon,
+  LinkIcon,
+  TextHOneIcon,
+  TextHTwoIcon,
+  TextHThreeIcon
+} from "@phosphor-icons/react"
 
 interface RichTextEditorProps {
   value: string
@@ -162,7 +162,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors text-xs font-black flex items-center gap-1"
             title="Heading 1"
           >
-            <Heading1 className="w-4 h-4" />
+            <TextHOneIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -170,7 +170,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors text-xs font-black flex items-center gap-1"
             title="Heading 2"
           >
-            <Heading2 className="w-4 h-4" />
+            <TextHTwoIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -178,7 +178,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors text-xs font-black flex items-center gap-1"
             title="Heading 3"
           >
-            <Heading3 className="w-4 h-4" />
+            <TextHThreeIcon weight="bold" className="w-4 h-4" />
           </button>
 
           <div className="h-4 w-[1px] bg-slate-300 mx-1" />
@@ -190,7 +190,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Bold"
           >
-            <Bold className="w-4 h-4" />
+            <TextBIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -198,7 +198,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Italic"
           >
-            <Italic className="w-4 h-4" />
+            <TextItalicIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -206,7 +206,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Underline"
           >
-            <Underline className="w-4 h-4" />
+            <TextUnderlineIcon weight="bold" className="w-4 h-4" />
           </button>
 
           <div className="h-4 w-[1px] bg-slate-300 mx-1" />
@@ -218,7 +218,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Bullet List"
           >
-            <List className="w-4 h-4" />
+            <ListBulletsIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -226,7 +226,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Numbered List"
           >
-            <ListOrdered className="w-4 h-4" />
+            <ListNumbersIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -234,7 +234,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Blockquote"
           >
-            <Quote className="w-4 h-4" />
+            <QuotesIcon weight="bold" className="w-4 h-4" />
           </button>
 
           <div className="h-4 w-[1px] bg-slate-300 mx-1" />
@@ -246,7 +246,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Align Left"
           >
-            <AlignLeft className="w-4 h-4" />
+            <TextAlignLeftIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -254,7 +254,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Align Center"
           >
-            <AlignCenter className="w-4 h-4" />
+            <TextAlignCenterIcon weight="bold" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -262,7 +262,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Align Right"
           >
-            <AlignRight className="w-4 h-4" />
+            <TextAlignRightIcon weight="bold" className="w-4 h-4" />
           </button>
 
           <div className="h-4 w-[1px] bg-slate-300 mx-1" />
@@ -274,7 +274,7 @@ export function RichTextEditor({
             className="p-1.5 rounded-lg text-slate-700 hover:bg-white hover:text-[#B5111B] transition-colors"
             title="Insert Link"
           >
-            <LinkIcon className="w-4 h-4" />
+            <LinkIcon weight="bold" className="w-4 h-4" />
           </button>
         </div>
 

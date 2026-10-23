@@ -8,12 +8,11 @@ import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  ShieldCheck,
-  RefreshCw,
-  Database,
-  Sliders,
-  Award
-} from "lucide-react"
+  ShieldCheckIcon,
+  ArrowsClockwiseIcon,
+  DatabaseIcon,
+  MedalIcon
+} from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/loader"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -75,7 +74,29 @@ export default function ProjectCalibrationPage() {
 
   React.useEffect(() => {
     loadAll()
-    const handleSync = () => {
+    const handleSync = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail
+      // When layout already refreshed the project, still reload rollup/staged but skip duplicate getProject
+      if (detail?.skipRefetch && detail?.fresh) {
+        useAppStore.setState(state => ({
+          projects: state.projects.map(p => p.id === id ? { ...p, ...detail.fresh } : p),
+          activeProject: state.activeProject?.id === id ? { ...state.activeProject, ...detail.fresh } : state.activeProject,
+        }))
+        Promise.all([
+          apiClient.getScorecardRollup(id),
+          apiClient.getStagedData(id),
+        ]).then(([rData, sData]) => {
+          if (rData) {
+            setRollup(rData)
+            setNotes(rData.calibrationNotes || '')
+          }
+          if (sData) {
+            const list = Array.isArray(sData) ? sData : (Array.isArray(sData.data) ? sData.data : [])
+            setStagedData(list)
+          }
+        }).catch(console.error)
+        return
+      }
       loadAll()
     }
     window.addEventListener('project-synced', handleSync)
@@ -84,7 +105,7 @@ export default function ProjectCalibrationPage() {
       window.removeEventListener('project-synced', handleSync)
       window.removeEventListener('project-section-assigned', handleSync)
     }
-  }, [loadAll])
+  }, [loadAll, id])
 
   const handleTriggerIngestion = async () => {
     setIngesting(true)
@@ -233,7 +254,7 @@ export default function ProjectCalibrationPage() {
             disabled={recalculating || categoryScores.length === 0}
             className="flex items-center gap-1.5 text-xs h-9 px-4 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${recalculating ? 'animate-spin' : ''}`} />
+            <ArrowsClockwiseIcon weight="bold" className={`w-3.5 h-3.5 text-slate-500 ${recalculating ? 'animate-spin' : ''}`} />
             {recalculating ? 'Recalculating...' : 'Recalculate Rollup'}
           </Button>
           <span className="text-xs text-slate-400 hidden sm:inline">
@@ -247,7 +268,7 @@ export default function ProjectCalibrationPage() {
           disabled={publishing || isPublished || categoryScores.length === 0}
           className="bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 text-xs h-9 px-4 rounded-lg font-semibold shadow-xs cursor-pointer disabled:opacity-50"
         >
-          <ShieldCheck className="w-4 h-4" />
+          <ShieldCheckIcon weight="duotone" className="w-4 h-4" />
           {publishing ? 'Publishing...' : isPublished ? 'Scorecard Published' : 'Approve & Publish Scorecard'}
         </Button>
       </div>
@@ -289,7 +310,7 @@ export default function ProjectCalibrationPage() {
                 {categoryScores.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-slate-400 text-xs">
-                      No sections assigned to this project yet. Return to Phase 1 (Executive Scorecard) and assign a section first.
+                      No sections assigned to this project yet. Return to Executive Scorecard (step 2) and assign a section first.
                     </td>
                   </tr>
                 ) : (
@@ -348,7 +369,7 @@ export default function ProjectCalibrationPage() {
         <Card className="border-slate-200/90 shadow-xs">
           <CardHeader className="border-b border-slate-100 pb-3">
             <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Award className="w-4 h-4 text-[#B5111B]" />
+              <MedalIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
               Lead Analyst Calibration Sign-Off
             </CardTitle>
           </CardHeader>
@@ -382,7 +403,7 @@ export default function ProjectCalibrationPage() {
         <Card className="border-slate-200/90 shadow-xs">
           <CardHeader className="border-b border-slate-100 pb-3 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Database className="w-4 h-4 text-[#B5111B]" />
+              <DatabaseIcon weight="duotone" className="w-4 h-4 text-[#B5111B]" />
               Secondary API Ingestion ({(Array.isArray(stagedData) ? stagedData.length : 0)} Indicators)
             </CardTitle>
             <div className="flex items-center gap-2">
@@ -394,7 +415,7 @@ export default function ProjectCalibrationPage() {
                 className="h-7 px-2.5 text-[11px] text-slate-700 hover:text-slate-900 hover:bg-slate-100 border-slate-200 rounded-md font-medium flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 title="Re-query Census, BLS, and EPA APIs for this county"
               >
-                <RefreshCw className={cn("w-3 h-3 text-slate-500", ingesting && "animate-spin")} />
+                <ArrowsClockwiseIcon weight="bold" className={cn("w-3 h-3 text-slate-500", ingesting && "animate-spin")} />
                 <span>{ingesting ? 'Syncing...' : 'Re-fetch APIs'}</span>
               </Button>
               <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">Phase 2 Staging Lake</span>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { X, Code2, Sparkles, Wand2 } from 'lucide-react';
+import { XIcon, CodeIcon, SparkleIcon, MagicWandIcon } from '@phosphor-icons/react';
 import { Button } from './button';
 
 export interface FormulaTokenDef {
@@ -179,7 +179,7 @@ export function FormulaChipEditor({
             className="text-[11px] h-6 px-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
             title="Clean & standardize formula spacing"
           >
-            <Wand2 className="w-3 h-3 mr-1 text-slate-500" />
+            <MagicWandIcon weight="duotone" className="w-3 h-3 mr-1 text-slate-500" />
             Format
           </Button>
           <Button
@@ -191,12 +191,12 @@ export function FormulaChipEditor({
           >
             {viewMode === 'chips' ? (
               <>
-                <Code2 className="w-3 h-3 mr-1 text-slate-500" />
+                <CodeIcon weight="bold" className="w-3 h-3 mr-1 text-slate-500" />
                 Raw Text
               </>
             ) : (
               <>
-                <Sparkles className="w-3 h-3 mr-1 text-[#B5111B]" />
+                <SparkleIcon weight="duotone" className="w-3 h-3 mr-1 text-[#B5111B]" />
                 Chip View
               </>
             )}
@@ -249,7 +249,7 @@ export function FormulaChipEditor({
                     className="ml-0.5 p-0.5 rounded-full hover:bg-[#B5111B]/20 text-[#B5111B]/70 hover:text-[#B5111B] transition-colors cursor-pointer"
                     title="Remove column"
                   >
-                    <X className="w-3 h-3" />
+                    <XIcon weight="bold" className="w-3 h-3" />
                   </button>
                 </span>
               );

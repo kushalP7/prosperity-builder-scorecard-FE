@@ -1,7 +1,11 @@
-"use client"
-
 import * as React from "react"
-import { CheckCircle2, AlertCircle, Info, Loader2, X } from "lucide-react"
+import {
+  CheckCircleIcon,
+  WarningCircleIcon,
+  InfoIcon,
+  SpinnerGapIcon,
+  XIcon,
+} from "@phosphor-icons/react"
 
 export type ToastType = "success" | "error" | "info" | "loading"
 
@@ -100,16 +104,16 @@ export function ToastContainer() {
         >
           <div className="flex items-center gap-2.5 min-w-0">
             {item.type === "success" && (
-              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+              <CheckCircleIcon weight="duotone" className="h-5 w-5 text-emerald-400 shrink-0" />
             )}
             {item.type === "error" && (
-              <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+              <WarningCircleIcon weight="duotone" className="h-5 w-5 text-red-400 shrink-0" />
             )}
             {item.type === "info" && (
-              <Info className="h-5 w-5 text-blue-400 shrink-0" />
+              <InfoIcon weight="duotone" className="h-5 w-5 text-blue-400 shrink-0" />
             )}
             {item.type === "loading" && (
-              <Loader2 className="h-5 w-5 text-primary animate-spin shrink-0" />
+              <SpinnerGapIcon weight="bold" className="h-5 w-5 text-primary animate-spin shrink-0" />
             )}
             <span className="truncate">{item.message}</span>
           </div>
@@ -118,7 +122,7 @@ export function ToastContainer() {
             onClick={() => toast.dismiss(item.id)}
             className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white shrink-0"
           >
-            <X className="h-3.5 w-3.5" />
+            <XIcon weight="bold" className="h-3.5 w-3.5" />
           </button>
         </div>
       ))}

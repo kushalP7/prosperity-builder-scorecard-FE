@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { Link, useRouter, useSearchParams } from "@/lib/router-compat";
 import {
-  Play,
-  Film,
-  Calendar,
-  Tag,
-  ArrowLeft,
-} from "lucide-react";
+  PlayIcon,
+  FilmSlateIcon,
+  CalendarBlankIcon,
+  TagIcon,
+  ArrowLeftIcon,
+} from "@phosphor-icons/react";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import {
@@ -143,7 +143,7 @@ function ViewAllVideosContent() {
               href="/videos"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] hover:underline mb-4 transition-colors group cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              <ArrowLeftIcon weight="bold" className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               <span>Back to Featured Spotlight</span>
             </Link>
 
@@ -206,7 +206,7 @@ function ViewAllVideosContent() {
             </div>
           ) : filteredVideos.length === 0 ? (
             <div className="border-2 border-dashed border-slate-200 bg-white rounded-3xl p-12 text-center space-y-3 max-w-lg mx-auto">
-              <Film className="w-12 h-12 text-slate-400 mx-auto" />
+              <FilmSlateIcon weight="duotone" className="w-12 h-12 text-slate-400 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No Archived Episodes</h3>
               <p className="text-xs text-slate-500">
                 All currently published episodes are featured on the main video showcase, or new episodes have not yet been published.
@@ -249,7 +249,7 @@ function ViewAllVideosContent() {
                       {/* Center Red Play Button Overlay (Matching Image 2) */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-8 h-8 rounded-full bg-red-600/90 group-hover:bg-[#B5111B] text-white flex items-center justify-center shadow-md group-hover:scale-115 transition-transform duration-300">
-                          <Play className="w-3.5 h-3.5 fill-white ml-0.5 text-white" />
+                          <PlayIcon weight="fill" className="w-3.5 h-3.5 ml-0.5 text-white" />
                         </div>
                       </div>
                     </div>
@@ -269,11 +269,11 @@ function ViewAllVideosContent() {
                     {/* Metadata Footer: Date & Category Tag */}
                     <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium mt-auto pt-2.5 border-t border-slate-100 flex-wrap">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <CalendarBlankIcon weight="duotone" className="w-3 h-3 text-slate-400" />
                         <span>{formatEpisodeDate(vid.createdAt)}</span>
                       </div>
                       <div className="flex items-center gap-1 truncate">
-                        <Tag className="w-3 h-3 text-slate-400" />
+                        <TagIcon weight="duotone" className="w-3 h-3 text-slate-400" />
                         <span className="truncate">{vid.category || "Luminaries"}</span>
                       </div>
                     </div>

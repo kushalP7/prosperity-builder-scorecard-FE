@@ -3,17 +3,17 @@
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import {
-  Play,
-  Film,
-  Mic,
-  FileText,
-  ExternalLink,
-  Calendar,
-  Tag,
-  X,
-  ArrowRight,
-  ChevronRight,
-} from "lucide-react";
+  PlayIcon,
+  FilmSlateIcon,
+  MicrophoneIcon,
+  FileTextIcon,
+  ArrowSquareOutIcon,
+  CalendarBlankIcon,
+  TagIcon,
+  XIcon,
+  ArrowRightIcon,
+  CaretRightIcon,
+} from "@phosphor-icons/react";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import {
@@ -321,7 +321,7 @@ function MediaSphereContent() {
             <section id="luminaries-podcasts" className="space-y-6">
               {luminariesVideos.length === 0 && !loading ? (
                 <div className="border-2 border-dashed border-slate-200 bg-white rounded-3xl p-12 text-center space-y-3">
-                  <Film className="w-12 h-12 text-slate-400 mx-auto" />
+                  <FilmSlateIcon weight="duotone" className="w-12 h-12 text-slate-400 mx-auto" />
                   <h3 className="text-base font-bold text-slate-800">Luminaries Episodes In Production</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
                     Episodes are recorded and curated regularly. Add new Luminaries episodes in the CMS dashboard.
@@ -359,7 +359,7 @@ function MediaSphereContent() {
                               onClick={() => setIsPlayingLuminaries(false)}
                               className="absolute top-3 right-3 bg-black/80 hover:bg-black text-white text-[11px] font-semibold tracking-wide px-3 py-1.5 rounded-lg backdrop-blur-xs border border-white/20 transition cursor-pointer flex items-center gap-1.5 shadow-md z-20"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <XIcon weight="bold" className="w-3.5 h-3.5" />
                               <span>Cover View</span>
                             </button>
                           </div>
@@ -384,7 +384,7 @@ function MediaSphereContent() {
                             {/* Center Frosted Circular Play Button */}
                             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 backdrop-blur-xs border border-white/40 flex items-center justify-center text-white shadow-2xl group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-white ml-1 text-white" />
+                                <PlayIcon weight="fill" className="w-7 h-7 sm:w-8 sm:h-8 ml-1 text-white" />
                               </div>
                             </div>
                           </div>
@@ -425,11 +425,11 @@ function MediaSphereContent() {
                         {/* Metadata Row */}
                         <div className="flex items-center gap-5 text-xs text-slate-500 font-medium pt-0.5 flex-wrap">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400" />
                             <span>{formatEpisodeDate(selectedLuminariesVideo.createdAt)}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Tag className="w-3.5 h-3.5 text-slate-400" />
+                            <TagIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400" />
                             <span>{selectedLuminariesVideo.category || "Luminaries Podcasts"}</span>
                           </div>
                         </div>
@@ -441,7 +441,7 @@ function MediaSphereContent() {
                             onClick={() => setIsPlayingLuminaries(true)}
                             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-5 sm:px-6 py-2.5 rounded-lg text-xs font-bold tracking-wide flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                           >
-                            <Play className="w-4 h-4 fill-white" />
+                            <PlayIcon weight="fill" className="w-4 h-4 text-white" />
                             <span>Watch Episode</span>
                           </button>
 
@@ -471,7 +471,7 @@ function MediaSphereContent() {
                           className="text-xs sm:text-sm font-bold text-[#B5111B] hover:text-[#8F0D15] flex items-center gap-1 hover:underline transition-colors"
                         >
                           <span>View All</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRightIcon weight="bold" className="w-3.5 h-3.5" />
                         </Link>
                       </div>
 
@@ -521,13 +521,14 @@ function MediaSphereContent() {
                                   {ep.title}
                                 </h4>
                                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium mt-1">
-                                  <Calendar className="w-3 h-3 text-slate-400" />
+                                  <CalendarBlankIcon weight="duotone" className="w-3 h-3 text-slate-400" />
                                   <span>{formatEpisodeDate(ep.createdAt)}</span>
                                 </div>
                               </div>
 
                               {/* Chevron */}
-                              <ChevronRight
+                              <CaretRightIcon
+                                weight="bold"
                                 className={`w-4 h-4 shrink-0 transition-colors ${
                                   isSelected ? "text-[#B5111B]" : "text-slate-300"
                                 }`}
@@ -548,7 +549,7 @@ function MediaSphereContent() {
             <section id="additional-videos" className="space-y-6">
               {additionalVideos.length === 0 && !loading ? (
                 <div className="border-2 border-dashed border-slate-200 bg-white rounded-3xl p-12 text-center space-y-3">
-                  <Film className="w-12 h-12 text-slate-400 mx-auto" />
+                  <FilmSlateIcon weight="duotone" className="w-12 h-12 text-slate-400 mx-auto" />
                   <h3 className="text-base font-bold text-slate-800">No Additional Videos Published Yet</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
                     Webinars and presentations will appear here as soon as they are assigned to this category in the CMS.
@@ -586,7 +587,7 @@ function MediaSphereContent() {
                               onClick={() => setIsPlayingAdditional(false)}
                               className="absolute top-3 right-3 bg-black/80 hover:bg-black text-white text-[11px] font-semibold tracking-wide px-3 py-1.5 rounded-lg backdrop-blur-xs border border-white/20 transition cursor-pointer flex items-center gap-1.5 shadow-md z-20"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <XIcon weight="bold" className="w-3.5 h-3.5" />
                               <span>Cover View</span>
                             </button>
                           </div>
@@ -611,7 +612,7 @@ function MediaSphereContent() {
                             {/* Center Frosted Circular Play Button */}
                             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 backdrop-blur-xs border border-white/40 flex items-center justify-center text-white shadow-2xl group-hover:scale-110 group-hover:bg-[#B5111B] group-hover:border-[#B5111B] transition-all duration-300">
-                                <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-white ml-1 text-white" />
+                                <PlayIcon weight="fill" className="w-7 h-7 sm:w-8 sm:h-8 ml-1 text-white" />
                               </div>
                             </div>
                           </div>
@@ -652,11 +653,11 @@ function MediaSphereContent() {
                         {/* Metadata Row */}
                         <div className="flex items-center gap-5 text-xs text-slate-500 font-medium pt-0.5 flex-wrap">
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <CalendarBlankIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400" />
                             <span>{formatEpisodeDate(selectedAdditionalVideo.createdAt)}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Tag className="w-3.5 h-3.5 text-slate-400" />
+                            <TagIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400" />
                             <span>{selectedAdditionalVideo.category || "Additional Videos"}</span>
                           </div>
                         </div>
@@ -668,7 +669,7 @@ function MediaSphereContent() {
                             onClick={() => setIsPlayingAdditional(true)}
                             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-5 sm:px-6 py-2.5 rounded-lg text-xs font-bold tracking-wide flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                           >
-                            <Play className="w-4 h-4 fill-white" />
+                            <PlayIcon weight="fill" className="w-4 h-4 text-white" />
                             <span>Watch Video</span>
                           </button>
 
@@ -698,7 +699,7 @@ function MediaSphereContent() {
                           className="text-xs sm:text-sm font-bold text-[#B5111B] hover:text-[#8F0D15] flex items-center gap-1 hover:underline transition-colors"
                         >
                           <span>View All</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRightIcon weight="bold" className="w-3.5 h-3.5" />
                         </Link>
                       </div>
 
@@ -748,13 +749,14 @@ function MediaSphereContent() {
                                   {ep.title}
                                 </h4>
                                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium mt-1">
-                                  <Calendar className="w-3 h-3 text-slate-400" />
+                                  <CalendarBlankIcon weight="duotone" className="w-3 h-3 text-slate-400" />
                                   <span>{formatEpisodeDate(ep.createdAt)}</span>
                                 </div>
                               </div>
 
                               {/* Chevron */}
-                              <ChevronRight
+                              <CaretRightIcon
+                                weight="bold"
                                 className={`w-4 h-4 shrink-0 transition-colors ${
                                   isSelected ? "text-[#B5111B]" : "text-slate-300"
                                 }`}
@@ -776,7 +778,7 @@ function MediaSphereContent() {
 
               {documents.length === 0 && !loading ? (
                 <div className="border-2 border-dashed border-slate-200 bg-white rounded-3xl p-12 text-center space-y-3">
-                  <FileText className="w-12 h-12 text-slate-400 mx-auto" />
+                  <FileTextIcon weight="duotone" className="w-12 h-12 text-slate-400 mx-auto" />
                   <h3 className="text-base font-bold text-slate-800">No PDF Market Reports Uploaded Yet</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
                     PDF reports will appear here as soon as they are uploaded in the CMS Media Sphere module under Rose/Media/PDF.
@@ -792,7 +794,7 @@ function MediaSphereContent() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#B5111B] group-hover:scale-105 transition">
-                            <FileText className="w-6 h-6" />
+                            <FileTextIcon weight="duotone" className="w-6 h-6" />
                           </div>
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
                             PDF Report
@@ -825,7 +827,7 @@ function MediaSphereContent() {
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#B5111B] hover:bg-[#8F0D15] text-white shadow-xs transition group/btn cursor-pointer"
                           >
                             <span>Open Report</span>
-                            <ExternalLink className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 transition" />
+                            <ArrowSquareOutIcon weight="bold" className="w-3.5 h-3.5 text-white/90 group-hover/btn:translate-x-0.5 transition" />
                           </a>
                         )}
                       </div>
@@ -841,7 +843,7 @@ function MediaSphereContent() {
             <section id="audio-podcasts" className="space-y-6">
               {audios.length === 0 && !loading ? (
                 <div className="border-2 border-dashed border-slate-200 bg-white rounded-3xl p-12 text-center space-y-3">
-                  <Mic className="w-12 h-12 text-slate-400 mx-auto" />
+                  <MicrophoneIcon weight="duotone" className="w-12 h-12 text-slate-400 mx-auto" />
                   <h3 className="text-base font-bold text-slate-800">No Audio Podcasts Published Yet</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
                     MP3 audio files and external stream links will display in this bespoke audio console once added in the CMS.

@@ -3,15 +3,15 @@
 import * as React from "react"
 import { Link } from "@/lib/router-compat"
 import {
-  ShieldCheck,
-  CheckCircle2,
-  Award,
-  RefreshCw,
-  ChevronRight,
-  MapPin,
-  Mail,
-  Globe
-} from "lucide-react"
+  ShieldCheckIcon,
+  CheckCircleIcon,
+  CertificateIcon,
+  ArrowsClockwiseIcon,
+  CaretRightIcon,
+  MapPinIcon,
+  EnvelopeSimpleIcon,
+  GlobeIcon,
+} from "@phosphor-icons/react"
 
 export function LandingFooter() {
   return (
@@ -22,8 +22,8 @@ export function LandingFooter() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
             {/* Pillar 1: Verified Data Quality Guarantee */}
             <div className="flex items-start gap-3.5 lg:pr-6 lg:border-r lg:border-red-500/20">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                <ShieldCheck className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
+                <ShieldCheckIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
               </div>
               <div className="space-y-1 min-w-0">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
@@ -38,8 +38,8 @@ export function LandingFooter() {
 
             {/* Pillar 2: Trusted Sources */}
             <div className="flex items-start gap-3.5 lg:pr-6 lg:border-r lg:border-red-500/20">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                <CheckCircle2 className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
+                <CheckCircleIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
               </div>
               <div className="space-y-1 min-w-0">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
@@ -54,8 +54,8 @@ export function LandingFooter() {
 
             {/* Pillar 3: Rigorous Validation */}
             <div className="flex items-start gap-3.5 lg:pr-6 lg:border-r lg:border-red-500/20">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                <Award className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
+                <CertificateIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
               </div>
               <div className="space-y-1 min-w-0">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
@@ -70,8 +70,8 @@ export function LandingFooter() {
 
             {/* Pillar 4: Continuous Monitoring */}
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/10">
-                <RefreshCw className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
+                <ArrowsClockwiseIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
               </div>
               <div className="space-y-1 min-w-0">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
@@ -124,7 +124,7 @@ export function LandingFooter() {
                 aria-label="Email"
                 title="Send us an email"
               >
-                <Mail className="w-3.5 h-3.5" />
+                <EnvelopeSimpleIcon className="w-3.5 h-3.5" />
               </a>
               <a
                 href="https://www.youtube.com/@RoseAssociatesNC"
@@ -155,7 +155,7 @@ export function LandingFooter() {
                   href="/#services"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Economic Development</span>
                 </Link>
               </li>
@@ -164,7 +164,7 @@ export function LandingFooter() {
                   href="/#services"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Real Estate Advisory</span>
                 </Link>
               </li>
@@ -173,7 +173,7 @@ export function LandingFooter() {
                   href="/prosperity-builder-scorecard"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Prosperity Builder Scorecard®</span>
                 </Link>
               </li>
@@ -182,7 +182,7 @@ export function LandingFooter() {
                   href="/executive-analytics"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Executive Analytics</span>
                 </Link>
               </li>
@@ -191,7 +191,7 @@ export function LandingFooter() {
                   href="/reports"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Market Reports</span>
                 </Link>
               </li>
@@ -213,7 +213,7 @@ export function LandingFooter() {
                   href="/"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Home</span>
                 </Link>
               </li>
@@ -222,7 +222,7 @@ export function LandingFooter() {
                   href="/#services"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Services</span>
                 </Link>
               </li>
@@ -231,7 +231,7 @@ export function LandingFooter() {
                   href="/prosperity-builder-scorecard"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Prosperity Builder Scorecard®</span>
                 </Link>
               </li>
@@ -240,7 +240,7 @@ export function LandingFooter() {
                   href="/executive-analytics"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Executive Analytics</span>
                 </Link>
               </li>
@@ -250,7 +250,7 @@ export function LandingFooter() {
                   href="/project-portfolio"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Projects</span>
                 </Link>
               </li>
@@ -259,7 +259,7 @@ export function LandingFooter() {
                   href="/videos"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Media Sphere</span>
                 </Link>
               </li>
@@ -268,7 +268,7 @@ export function LandingFooter() {
                   href="/about"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>About Us</span>
                 </Link>
               </li>
@@ -277,7 +277,7 @@ export function LandingFooter() {
                   href="/login"
                   className="hover:text-white transition-colors flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon className="w-3.5 h-3.5 text-[#E11D48] group-hover:translate-x-0.5 transition-transform shrink-0" />
                   <span>Client Portal</span>
                 </Link>
               </li>
@@ -296,7 +296,7 @@ export function LandingFooter() {
             <div className="space-y-3.5 text-xs text-slate-300 font-medium">
               <div className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-lg bg-red-950/80 border border-red-800/60 text-[#E11D48] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                  <MapPin className="w-3.5 h-3.5 text-[#E11D48]" />
+                  <MapPinIcon weight="duotone" className="w-3.5 h-3.5 text-[#E11D48]" />
                 </div>
                 <span className="leading-relaxed text-slate-200">
                   Rose Associates
@@ -307,7 +307,7 @@ export function LandingFooter() {
 
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-red-950/80 border border-red-800/60 text-[#E11D48] flex items-center justify-center shrink-0 shadow-xs">
-                  <Mail className="w-3.5 h-3.5 text-[#E11D48]" />
+                  <EnvelopeSimpleIcon weight="duotone" className="w-3.5 h-3.5 text-[#E11D48]" />
                 </div>
                 <a
                   href="mailto:info@roseassociates.com"
@@ -319,7 +319,7 @@ export function LandingFooter() {
 
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-red-950/80 border border-red-800/60 text-[#E11D48] flex items-center justify-center shrink-0 shadow-xs">
-                  <Globe className="w-3.5 h-3.5 text-[#E11D48]" />
+                  <GlobeIcon weight="duotone" className="w-3.5 h-3.5 text-[#E11D48]" />
                 </div>
                 <a
                   href="https://roseassociates.com"
@@ -331,15 +331,15 @@ export function LandingFooter() {
                 </a>
               </div>
 
-              {/* <div className="pt-2"> KP
+              <div className="pt-2">
                 <Link
                   href="/contact"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-[11px] font-extrabold shadow-sm transition-all"
                 >
                   <span>Enterprise Inquiry</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <CaretRightIcon weight="bold" className="w-3.5 h-3.5" />
                 </Link>
-              </div> */}
+              </div>
             </div>
           </div>
         </div>

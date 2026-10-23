@@ -3,18 +3,18 @@
 import React, { useState, useEffect } from "react";
 import { Link, useRouter } from "@/lib/router-compat";
 import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  Film,
-  Mic,
-  FileText,
-  Upload,
-  CheckCircle,
-  Trash2,
-  AlertCircle,
-  Eye,
-} from "lucide-react";
+  ArrowLeftIcon,
+  FloppyDiskIcon,
+  CircleNotchIcon,
+  FilmStripIcon,
+  MicrophoneIcon,
+  FileTextIcon,
+  UploadSimpleIcon,
+  CheckCircleIcon,
+  TrashIcon,
+  WarningCircleIcon,
+  EyeIcon
+} from "@phosphor-icons/react";
 import {
   LandingMediaItem,
   mediaApi,
@@ -210,7 +210,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
         setIsSaving(false);
         setUploadingField(null);
         setUploadStatusText(null);
-        setError(uploadErr.message || `Upload failed. Could not upload file to ${subfolderName}.`);
+        setError(uploadErr.message || `UploadSimpleIcon failed. Could not upload file to ${subfolderName}.`);
         return;
       } finally {
         setUploadingField(null);
@@ -248,7 +248,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
       }
       router.push("/landing-cms?tab=media");
     } catch (err: any) {
-      console.error("Save error:", err);
+      console.error("FloppyDiskIcon error:", err);
       setError(err.message || "Failed to save media item to database.");
     } finally {
       setIsSaving(false);
@@ -258,7 +258,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
   if (loading) {
     return (
       <div className="p-16 text-center flex flex-col items-center gap-3">
-        <Loader2 className="w-8 h-8 text-[#B5111B] animate-spin" />
+        <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
         <span className="text-xs font-bold text-slate-600">Loading media item details...</span>
       </div>
     );
@@ -275,7 +275,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors border border-slate-200 shrink-0"
             title="Back to Landing CMS"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeftIcon weight="bold" className="w-5 h-5" />
           </Link>
           <div className="flex flex-col min-w-0">
             <h1 className="text-sm sm:text-lg font-black text-slate-900 truncate">
@@ -294,7 +294,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             target="_blank"
             className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all flex items-center gap-1.5"
           >
-            <Eye className="w-4 h-4 text-[#B5111B]" />
+            <EyeIcon weight="bold" className="w-4 h-4 text-[#B5111B]" />
             <span className="hidden xs:inline sm:inline">Preview</span>
           </Link>
 
@@ -304,7 +304,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             disabled={isSaving || !!uploadingField}
             className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all disabled:opacity-50"
           >
-            <span className="hidden xs:inline">Save </span>Draft
+            <span className="hidden xs:inline">FloppyDiskIcon </span>Draft
           </button>
 
           <button
@@ -315,12 +315,12 @@ export function MediaForm({ mediaId }: MediaFormProps) {
           >
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />
                 <span>{uploadStatusText || "Saving..."}</span>
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" />
+                <FloppyDiskIcon weight="bold" className="w-4 h-4" />
                 <span>{mediaId ? "Update Item" : "Publish to Sphere"}</span>
               </>
             )}
@@ -330,7 +330,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs font-bold text-red-700 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+          <WarningCircleIcon weight="duotone" className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -365,12 +365,12 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "video" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
                   }`}
               >
-                <Film className="w-5 h-5" />
+                <FilmStripIcon weight="duotone" className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-xs font-black">Video Broadcast</div>
                 <div className="text-[11px] text-slate-400 font-medium mt-0.5">
-                  YouTube, Vimeo, MP4, or Upload
+                  YouTube, Vimeo, MP4, or UploadSimpleIcon
                 </div>
               </div>
             </button>
@@ -394,7 +394,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "audio" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
                   }`}
               >
-                <Mic className="w-5 h-5" />
+                <MicrophoneIcon weight="duotone" className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-xs font-black">Audio Podcast</div>
@@ -423,7 +423,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 className={`w-10 h-10 rounded-xl flex items-center justify-center ${formState.mediaType === "document" ? "bg-[#B5111B] text-white" : "bg-slate-100 text-slate-600"
                   }`}
               >
-                <FileText className="w-5 h-5" />
+                <FileTextIcon weight="duotone" className="w-5 h-5" />
               </div>
               <div>
                 <div className="text-xs font-black">PDF Document</div>
@@ -510,7 +510,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                         : "text-slate-500 hover:text-slate-900"
                       }`}
                   >
-                    {source === "youtube" ? "YouTube" : source === "upload" ? "Upload File" : source.toUpperCase()}
+                    {source === "youtube" ? "YouTube" : source === "upload" ? "UploadSimpleIcon File" : source.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -519,7 +519,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             {formState.videoSource === "upload" ? (
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Upload Video File (Stored in Rose/Media/Video)
+                  UploadSimpleIcon Video File (Stored in Rose/Media/Video)
                 </label>
                 <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition">
                   <input
@@ -535,13 +535,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   >
                     {uploadingField === "video" ? (
                       <div className="flex items-center gap-2 text-rose-600 font-bold">
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <CircleNotchIcon weight="bold" className="w-6 h-6 animate-spin" />
                         <span>{uploadStatusText || "Uploading video..."}</span>
                       </div>
                     ) : stagedMediaFile?.type === "video" ? (
                       <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-amber-600" />
+                          <CheckCircleIcon weight="duotone" className="w-5 h-5 text-amber-600" />
                           <span>Video Selected (Staged Locally)</span>
                         </div>
                         <span className="truncate max-w-sm text-xs font-semibold text-slate-800">
@@ -556,13 +556,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                       </div>
                     ) : formState.sourceUrl ? (
                       <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircleIcon weight="duotone" className="w-5 h-5" />
                         <span className="truncate max-w-sm">{formState.sourceUrl}</span>
                       </div>
                     ) : (
                       <>
                         <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs">
-                          <Upload className="w-5 h-5 text-slate-500" />
+                          <UploadSimpleIcon weight="duotone" className="w-5 h-5 text-slate-500" />
                         </div>
                         <span className="font-bold">Choose a video file (.mp4, .mov, .webm)</span>
                         <span className="text-[11px] text-slate-400">
@@ -627,7 +627,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                     {source === "iframe"
                       ? "Podcast Embed (Iframe / URL)"
                       : source === "upload"
-                        ? "Upload MP3"
+                        ? "UploadSimpleIcon MP3"
                         : "Direct MP3 Stream"}
                   </button>
                 ))}
@@ -690,7 +690,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   ) : (
                     <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50">
                       <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-slate-400 mb-2 shadow-2xs">
-                        <Mic className="w-5 h-5 text-[#B5111B]" />
+                        <MicrophoneIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
                       </div>
                       <p className="text-xs font-bold text-slate-700">No Embed Code or URL Entered Yet</p>
                       <p className="text-[11px] text-slate-400 mt-1 max-w-md mx-auto">
@@ -703,7 +703,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             ) : formState.audioSource === "upload" ? (
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Upload MP3 Audio File (Stored in Rose/Media/Audio)
+                  UploadSimpleIcon MP3 Audio File (Stored in Rose/Media/Audio)
                 </label>
                 <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition">
                   <input
@@ -719,13 +719,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   >
                     {uploadingField === "audio" ? (
                       <div className="flex items-center gap-2 text-rose-600 font-bold">
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <CircleNotchIcon weight="bold" className="w-6 h-6 animate-spin" />
                         <span>{uploadStatusText || "Uploading audio..."}</span>
                       </div>
                     ) : stagedMediaFile?.type === "audio" ? (
                       <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-amber-600" />
+                          <CheckCircleIcon weight="duotone" className="w-5 h-5 text-amber-600" />
                           <span>Audio Selected (Staged Locally)</span>
                         </div>
                         <span className="truncate max-w-sm text-xs font-semibold text-slate-800">
@@ -740,13 +740,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                       </div>
                     ) : formState.sourceUrl ? (
                       <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircleIcon weight="duotone" className="w-5 h-5" />
                         <span className="truncate max-w-sm">{formState.sourceUrl}</span>
                       </div>
                     ) : (
                       <>
                         <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs">
-                          <Mic className="w-5 h-5 text-slate-500" />
+                          <MicrophoneIcon weight="duotone" className="w-5 h-5 text-slate-500" />
                         </div>
                         <span className="font-bold">Choose an MP3 or audio file</span>
                         <span className="text-[11px] text-slate-400">
@@ -779,14 +779,14 @@ export function MediaForm({ mediaId }: MediaFormProps) {
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-5">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
               <div className="w-8 h-8 rounded-xl bg-rose-50 text-[#B5111B] flex items-center justify-center">
-                <FileText className="w-4 h-4" />
+                <FileTextIcon weight="duotone" className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-sm font-black text-slate-900 tracking-tight">
                   2. Market Report PDF Document
                 </h2>
                 <p className="text-[11px] text-slate-400 font-medium">
-                  Upload a downloadable executive research or market analysis PDF report
+                  UploadSimpleIcon a downloadable executive research or market analysis PDF report
                 </p>
               </div>
             </div>
@@ -822,7 +822,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Upload PDF File <span className="text-red-500">*</span> (Stored in Rose/Media/PDF)
+                UploadSimpleIcon PDF File <span className="text-red-500">*</span> (Stored in Rose/Media/PDF)
               </label>
               <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition">
                 <input
@@ -838,13 +838,13 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                 >
                   {uploadingField === "pdf" ? (
                     <div className="flex items-center gap-2 text-rose-600 font-bold">
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <CircleNotchIcon weight="bold" className="w-6 h-6 animate-spin" />
                       <span>{uploadStatusText || "Uploading PDF..."}</span>
                     </div>
                   ) : stagedMediaFile?.type === "pdf" ? (
                     <div className="flex flex-col items-center gap-1.5 text-amber-800 font-bold">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-amber-600" />
+                        <CheckCircleIcon weight="duotone" className="w-5 h-5 text-amber-600" />
                         <span>PDF Selected (Staged Locally)</span>
                       </div>
                       <span className="text-xs text-slate-800 font-semibold truncate max-w-md">
@@ -860,7 +860,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   ) : formState.sourceUrl ? (
                     <div className="flex flex-col items-center gap-2 text-emerald-600 font-bold">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircleIcon weight="duotone" className="w-5 h-5" />
                         <span>PDF Document Linked</span>
                       </div>
                       <span className="text-xs text-slate-500 font-normal truncate max-w-md">
@@ -873,7 +873,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
                   ) : (
                     <>
                       <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-xs">
-                        <FileText className="w-5 h-5 text-slate-500" />
+                        <FileTextIcon weight="duotone" className="w-5 h-5 text-slate-500" />
                       </div>
                       <span className="font-bold">Choose a PDF document file</span>
                       <span className="text-[11px] text-slate-400">

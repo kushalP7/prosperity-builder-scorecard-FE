@@ -1,11 +1,17 @@
 "use client"
 
 import * as React from "react"
+import { Link, useParams } from "@/lib/router-compat"
 import { useAppStore } from "@/store"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
-import { Link, useParams } from "@/lib/router-compat"
-import { ArrowLeft, Plus, Settings2, Trash2, Pencil, CheckCircle2 } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  GearIcon,
+  TrashIcon,
+  PencilSimpleIcon,
+  CheckCircleIcon
+} from "@phosphor-icons/react"
 import { sortColumns } from "@/lib/scorecardOrder"
 import { FormulaChipEditor, normalizeFormulaSpacing } from "@/components/ui/FormulaChipEditor"
 
@@ -157,7 +163,7 @@ export default function SectionMakerCategoryPage() {
         </p>
         <Link href="/section-maker">
           <Button variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeftIcon weight="bold" className="w-4 h-4 mr-2" />
             Back to Section Maker
           </Button>
         </Link>
@@ -286,10 +292,10 @@ export default function SectionMakerCategoryPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEditColumn(groupId, col)}>
-                      <Pencil className="h-4 w-4 text-muted-foreground" />
+                      <PencilSimpleIcon weight="duotone" className="h-4 w-4 text-muted-foreground" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => deleteTemplateColumn(sectionId, categoryId, groupId, col.id)}>
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <TrashIcon weight="duotone" className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>
                 </td>
@@ -305,7 +311,7 @@ export default function SectionMakerCategoryPage() {
     <div className="space-y-6">
       <div>
         <Link href="/section-maker" className="text-sm text-muted-foreground hover:text-primary flex items-center mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" />
+          <ArrowLeftIcon weight="bold" className="h-4 w-4 mr-1" />
           Back to Section Maker
         </Link>
         <div className="flex items-center justify-between">
@@ -337,7 +343,7 @@ export default function SectionMakerCategoryPage() {
               setTargetGroupId(null)
               setIsColumnModalOpen(true)
             }}>
-              <Settings2 className="h-4 w-4 mr-2" />
+              <GearIcon weight="duotone" className="h-4 w-4 mr-2" />
               Add Column
             </Button>
           </div>
@@ -500,7 +506,7 @@ export default function SectionMakerCategoryPage() {
                 <div className="text-xs pt-1">
                   {validationResult.status === 'valid' && (
                     <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50/60 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded border border-emerald-200/50">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircleIcon weight="duotone" className="h-4 w-4 text-emerald-600 shrink-0" />
                       <span className="font-medium">Valid Formula</span>
                     </div>
                   )}
@@ -530,7 +536,7 @@ export default function SectionMakerCategoryPage() {
                   <div key={idx} className="flex gap-2 items-center">
                     <input className="flex-1 rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm" placeholder="Label" value={opt.label} onChange={e => { const newOpts = [...newColumn.options]; newOpts[idx].label = e.target.value; setNewColumn({ ...newColumn, options: newOpts }) }} />
                     <input className="flex-1 rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm" placeholder="Value" value={opt.value} onChange={e => { const newOpts = [...newColumn.options]; newOpts[idx].value = e.target.value; setNewColumn({ ...newColumn, options: newOpts }) }} />
-                    <Button variant="ghost" size="sm" className="px-2 text-red-500" onClick={() => { const newOpts = [...newColumn.options]; newOpts.splice(idx, 1); setNewColumn({ ...newColumn, options: newOpts }) }}><Trash2 className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" className="px-2 text-red-500" onClick={() => { const newOpts = [...newColumn.options]; newOpts.splice(idx, 1); setNewColumn({ ...newColumn, options: newOpts }) }}><TrashIcon weight="duotone" className="h-4 w-4" /></Button>
                   </div>
                 ))}
               </div>

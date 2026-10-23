@@ -9,33 +9,22 @@ import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import {
-  CreditCard,
-  Clock,
-  CheckCircle2,
-  Sparkles,
-  Calendar,
-  DollarSign,
-  ShieldCheck,
-  Bell,
-  Mail,
-  Zap,
-  Save,
-  Check,
-  Eye,
-  FileCheck,
-  FileText,
-  AlertCircle,
-  ChevronDown,
-  Edit3,
-  Lock,
-  Unlock,
-  AlertTriangle,
-  XCircle,
-  RotateCcw,
-  ShieldAlert,
-  Receipt,
-  Calculator
-} from "lucide-react"
+  CreditCardIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  CalendarBlankIcon,
+  CurrencyDollarIcon,
+  ShieldCheckIcon,
+  BellIcon,
+  EnvelopeSimpleIcon,
+  FloppyDiskIcon,
+  CheckIcon,
+  EyeIcon,
+  FileTextIcon,
+  CaretDownIcon,
+  PencilSimpleIcon,
+  CalculatorIcon
+} from "@phosphor-icons/react"
 
 interface BrandRedSelectOption {
   value: string;
@@ -65,7 +54,7 @@ function BrandRedSelect({ value, onChange, options, className }: BrandRedSelectP
         )}
       >
         <span className="truncate">{selectedOption.label}</span>
-        <ChevronDown className={cn(
+        <CaretDownIcon weight="bold" className={cn(
           "w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-transform shrink-0 ml-2",
           isOpen && "rotate-180 text-[#B5111B]"
         )} />
@@ -98,7 +87,7 @@ function BrandRedSelect({ value, onChange, options, className }: BrandRedSelectP
                 )}
               >
                 <span>{option.label}</span>
-                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3] text-white shrink-0 ml-2" />}
+                {isSelected && <CheckIcon weight="bold" className="w-3.5 h-3.5 stroke-[3] text-white shrink-0 ml-2" />}
               </button>
             );
           })}
@@ -189,7 +178,7 @@ function BrandRedDatePicker({ value, onChange, className }: BrandRedDatePickerPr
         )}
       >
         <span>{value || "Select Date..."}</span>
-        <Calendar className="w-4 h-4 text-slate-400 group-hover:text-[#B5111B] transition-colors shrink-0 ml-2" />
+        <CalendarBlankIcon weight="duotone" className="w-4 h-4 text-slate-400 group-hover:text-[#B5111B] transition-colors shrink-0 ml-2" />
       </button>
 
       {isOpen && (
@@ -365,7 +354,7 @@ export default function SettingsPage() {
             disabled={isSaving}
             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold px-6 py-2.5 rounded-xl shadow-xs cursor-pointer transition-all flex items-center gap-2 text-xs sm:text-sm"
           >
-            {isSaving ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {isSaving ? <Spinner className="w-4 h-4" /> : <FloppyDiskIcon weight="duotone" className="w-4 h-4" />}
             <span>{isSaving ? "Saving..." : "Save Settings"}</span>
           </Button>
         </div>
@@ -377,7 +366,7 @@ export default function SettingsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B5111B] to-rose-700 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                <CreditCard className="w-5 h-5" />
+                <CreditCardIcon weight="duotone" className="w-5 h-5" />
               </div>
               <div>
                 <CardTitle className="text-base font-bold text-slate-900">Plan Details & Subscription</CardTitle>
@@ -389,63 +378,16 @@ export default function SettingsPage() {
               onClick={() => setShowEditPricingModal(true)}
               className="bg-red-50 hover:bg-red-100 text-[#B5111B] border border-red-200 font-bold px-3.5 py-1.5 rounded-xl shadow-2xs cursor-pointer transition-all flex items-center gap-1.5 text-xs w-fit"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <PencilSimpleIcon weight="duotone" className="w-3.5 h-3.5" />
               <span>Edit Plan Prices</span>
             </Button>
           </div>
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
-          {/* Sequential Billing Workflow Banner (Matches Landing Page Architecture) */}
-          <div className="p-4 sm:p-5 bg-slate-50/90 border border-slate-200/90 rounded-2xl space-y-4 shadow-2xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-[#B5111B]" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-900">
-                  Billing Plan Architecture & Workflow
-                </span>
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs w-fit flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Active 2-Plan System</span>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-2xs flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-red-50 text-[#B5111B] flex items-center justify-center shrink-0 font-bold">
-                  <FileText className="w-4.5 h-4.5" />
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[10px] font-extrabold text-[#B5111B] uppercase tracking-wider">Option 01: Single Audit</div>
-                  <div className="font-black text-slate-900 text-sm">Single Report Plan (${reportPrice} / Report)</div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Single project audit calculation. Unlocks executive scorecard PDF generation & verified stamp.
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-2xs flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-red-50 text-[#B5111B] flex items-center justify-center shrink-0 font-bold">
-                  <Calculator className="w-4.5 h-4.5" />
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[10px] font-extrabold text-[#B5111B] uppercase tracking-wider">Option 02: Combined Package</div>
-                  <div className="font-black text-slate-900 text-sm">Combined Plan (${combinedPrice.toLocaleString()} Total)</div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    Complete bundle: ${reportPrice.toLocaleString()} Initial Scorecard + ${subscriptionPrice.toLocaleString()} Subscription Updates = ${combinedPrice.toLocaleString()} ($12,000 savings).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* 3 Scorecard Pricing Plan Cards */}
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">Scorecard Investment &amp; Billing Options</label>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch pt-1">
               {/* PLAN 1: Scorecard Only ($15,000 / Report) */}
               <div className="bg-white rounded-2xl border border-slate-200/90 p-5 space-y-5 flex flex-col justify-between shadow-2xs">
@@ -470,23 +412,23 @@ export default function SettingsPage() {
 
                   <ul className="space-y-2 pt-1 text-xs text-slate-700 font-medium">
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Initial Virtual Scoping Call</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Intake Questionnaire (90+ Data Points)</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Certified Scorecard Report PDF</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Presentation / Consultation Visit</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Kathleen Rose, CCIM/CRE Seal</span>
                     </li>
                   </ul>
@@ -522,23 +464,23 @@ export default function SettingsPage() {
 
                   <ul className="space-y-2 pt-1 text-xs text-slate-700 font-medium">
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>3 Milestone Update Reports</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Virtual Alignment Call Per Cycle</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Recalibrated Intake Questionnaires</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Presentation / Consultation Visit x 3</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Longitudinal Trend Benchmarks</span>
                     </li>
                   </ul>
@@ -591,23 +533,23 @@ export default function SettingsPage() {
 
                   <ul className="space-y-2 pt-1 text-xs text-slate-700 font-medium">
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Full Baseline 1x Scorecard ($15k Value)</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Complete 3-Cycle Subscription ($36k Value)</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Initial Virtual Call &amp; Recurring Alignment</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>4 Certified Reports in Total</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                      <CheckIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                       <span>Consultation Visits Per Milestone</span>
                     </li>
                   </ul>
@@ -624,7 +566,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                <Clock className="w-5 h-5" />
+                <ClockIcon weight="duotone" className="w-5 h-5" />
               </div>
               <div>
                 <CardTitle className="text-base font-bold text-slate-900">Partial Payment & Invoicing Settings</CardTitle>
@@ -637,7 +579,7 @@ export default function SettingsPage() {
               onClick={() => setShowEmailPreviewModal(true)}
               className="text-xs border-slate-300 bg-slate-100 text-slate-900 hover:bg-slate-200 font-bold cursor-pointer shadow-2xs flex items-center gap-1.5 shrink-0"
             >
-              <Eye className="w-3.5 h-3.5 text-slate-700" />
+              <EyeIcon weight="duotone" className="w-3.5 h-3.5 text-slate-700" />
               <span>Preview Email Templates</span>
             </Button>
           </div>
@@ -717,7 +659,7 @@ export default function SettingsPage() {
             {/* Modal Subtitle Header */}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between text-blue-900 text-xs">
               <div className="font-bold flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-600 shrink-0" />
+                <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4 text-blue-600 shrink-0" />
                 <span>Live Email Output Preview (Configured by Settings)</span>
               </div>
               <span className="text-[11px] font-bold text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded-full border border-blue-300">
@@ -736,7 +678,7 @@ export default function SettingsPage() {
                     : "text-slate-600 hover:bg-white hover:text-slate-900"
                 )}
               >
-                <Bell className="w-3.5 h-3.5" />
+                <BellIcon weight="duotone" className="w-3.5 h-3.5" />
                 <span>Partial Payment Reminder Email</span>
               </button>
               <button
@@ -748,7 +690,7 @@ export default function SettingsPage() {
                     : "text-slate-600 hover:bg-white hover:text-slate-900"
                 )}
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5" />
                 <span>Full Scorecard Report Email</span>
               </button>
             </div>
@@ -890,13 +832,13 @@ export default function SettingsPage() {
                         <div className="text-[11px] text-slate-500">Full Assessment Document • 4.2 MB</div>
                       </div>
                     </div>
-                    <FileCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <CheckCircleIcon weight="duotone" className="w-5 h-5 text-emerald-600 shrink-0" />
                   </div>
 
                   {/* CTA Button */}
                   <div className="pt-2 flex justify-center">
                     <div className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5">
-                      <FileText className="w-4 h-4" />
+                      <FileTextIcon weight="duotone" className="w-4 h-4" />
                       <span>Download Scorecard PDF Report</span>
                     </div>
                   </div>
@@ -926,7 +868,7 @@ export default function SettingsPage() {
         >
           <div className="space-y-4 text-left">
             <div className="p-3 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-xs text-[#B5111B]">
-              <Edit3 className="w-4 h-4 shrink-0" />
+              <PencilSimpleIcon weight="duotone" className="w-4 h-4 shrink-0" />
               <span>Admin Pricing Control: Update base rates for Scorecard Only, Subscription, and Combined packages.</span>
             </div>
 
@@ -936,7 +878,7 @@ export default function SettingsPage() {
                   Option 01: Scorecard Only (1x Report) ($)
                 </label>
                 <div className="relative">
-                  <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <CurrencyDollarIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="number"
                     value={reportPrice}
@@ -951,7 +893,7 @@ export default function SettingsPage() {
                   Option 02: Scorecard Subscription (3 Updates) ($)
                 </label>
                 <div className="relative">
-                  <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <CurrencyDollarIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="number"
                     value={subscriptionPrice}
@@ -966,7 +908,7 @@ export default function SettingsPage() {
                   Option 03: Combined Package = Scorecard Only + Scorecard Subscription ($)
                 </label>
                 <div className="relative">
-                  <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <CurrencyDollarIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="number"
                     value={combinedPrice}

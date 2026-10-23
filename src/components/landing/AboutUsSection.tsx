@@ -1,6 +1,12 @@
-"use client"
-
-import { Award, Compass, Building2, Mail, CheckCircle2, ShieldCheck, TrendingUp } from "lucide-react"
+import {
+  ShieldCheckIcon,
+  CertificateIcon,
+  CompassIcon,
+  TrendUpIcon,
+  BuildingsIcon,
+  EnvelopeSimpleIcon,
+  CheckCircleIcon,
+} from "@phosphor-icons/react"
 
 export function AboutUsSection() {
   return (
@@ -25,11 +31,11 @@ export function AboutUsSection() {
 
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold">
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-slate-300">
-              <ShieldCheck className="w-4 h-4 text-[#E11D48]" />
+              <ShieldCheckIcon weight="duotone" className="w-4 h-4 text-[#E11D48]" />
               <span>Certified Woman-Owned Business</span>
             </div>
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-slate-300">
-              <Award className="w-4 h-4 text-[#E11D48]" />
+              <CertificateIcon weight="duotone" className="w-4 h-4 text-[#E11D48]" />
               <span>CCIM & CRE Designated Leadership</span>
             </div>
           </div>
@@ -86,7 +92,7 @@ export function AboutUsSection() {
                 {/* Quote Section - Clean Flex Column Alignment */}
                 <div className="flex items-start gap-4">
                   <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shadow-md shrink-0">
-                    <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <CompassIcon weight="duotone" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
 
                   <blockquote className="italic text-sm sm:text-[15px] text-slate-100 leading-relaxed font-serif pt-1 flex-1">
@@ -136,7 +142,7 @@ export function AboutUsSection() {
             {/* Pillar 1 */}
             <div className="bg-white rounded-2xl p-7 border border-slate-200/90 shadow-2xs space-y-4 hover:shadow-lg transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-all">
-                <TrendingUp className="w-6 h-6 text-white" />
+                <TrendUpIcon weight="duotone" className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-black text-slate-900 tracking-tight">
                 Developing Prosperity
@@ -149,7 +155,7 @@ export function AboutUsSection() {
             {/* Pillar 2 */}
             <div className="bg-white rounded-2xl p-7 border border-slate-200/90 shadow-2xs space-y-4 hover:shadow-lg transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-all">
-                <ShieldCheck className="w-6 h-6 text-white" />
+                <ShieldCheckIcon weight="duotone" className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-black text-slate-900 tracking-tight">
                 Building Quality of Life
@@ -162,7 +168,7 @@ export function AboutUsSection() {
             {/* Pillar 3 */}
             <div className="bg-white rounded-2xl p-7 border border-slate-200/90 shadow-2xs space-y-4 hover:shadow-lg transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B5111B] to-[#E11D48] text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-all">
-                <Building2 className="w-6 h-6 text-white" />
+                <BuildingsIcon weight="duotone" className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-black text-slate-900 tracking-tight">
                 Curating Built Balance
@@ -237,7 +243,7 @@ export function AboutUsSection() {
                       className="p-2 rounded-xl bg-white/10 hover:bg-[#B5111B] text-white border border-white/15 transition-colors"
                       title="Email Kathleen Rose"
                     >
-                      <Mail className="w-4 h-4" />
+                      <EnvelopeSimpleIcon className="w-4 h-4" />
                     </a>
                     <a
                       href="https://www.linkedin.com/in/roseassociates/"
@@ -272,7 +278,7 @@ export function AboutUsSection() {
                       href="mailto:krose@roseassociates.com"
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold shadow-xs transition-colors"
                     >
-                      <Mail className="w-3.5 h-3.5" />
+                      <EnvelopeSimpleIcon className="w-3.5 h-3.5" />
                       <span>krose@roseassociates.com</span>
                     </a>
                   </div>
@@ -296,7 +302,7 @@ export function AboutUsSection() {
                       "Charlotte Business Journal Top 25 Women in Business"
                     ].map((badge, idx) => (
                       <span key={idx} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-slate-200/90 text-slate-700 px-3 py-1.5 rounded-xl shadow-2xs">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                        <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                         <span>{badge}</span>
                       </span>
                     ))}
@@ -347,7 +353,7 @@ export function AboutUsSection() {
                       className="p-2 rounded-xl bg-white/10 hover:bg-[#B5111B] text-white border border-white/15 transition-colors"
                       title="Email Daniel Bellot"
                     >
-                      <Mail className="w-4 h-4" />
+                      <EnvelopeSimpleIcon className="w-4 h-4" />
                     </a>
                     <a
                       href="https://www.linkedin.com/in/daniel-bellot-60b25811b/"
@@ -382,7 +388,7 @@ export function AboutUsSection() {
                       href="mailto:dbellot@roseassociates.com"
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold shadow-xs transition-colors"
                     >
-                      <Mail className="w-3.5 h-3.5" />
+                      <EnvelopeSimpleIcon className="w-3.5 h-3.5" />
                       <span>dbellot@roseassociates.com</span>
                     </a>
                   </div>
@@ -406,7 +412,7 @@ export function AboutUsSection() {
                       "GIS & Spatial Analytics Lead"
                     ].map((badge, idx) => (
                       <span key={idx} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-slate-200/90 text-slate-700 px-3 py-1.5 rounded-xl shadow-2xs">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                        <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                         <span>{badge}</span>
                       </span>
                     ))}
@@ -457,7 +463,7 @@ export function AboutUsSection() {
                       className="p-2 rounded-xl bg-white/10 hover:bg-[#B5111B] text-white border border-white/15 transition-colors"
                       title="Email Dr. William McCoy"
                     >
-                      <Mail className="w-4 h-4" />
+                      <EnvelopeSimpleIcon className="w-4 h-4" />
                     </a>
                   </div>
                 </div>
@@ -480,7 +486,7 @@ export function AboutUsSection() {
                       href="mailto:info@roseassociates.com"
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold shadow-xs transition-colors"
                     >
-                      <Mail className="w-3.5 h-3.5" />
+                      <EnvelopeSimpleIcon className="w-3.5 h-3.5" />
                       <span>info@roseassociates.com</span>
                     </a>
                   </div>
@@ -504,7 +510,7 @@ export function AboutUsSection() {
                       "40+ Years Public Policy Research"
                     ].map((badge, idx) => (
                       <span key={idx} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white border border-slate-200/90 text-slate-700 px-3 py-1.5 rounded-xl shadow-2xs">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
+                        <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] shrink-0" />
                         <span>{badge}</span>
                       </span>
                     ))}

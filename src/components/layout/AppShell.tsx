@@ -5,23 +5,21 @@ import { Link, usePathname, useRouter } from "@/lib/router-compat"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/store"
 import {
-  LayoutDashboard,
-  FileSpreadsheet,
-  Layers,
-  PieChart,
-  Settings,
-  FolderOpen,
-  BarChart3,
-  ReceiptText,
-  Users,
-  DollarSign,
-  LogOut,
-  User,
-  Menu,
-  X,
-  ShieldAlert,
-  ArrowLeft
-} from "lucide-react"
+  ChartBarIcon,
+  SquaresFourIcon,
+  FolderOpenIcon,
+  StackIcon,
+  ReceiptIcon,
+  CurrencyDollarIcon,
+  UsersIcon,
+  GearIcon,
+  TableIcon,
+  XIcon,
+  SignOutIcon,
+  ListIcon,
+  ShieldWarningIcon,
+  ArrowLeftIcon,
+} from "@phosphor-icons/react"
 import { RoseLoader } from "@/components/ui/loader"
 import { canAccessRoute, canAccessModule, AppModule } from "@/lib/permissions"
 
@@ -92,15 +90,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isRouteAllowed = canAccessRoute(userRole, pathname)
 
   const rawNavItems: Array<{ href: string; label: string; icon: any; module: AppModule }> = [
-    { href: "/overall-analytics", label: "Overall Dashboard", icon: BarChart3, module: 'overall-analytics' },
-    { href: "/analytics", label: "Dashboard", icon: LayoutDashboard, module: 'analytics' },
-    { href: "/projects", label: "Projects", icon: FolderOpen, module: 'projects' },
-    { href: "/section-maker", label: "Section Maker", icon: Layers, module: 'section-maker' },
-    { href: "/orders", label: "Orders", icon: ReceiptText, module: 'orders' },
-    { href: "/payments", label: "Payments", icon: DollarSign, module: 'payments' },
-    { href: "/users", label: "Users", icon: Users, module: 'users' },
-    { href: "/settings", label: "Settings", icon: Settings, module: 'settings' },
-    { href: "/landing-cms", label: "Landing CMS", icon: FileSpreadsheet, module: 'landing-cms' },
+    { href: "/overall-analytics", label: "Overall Dashboard", icon: ChartBarIcon, module: 'overall-analytics' },
+    { href: "/analytics", label: "Dashboard", icon: SquaresFourIcon, module: 'analytics' },
+    { href: "/projects", label: "Projects", icon: FolderOpenIcon, module: 'projects' },
+    { href: "/section-maker", label: "Section Maker", icon: StackIcon, module: 'section-maker' },
+    { href: "/orders", label: "Orders", icon: ReceiptIcon, module: 'orders' },
+    { href: "/payments", label: "Payments", icon: CurrencyDollarIcon, module: 'payments' },
+    { href: "/users", label: "Users", icon: UsersIcon, module: 'users' },
+    { href: "/settings", label: "Settings", icon: GearIcon, module: 'settings' },
+    { href: "/landing-cms", label: "Landing CMS", icon: TableIcon, module: 'landing-cms' },
   ]
 
   const navItems = rawNavItems
@@ -138,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="absolute right-3 top-1/2 -translate-y-1/2 md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             aria-label="Close sidebar"
           >
-            <X className="w-5 h-5" />
+            <XIcon weight="bold" className="w-5 h-5" />
           </button>
         </div>
 
@@ -158,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     : "text-slate-700 hover:bg-[#B5111B]/10 hover:text-[#B5111B]"
                 )}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
+                <item.icon weight="duotone" className="h-4 w-4 shrink-0" />
                 <span>{item.label}</span>
               </Link>
             )
@@ -188,7 +186,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 title="Log Out"
                 className="p-1.5 rounded-xl text-slate-500 hover:text-[#B5111B] hover:bg-red-50 border border-slate-200/80 hover:border-red-200 transition-all cursor-pointer shrink-0 flex items-center justify-center mt-0.5"
               >
-                <LogOut className="w-4 h-4" />
+                <SignOutIcon weight="bold" className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -207,7 +205,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
               aria-label="Open sidebar navigation"
             >
-              <Menu className="w-5 h-5" />
+              <ListIcon weight="bold" className="w-5 h-5" />
             </button>
 
             <div id="app-header-title" className="flex flex-col justify-center">
@@ -227,7 +225,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {!isRouteAllowed ? (
             <div className="max-w-lg mx-auto my-12 p-8 bg-white rounded-2xl border border-slate-200 shadow-sm text-center space-y-4">
               <div className="w-14 h-14 bg-red-50 text-[#B5111B] rounded-2xl flex items-center justify-center mx-auto border border-red-100">
-                <ShieldAlert className="w-7 h-7" />
+                <ShieldWarningIcon weight="duotone" className="w-7 h-7" />
               </div>
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
@@ -240,7 +238,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href="/landing-cms"
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeftIcon weight="bold" className="w-4 h-4" />
                   <span>Return to Landing CMS</span>
                 </Link>
               </div>

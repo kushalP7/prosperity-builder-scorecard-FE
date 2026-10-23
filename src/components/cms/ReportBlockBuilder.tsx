@@ -2,19 +2,19 @@
 
 import * as React from "react"
 import {
-  Plus,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  FileText,
-  Image as ImageIcon,
-  FileCheck,
-  BarChart2,
-  Download,
-  Layout,
-  Copy,
-  Columns
-} from "lucide-react"
+  PlusIcon,
+  TrashIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  FileTextIcon,
+  ImageIcon,
+  ChartBarIcon,
+  DownloadSimpleIcon,
+  LayoutIcon,
+  CopyIcon,
+  ColumnsIcon,
+  FilePdfIcon
+} from "@phosphor-icons/react"
 import { ReportSectionBlock, ImageTextItem } from "@/lib/reports-api"
 import { getPendingUpload, revokePendingUpload } from "@/lib/pending-uploads"
 import { RichTextEditor } from "./RichTextEditor"
@@ -105,7 +105,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("rich_text")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <FileText className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <FileTextIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>Rich Text</span>
           </button>
 
@@ -114,7 +114,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("image_text")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <Columns className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <ColumnsIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>Image & Text</span>
           </button>
 
@@ -123,7 +123,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("stats_grid")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <BarChart2 className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <ChartBarIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>Key Stats</span>
           </button>
 
@@ -132,7 +132,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("gallery")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <ImageIcon className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <ImageIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>Gallery</span>
           </button>
 
@@ -141,7 +141,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("pdf_viewer")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <FileCheck className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <FilePdfIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>PDF Viewer</span>
           </button>
 
@@ -150,7 +150,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
             onClick={() => addBlock("downloads")}
             className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
           >
-            <Download className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+            <DownloadSimpleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
             <span>Download Files</span>
           </button>
         </div>
@@ -160,7 +160,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
       {blocks.length === 0 ? (
         <div className="p-12 rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-white text-slate-400 mx-auto flex items-center justify-center border border-slate-200 shadow-2xs">
-            <Layout className="w-6 h-6" />
+            <LayoutIcon weight="duotone" className="w-6 h-6" />
           </div>
           <div>
             <h4 className="text-xs font-bold text-slate-800">No Section Blocks Added Yet</h4>
@@ -195,7 +195,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                     className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg disabled:opacity-30"
                     title="Move Up"
                   >
-                    <ArrowUp className="w-4 h-4" />
+                    <ArrowUpIcon weight="bold" className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -204,7 +204,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                     className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg disabled:opacity-30"
                     title="Move Down"
                   >
-                    <ArrowDown className="w-4 h-4" />
+                    <ArrowDownIcon weight="bold" className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -212,7 +212,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                     className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg"
                     title="Duplicate Block"
                   >
-                    <Copy className="w-4 h-4" />
+                    <CopyIcon weight="bold" className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -220,7 +220,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                     className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg ml-1"
                     title="Remove Block"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <TrashIcon weight="duotone" className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -306,16 +306,16 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                               </span>
 
                               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                                {/* Layout Style */}
+                                {/* LayoutIcon Style */}
                                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs">
-                                  <span className="text-slate-500">Layout:</span>
+                                  <span className="text-slate-500">LayoutIcon:</span>
                                   <select
                                     value={item.layoutStyle || "wrap"}
                                     onChange={(e) => updateItem(idx, { layoutStyle: e.target.value as any })}
                                     className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
                                   >
                                     <option value="wrap">Text Wrap (Magazine)</option>
-                                    <option value="columns">2-Columns (Sticky)</option>
+                                    <option value="columns">2-ColumnsIcon (Sticky)</option>
                                     <option value="stacked">Stacked (Banner)</option>
                                   </select>
                                 </div>
@@ -390,7 +390,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                                       <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-medium flex items-center gap-2 mt-2">
                                         <span className="text-sm">💡</span>
                                         <span>
-                                          <strong>Long text detected ({plainText.length} chars):</strong> Switch Layout above to <strong>&ldquo;Text Wrap (Magazine)&rdquo;</strong> to allow text to smoothly flow below the image without empty space.
+                                          <strong>Long text detected ({plainText.length} chars):</strong> Switch LayoutIcon above to <strong>&ldquo;Text Wrap (Magazine)&rdquo;</strong> to allow text to smoothly flow below the image without empty space.
                                         </span>
                                       </div>
                                     );
@@ -408,7 +408,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
                         onClick={addItem}
                         className="w-full py-3 rounded-2xl border-2 border-dashed border-[#B5111B]/40 hover:border-[#B5111B] bg-red-50/40 hover:bg-red-50 text-[#B5111B] text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                       >
-                        <Plus className="w-4 h-4" />
+                        <PlusIcon weight="bold" className="w-4 h-4" />
                         <span>Add Another Side-by-Side Item (e.g. 2nd Image & Text)</span>
                       </button>
 
@@ -600,7 +600,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("rich_text")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <FileText className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <FileTextIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>Rich Text</span>
             </button>
 
@@ -609,7 +609,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("image_text")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <Columns className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <ColumnsIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>Image & Text</span>
             </button>
 
@@ -618,7 +618,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("stats_grid")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <BarChart2 className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <ChartBarIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>Stats Grid</span>
             </button>
 
@@ -627,7 +627,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("pdf_viewer")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <FileCheck className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <FilePdfIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>PDF Viewer</span>
             </button>
 
@@ -636,7 +636,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("gallery")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <ImageIcon className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <ImageIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>Gallery</span>
             </button>
 
@@ -645,7 +645,7 @@ export function ReportBlockBuilder({ blocks, onChange }: ReportBlockBuilderProps
               onClick={() => addBlock("downloads")}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#B5111B] hover:text-white text-slate-800 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs border border-slate-200 group"
             >
-              <Download className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
+              <DownloadSimpleIcon weight="duotone" className="w-3.5 h-3.5 text-[#B5111B] group-hover:!text-white transition-colors" />
               <span>Downloads</span>
             </button>
           </div>

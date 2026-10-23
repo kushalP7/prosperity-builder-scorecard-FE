@@ -4,20 +4,18 @@ import * as React from "react"
 import { useParams } from "@/lib/router-compat"
 import { useAppStore } from "@/store"
 import {
-  FileSpreadsheet,
-  ChevronRight,
-  ChevronsUpDown,
-  Bus,
-  Palette,
-  ShieldCheck,
-  Activity,
-  Building2,
-  FolderKanban,
-  ArrowLeft,
-  RefreshCw,
-  Calculator,
-  CheckCircle2
-} from "lucide-react"
+  TableIcon,
+  CaretRightIcon,
+  CaretUpDownIcon,
+  BusIcon,
+  PaletteIcon,
+  ShieldCheckIcon,
+  ActivityIcon,
+  BuildingsIcon,
+  KanbanIcon,
+  ArrowLeftIcon,
+  ArrowsClockwiseIcon
+} from "@phosphor-icons/react"
 import { apiClient } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/loader"
@@ -26,12 +24,186 @@ import { cn } from "@/lib/utils"
 
 const getSectionIcon = (label?: string, iconName?: string) => {
   const l = (label || '').toLowerCase();
-  if (l.includes('transport') || l.includes('access')) return Bus;
-  if (l.includes('art') || l.includes('culture')) return Palette;
-  if (l.includes('crime') || l.includes('safety') || l.includes('public')) return ShieldCheck;
-  if (l.includes('health')) return Activity;
-  if (l.includes('housing') || l.includes('land')) return Building2;
-  return FolderKanban;
+  if (l.includes('transport') || l.includes('access')) return BusIcon;
+  if (l.includes('art') || l.includes('culture')) return PaletteIcon;
+  if (l.includes('crime') || l.includes('safety') || l.includes('public')) return ShieldCheckIcon;
+  if (l.includes('health')) return ActivityIcon;
+  if (l.includes('housing') || l.includes('land')) return BuildingsIcon;
+  return KanbanIcon;
+}
+
+/** Color + category chip styling for Data Source values */
+function getSourceChipClass(source: string): string {
+  const s = source.toLowerCase()
+  if (s.includes('ncdot') || s.includes('dot gis') || s.includes('highway')) {
+    return 'bg-sky-100 text-sky-900 border-sky-200'
+  }
+  if (s.includes('census') || s.includes('acs') || s.includes('quickfacts')) {
+    return 'bg-teal-100 text-teal-900 border-teal-200'
+  }
+  if (s.includes('intake') || s.includes('phase 2') || s.includes('client') || s.includes('questionnaire')) {
+    return 'bg-rose-100 text-rose-900 border-rose-200'
+  }
+  if (s.includes('bls') || s.includes('labor') || s.includes('unemployment')) {
+    return 'bg-violet-100 text-violet-900 border-violet-200'
+  }
+  if (s.includes('epa') || s.includes('esri') || s.includes('gis')) {
+    return 'bg-amber-100 text-amber-900 border-amber-200'
+  }
+  return 'bg-slate-100 text-slate-800 border-slate-200'
+}
+
+function isNotesColumn(name?: string): boolean {
+  const n = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  return (
+    n.includes('localdata') ||
+    n.includes('resultnotes') ||
+    n.includes('localdatanotes') ||
+    (n.includes('notes') && !n.includes('datasource') && !n.includes('source'))
+  )
+}
+
+const NOTES_CHIP_CLASS =
+  'inline-flex max-w-full items-start rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-left text-[11px] font-medium leading-snug text-slate-700 break-words whitespace-normal'
+
+/** Single-style chip for Local Data Result & Notes (one color only) */
+function NotesChip({ value }: { value: string }) {
+  const trimmed = (value || '').trim()
+  if (!trimmed || trimmed === '-') {
+    return <span className="text-xs text-muted-foreground">—</span>
+  }
+  return (
+    <span title={trimmed} className={NOTES_CHIP_CLASS}>
+      {trimmed}
+    </span>
+  )
+}
+
+function NotesCell({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (val: string) => void
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const trimmed = (value || '').trim()
+
+  React.useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+  }, [editing])
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        className="w-full min-h-[32px] rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40"
+        value={value || ''}
+        onChange={e => onChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault()
+            setEditing(false)
+          }
+        }}
+        placeholder="Notes..."
+      />
+    )
+  }
+
+  if (!trimmed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="w-full min-h-[32px] rounded-md border border-dashed border-slate-300 bg-transparent px-2 py-1 text-left text-xs text-slate-400 hover:border-slate-400 hover:text-slate-500 transition-colors cursor-pointer"
+      >
+        Add notes…
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title={trimmed}
+      className={cn(NOTES_CHIP_CLASS, 'cursor-pointer transition-opacity hover:opacity-90')}
+    >
+      {trimmed}
+    </button>
+  )
+}
+
+function DataSourceCell({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (val: string) => void
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const trimmed = (value || '').trim()
+
+  React.useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+  }, [editing])
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        className="w-full min-h-[32px] rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40"
+        value={value || ''}
+        onChange={e => onChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault()
+            setEditing(false)
+          }
+        }}
+        placeholder="Source..."
+      />
+    )
+  }
+
+  if (!trimmed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="w-full min-h-[32px] rounded-md border border-dashed border-slate-300 bg-transparent px-2 py-1 text-left text-xs text-slate-400 hover:border-slate-400 hover:text-slate-500 transition-colors cursor-pointer"
+      >
+        Add source…
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title={trimmed}
+      className={cn(
+        'inline-flex max-w-full items-start rounded-full border px-2.5 py-1 text-left text-[11px] font-semibold leading-snug break-words whitespace-normal cursor-pointer transition-opacity hover:opacity-90',
+        getSourceChipClass(trimmed)
+      )}
+    >
+      {trimmed}
+    </button>
+  )
 }
 
 // Canonical Excel column order as defined in Prosperity Builder Scorecard Master
@@ -283,7 +455,21 @@ export default function ProjectDataPage() {
     const handleSectionAssigned = () => {
       loadFreshProject();
     };
-    const handleProjectSynced = () => {
+    const handleProjectSynced = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail;
+      // Layout already refreshed store — reuse payload, skip duplicate getProject
+      if (detail?.skipRefetch && detail?.fresh) {
+        useAppStore.setState(state => {
+          const exists = state.projects.some(p => p.id === id);
+          return {
+            projects: exists
+              ? state.projects.map(p => p.id === id ? { ...p, ...detail.fresh, data: detail.fresh.data || p.data } : p)
+              : [...state.projects, detail.fresh],
+            activeProject: detail.fresh,
+          };
+        });
+        return;
+      }
       loadFreshProject();
     };
     window.addEventListener('project-section-assigned', handleSectionAssigned);
@@ -471,7 +657,7 @@ export default function ProjectDataPage() {
       <div className="flex-1 flex flex-col min-h-0 bg-transparent space-y-3">
         {assignedSections.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-muted-foreground p-12 text-center space-y-4 bg-background rounded-xl border border-border shadow-sm">
-            <FileSpreadsheet className="h-12 w-12 opacity-20" />
+            <TableIcon weight="duotone" className="h-12 w-12 opacity-20" />
             <div>
               <h3 className="font-medium text-foreground text-lg">No Sections Assigned</h3>
               <p className="text-sm mt-1 max-w-md">Go back to the project dashboard and assign some sections to start entering data.</p>
@@ -545,7 +731,7 @@ export default function ProjectDataPage() {
                     className="text-xs h-8 rounded-lg px-3 border-slate-300 shadow-xs bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-950 font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                     title="Recalculate scores and update all calculations from backend"
                   >
-                    <RefreshCw className={cn("w-3.5 h-3.5 text-primary", isRecalculating && "animate-spin")} />
+                    <ArrowsClockwiseIcon weight="bold" className={cn("w-3.5 h-3.5 text-primary", isRecalculating && "animate-spin")} />
                     <span>{isRecalculating ? "Recalculating..." : "Recalculate Scores"}</span>
                   </Button>
                   {viewMode === 'detailed' && (
@@ -555,7 +741,7 @@ export default function ProjectDataPage() {
                       onClick={() => setViewMode('summary')}
                       className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground cursor-pointer font-medium"
                     >
-                      <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                      <ArrowLeftIcon weight="bold" className="w-3.5 h-3.5 mr-1.5" />
                       Back to Summary
                     </Button>
                   )}
@@ -565,7 +751,7 @@ export default function ProjectDataPage() {
                     onClick={toggleAllCategories}
                     className="text-xs h-8 rounded-lg px-3.5 border-border shadow-sm bg-background hover:bg-muted/50 cursor-pointer font-medium"
                   >
-                    <ChevronsUpDown className="w-3.5 h-3.5 mr-1.5" />
+                    <CaretUpDownIcon weight="bold" className="w-3.5 h-3.5 mr-1.5" />
                     {hasAnyCategoryExpanded ? 'Collapse All' : 'Expand All'}
                   </Button>
                 </div>
@@ -582,9 +768,9 @@ export default function ProjectDataPage() {
                       <table className="w-full text-left text-sm border-collapse">
                         <thead className="bg-[#E9ECEF] border-b-2 border-border sticky top-0 z-20 shadow-xs">
                         <tr>
-                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[50%]">Category</th>
-                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[25%] text-center">Data</th>
-                          <th className="px-4 py-3 font-bold text-foreground w-[25%]">Source</th>
+                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[45%]">Category</th>
+                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[15%] text-center">Data</th>
+                          <th className="px-4 py-3 font-bold text-foreground min-w-[240px] w-[40%]">Source</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -672,13 +858,10 @@ export default function ProjectDataPage() {
                                       onChange={e => handleBaseChange('value', e.target.value)}
                                     />
                                   </td>
-                                  <td className="px-1 py-1 align-middle bg-blue-50/20 hover:bg-blue-50/40">
-                                    <input
-                                      type="text"
-                                      className="w-full h-full min-h-[32px] bg-transparent px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-colors border-0"
+                                  <td className="px-2 py-1.5 align-middle min-w-[240px] bg-blue-50/20 hover:bg-blue-50/40">
+                                    <DataSourceCell
                                       value={baseRecord.source || ''}
-                                      onChange={e => handleBaseChange('source', e.target.value)}
-                                      placeholder="Source..."
+                                      onChange={val => handleBaseChange('source', val)}
                                     />
                                   </td>
                                 </tr>
@@ -699,7 +882,7 @@ export default function ProjectDataPage() {
                                     >
                                       <td colSpan={3} className="px-4 py-2 pl-8 font-semibold text-foreground border-r border-border">
                                         <div className="flex items-center gap-2">
-                                          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isCategoryCollapsed(category.id) ? '' : 'rotate-90'}`} />
+                                          <CaretRightIcon weight="bold" className={`h-4 w-4 text-muted-foreground transition-transform ${isCategoryCollapsed(category.id) ? '' : 'rotate-90'}`} />
                                           <span>{category.label}</span>
                                         </div>
                                         {category.description && category.description.trim() && (
@@ -767,14 +950,17 @@ export default function ProjectDataPage() {
                                 {sectionColumns.map(col => (
                                   <th
                                     key={col.id}
-                                    className="px-2 py-3 font-bold text-white text-center border-l border-white/20"
+                                    className={cn(
+                                      "px-2 py-3 font-bold text-white border-l border-white/20",
+                                      isNotesColumn(col.name) ? "text-left min-w-[220px]" : "text-center"
+                                    )}
                                     style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
                                   >
                                     {col.name}
                                   </th>
                                 ))}
                                 <th
-                                  className="px-3 py-3 font-bold text-white text-center min-w-[160px] border-l border-white/20"
+                                  className="px-3 py-3 font-bold text-white text-left min-w-[240px] border-l border-white/20"
                                   style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
                                 >
                                   Data Source
@@ -797,7 +983,7 @@ export default function ProjectDataPage() {
                                       >
                                         <td colSpan={sectionColumns.length + 3} className="px-4 py-3 font-semibold text-foreground">
                                           <div className="flex items-center gap-2">
-                                            <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
+                                            <CaretRightIcon weight="bold" className={`h-4 w-4 text-muted-foreground transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
                                             <span>{category.label}</span>
                                           </div>
                                           {category.description && category.description.trim() && (
@@ -1093,6 +1279,7 @@ export default function ProjectDataPage() {
                                           const isThisYn = isYnColumn(col.name);
                                           const isThisValue = isValueColumn(col.name);
                                           const isClientTotalScore = /client\s*total/i.test(col.name || '');
+                                          const isNotesCol = isNotesColumn(col.name);
                                           const groupRuleVal = evaluateGroupScoringRules(rowNode, groupData, col);
                                           const ruleVal = evaluateRules(col, groupData) ?? groupRuleVal;
 
@@ -1166,9 +1353,36 @@ export default function ProjectDataPage() {
                                             scheduleAutoRefresh();
                                           };
 
+                                          const notesDisplay =
+                                            col.type === 'boolean' || col.type === 'select' || col.type === 'number' || col.type === 'text'
+                                              ? (displayValue !== null && displayValue !== undefined ? String(displayValue) : '')
+                                              : String(
+                                                  evaluateFormula(
+                                                    (isClientTotalScore && (rowNode as any)?.formula?.trim())
+                                                      ? (rowNode as any).formula.trim()
+                                                      : col.formulaExpression
+                                                  ) ?? ''
+                                                );
+
                                           return (
-                                            <td key={col.id} className={`px-2 py-2 align-middle text-center border-l border-border/50 ${isLocked ? 'bg-muted/10' : ''}`}>
-                                              {col.type === 'boolean' ? (
+                                            <td
+                                              key={col.id}
+                                              className={cn(
+                                                "px-2 py-2 align-middle border-l border-border/50",
+                                                isNotesCol ? "text-left min-w-[220px]" : "text-center",
+                                                isLocked ? "bg-muted/10" : ""
+                                              )}
+                                            >
+                                              {isNotesCol ? (
+                                                col.type === 'text' && !isLocked ? (
+                                                  <NotesCell
+                                                    value={displayValue !== null && displayValue !== undefined ? String(displayValue) : ''}
+                                                    onChange={val => handleChange('value', val)}
+                                                  />
+                                                ) : (
+                                                  <NotesChip value={notesDisplay} />
+                                                )
+                                              ) : col.type === 'boolean' ? (
                                                 <select
                                                   className={cn(
                                                     "w-20 mx-auto rounded-md border border-input px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
@@ -1243,13 +1457,10 @@ export default function ProjectDataPage() {
                                           );
                                         })}
                                         {/* Data Source Column (bound to baseRecord.source, matching Summary View) */}
-                                        <td className="px-2 py-1 align-middle border-l border-border/50 min-w-[160px] bg-blue-50/10 hover:bg-blue-50/25">
-                                          <input
-                                            type="text"
-                                            className="w-full rounded-sm border border-transparent px-2 py-1 text-xs transition-all bg-transparent hover:border-input focus:bg-background shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                                        <td className="px-2 py-1.5 align-middle border-l border-border/50 min-w-[240px] bg-blue-50/10 hover:bg-blue-50/25">
+                                          <DataSourceCell
                                             value={baseRecord.source || ''}
-                                            onChange={e => handleBaseSourceChange(e.target.value)}
-                                            placeholder="Source..."
+                                            onChange={handleBaseSourceChange}
                                           />
                                         </td>
                                       </tr>

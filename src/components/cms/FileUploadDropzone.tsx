@@ -1,7 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { Upload, FileText, Image as ImageIcon, X, CheckCircle2, ExternalLink, Link2, RefreshCw } from "lucide-react"
+import {
+  UploadSimpleIcon,
+  FileTextIcon,
+  ImageIcon,
+  XIcon,
+  CheckCircleIcon,
+  ArrowSquareOutIcon,
+  LinkIcon,
+  ArrowsClockwiseIcon
+} from "@phosphor-icons/react"
 import { createPendingUpload, isPendingUpload, getPendingUpload, revokePendingUpload, formatBytes } from "@/lib/pending-uploads"
 
 interface FileUploadDropzoneProps {
@@ -84,7 +93,7 @@ export function FileUploadDropzone({
           onClick={() => setShowManualUrl(!showManualUrl)}
           className="text-[11px] font-bold text-[#B5111B] hover:underline flex items-center gap-1"
         >
-          <Link2 className="w-3 h-3" />
+          <LinkIcon weight="bold" className="w-3 h-3" />
           <span>{showManualUrl ? "Upload File" : "Paste URL"}</span>
         </button>
       </div>
@@ -105,7 +114,7 @@ export function FileUploadDropzone({
         <div className="border-2 border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-3 shadow-xs relative group">
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircleIcon weight="duotone" className="w-4 h-4 text-emerald-600 shrink-0" />
               <span className="truncate">{pendingInfo?.name || `File Attached (${folder})`}</span>
             </span>
 
@@ -116,7 +125,7 @@ export function FileUploadDropzone({
                 className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-[#B5111B] text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
                 title="Replace File"
               >
-                <RefreshCw className="w-3 h-3" />
+                <ArrowsClockwiseIcon weight="bold" className="w-3 h-3" />
                 <span>Replace</span>
               </button>
 
@@ -126,7 +135,7 @@ export function FileUploadDropzone({
                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-200 cursor-pointer"
                 title="Remove File"
               >
-                <X className="w-4.5 h-4.5" />
+                <XIcon weight="bold" className="w-4.5 h-4.5" />
               </button>
             </div>
           </div>
@@ -147,7 +156,7 @@ export function FileUploadDropzone({
             <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-[#B5111B]/10 text-[#B5111B] flex items-center justify-center shrink-0">
-                  <FileText className="w-5 h-5" />
+                  <FileTextIcon weight="duotone" className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-xs font-bold text-slate-900 truncate">
@@ -166,7 +175,7 @@ export function FileUploadDropzone({
                 className="px-3 py-1.5 rounded-lg bg-[#B5111B] text-white text-xs font-bold flex items-center gap-1 hover:bg-[#8F0D15] transition-all shrink-0"
               >
                 <span>View</span>
-                <ExternalLink className="w-3 h-3" />
+                <ArrowSquareOutIcon weight="bold" className="w-3 h-3" />
               </a>
             </div>
           )}
@@ -200,7 +209,7 @@ export function FileUploadDropzone({
 
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 text-[#B5111B] shadow-xs flex items-center justify-center">
-              {acceptType === "image" ? <ImageIcon className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
+              {acceptType === "image" ? <ImageIcon weight="duotone" className="w-6 h-6" /> : <UploadSimpleIcon weight="duotone" className="w-6 h-6" />}
             </div>
             <div>
               <span className="text-xs font-bold text-slate-800">{helperText}</span>

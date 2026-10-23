@@ -2,40 +2,24 @@
 
 import * as React from "react"
 import {
-  DollarSign,
-  Search,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Lock,
-  Unlock,
-  ShieldCheck,
-  Receipt,
-  Building2,
-  MapPin,
-  X,
-  FileText,
-  TrendingUp,
-  ArrowUpRight,
-  ShieldAlert,
-  ChevronRight,
-  ChevronLeft,
-  MoreVertical,
-  Check,
-  User,
-  Filter,
-  CreditCard,
-  Send,
-  RotateCcw,
-  XCircle
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+  MagnifyingGlassIcon,
+  XIcon,
+  UserIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
+import { DataTable } from "@/components/ui/data-table"
+import { ColumnDef, SortingState } from "@tanstack/react-table"
 
 export type PaymentTrackingStatus = 'Paid' | 'Partially Paid' | 'Payment Hold' | 'Overdue' | 'Failed' | 'Refunded';
+
+/** Matches landing pricing packages (full upfront) */
+export type SubscriptionPackageType =
+  | "Scorecard Only ($15,000)"
+  | "Scorecard Subscription ($36,000)"
+  | "Combined Package ($48,000)";
 
 export interface AuditTransactionRow {
   id: string;
@@ -44,7 +28,7 @@ export interface AuditTransactionRow {
   customerEmail: string;
   projectName: string;
   countyOrState: string;
-  paymentType: "Platform Subscription ($149)" | "Report Generation Plan ($99)" | "Pay in Parts (50% Deposit)" | "Pay in Full ($248)";
+  paymentType: SubscriptionPackageType;
   paymentMethod: string;
   paidAmount: number;
   totalAmount: number;
@@ -56,295 +40,139 @@ export interface AuditTransactionRow {
 
 const ITEMS_PER_PAGE = 10;
 
+const PKG = {
+  scorecardOnly: { type: "Scorecard Only ($15,000)" as const, amount: 15000 },
+  subscription: { type: "Scorecard Subscription ($36,000)" as const, amount: 36000 },
+  combined: { type: "Combined Package ($48,000)" as const, amount: 48000 },
+};
+
 const INITIAL_TRANSACTIONS: AuditTransactionRow[] = [
   {
-    id: "TXN-8801",
-    orderNumber: "ORD-2026-001",
-    customerName: "Johnathan Smith",
-    customerEmail: "jsmith@wakegov.com",
-    projectName: "Metropolis Master Plan 2026",
-    countyOrState: "Wake County, NC",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "ACH / U.S. Bank Debit",
-    paidAmount: 149,
-    totalAmount: 248,
-    status: "Partially Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 2: Questionnaire Filled",
-    date: "Aug 18, 2026"
+    id: "TXN-8801", orderNumber: "ORD-2026-001", customerName: "Johnathan Smith", customerEmail: "jsmith@wakegov.com",
+    projectName: "Metropolis Master Plan 2026", countyOrState: "Wake County, NC",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "Stripe Checkout",
+    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Payment Hold",
+    stageUnlocked: false, stageLabel: "Step 1: Awaiting Full Payment", date: "Aug 18, 2026",
   },
   {
-    id: "TXN-8802",
-    orderNumber: "ORD-2026-002",
-    customerName: "Elena Rodriguez",
-    customerEmail: "erodriguez@nycedc.org",
-    projectName: "Hudson Yards District Vision 2026",
-    countyOrState: "New York County, NY",
-    paymentType: "Pay in Full ($248)",
-    paymentMethod: "Corporate Bank Transfer",
-    paidAmount: 248,
-    totalAmount: 248,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 6: Complete Report Delivered",
-    date: "Aug 17, 2026"
+    id: "TXN-8802", orderNumber: "ORD-2026-002", customerName: "Elena Rodriguez", customerEmail: "erodriguez@nycedc.org",
+    projectName: "Hudson Yards District Vision 2026", countyOrState: "New York County, NY",
+    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
+    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Aug 17, 2026",
   },
   {
-    id: "TXN-8803",
-    orderNumber: "ORD-2026-003",
-    customerName: "Marcus Vance",
-    customerEmail: "mvance@riversidedev.org",
-    projectName: "Riverside Gateway Plan 2026",
-    countyOrState: "Cook County, IL",
-    paymentType: "Report Generation Plan ($99)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 99,
-    totalAmount: 99,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 3: 3rd Party Web Data",
-    date: "Aug 15, 2026"
+    id: "TXN-8803", orderNumber: "ORD-2026-003", customerName: "Marcus Vance", customerEmail: "mvance@riversidedev.org",
+    projectName: "Riverside Gateway Plan 2026", countyOrState: "Cook County, IL",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Direct Debit",
+    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 3: 3rd-Party Data Ingestion", date: "Aug 15, 2026",
   },
   {
-    id: "TXN-8804",
-    orderNumber: "ORD-2026-004",
-    customerName: "Sarah Jenkins",
-    customerEmail: "s.jenkins@midtownalliance.org",
-    projectName: "Midtown Tech District 2026",
-    countyOrState: "Fulton County, GA",
-    paymentType: "Pay in Parts (50% Deposit)",
-    paymentMethod: "ACH / U.S. Bank Debit",
-    paidAmount: 124,
-    totalAmount: 248,
-    status: "Payment Hold",
-    stageUnlocked: false,
-    stageLabel: "Step 3 Hold (Auth Required)",
-    date: "Aug 12, 2026"
+    id: "TXN-8804", orderNumber: "ORD-2026-004", customerName: "Sarah Jenkins", customerEmail: "s.jenkins@midtownalliance.org",
+    projectName: "Midtown Tech District 2026", countyOrState: "Fulton County, GA",
+    paymentType: PKG.subscription.type, paymentMethod: "HubSpot Checkout",
+    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Payment Hold",
+    stageUnlocked: false, stageLabel: "Step 1: Package Checkout Hold", date: "Aug 12, 2026",
   },
   {
-    id: "TXN-8805",
-    orderNumber: "ORD-2026-005",
-    customerName: "Robert Chen",
-    customerEmail: "rchen@harborport.gov",
-    projectName: "Harbor View Revitalization 2026",
-    countyOrState: "King County, WA",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "ACH Wire Transfer",
-    paidAmount: 0,
-    totalAmount: 149,
-    status: "Overdue",
-    stageUnlocked: false,
-    stageLabel: "Step 1 Blocked (Unpaid)",
-    date: "Aug 01, 2026"
+    id: "TXN-8805", orderNumber: "ORD-2026-005", customerName: "Robert Chen", customerEmail: "rchen@harborport.gov",
+    projectName: "Harbor View Revitalization 2026", countyOrState: "King County, WA",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Wire Transfer",
+    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Overdue",
+    stageUnlocked: false, stageLabel: "Step 1: Payment Overdue", date: "Aug 01, 2026",
   },
   {
-    id: "TXN-8806",
-    orderNumber: "ORD-2026-006",
-    customerName: "Sophia Martinez",
-    customerEmail: "smartinez@austincommunity.org",
-    projectName: "Community Gardens 2026",
-    countyOrState: "Travis County, TX",
-    paymentType: "Report Generation Plan ($99)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 0,
-    totalAmount: 99,
-    status: "Failed",
-    stageUnlocked: false,
-    stageLabel: "Step 4 Blocked (ACH Failed)",
-    date: "Jul 28, 2026"
+    id: "TXN-8806", orderNumber: "ORD-2026-006", customerName: "Sophia Martinez", customerEmail: "smartinez@austincommunity.org",
+    projectName: "Community Gardens 2026", countyOrState: "Travis County, TX",
+    paymentType: PKG.subscription.type, paymentMethod: "Stripe Checkout",
+    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Failed",
+    stageUnlocked: false, stageLabel: "Step 1: Checkout Failed", date: "Jul 28, 2026",
   },
   {
-    id: "TXN-8807",
-    orderNumber: "ORD-2026-007",
-    customerName: "David Miller",
-    customerEmail: "dmiller@denverurban.gov",
-    projectName: "Downtown Transportation Corridor 2026",
-    countyOrState: "Denver County, CO",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "Corporate ACH Debit",
-    paidAmount: 149,
-    totalAmount: 149,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 2: Questionnaire Filled",
-    date: "Jul 25, 2026"
+    id: "TXN-8807", orderNumber: "ORD-2026-007", customerName: "David Miller", customerEmail: "dmiller@denverurban.gov",
+    projectName: "Downtown Transportation Corridor 2026", countyOrState: "Denver County, CO",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "Corporate ACH Debit",
+    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 2: Intake Questionnaire", date: "Jul 25, 2026",
   },
   {
-    id: "TXN-8808",
-    orderNumber: "ORD-2026-008",
-    customerName: "Jessica Taylor",
-    customerEmail: "jtaylor@miamidev.org",
-    projectName: "Brickell Financial Hub Assessment",
-    countyOrState: "Miami-Dade County, FL",
-    paymentType: "Report Generation Plan ($99)",
-    paymentMethod: "ACH / Bank Wire",
-    paidAmount: 99,
-    totalAmount: 99,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 5: Scorecard Certified",
-    date: "Jul 20, 2026"
+    id: "TXN-8808", orderNumber: "ORD-2026-008", customerName: "Jessica Taylor", customerEmail: "jtaylor@miamidev.org",
+    projectName: "Brickell Financial Hub Assessment", countyOrState: "Miami-Dade County, FL",
+    paymentType: PKG.subscription.type, paymentMethod: "ACH / Bank Wire",
+    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jul 20, 2026",
   },
   {
-    id: "TXN-8809",
-    orderNumber: "ORD-2026-009",
-    customerName: "Michael Brown",
-    customerEmail: "mbrown@bostonplanning.org",
-    projectName: "Seaport Innovation District Master Plan",
-    countyOrState: "Suffolk County, MA",
-    paymentType: "Pay in Full ($248)",
-    paymentMethod: "Corporate Bank Transfer",
-    paidAmount: 248,
-    totalAmount: 248,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 6: Complete Report Delivered",
-    date: "Jul 15, 2026"
+    id: "TXN-8809", orderNumber: "ORD-2026-009", customerName: "Michael Brown", customerEmail: "mbrown@bostonplanning.org",
+    projectName: "Seaport Innovation District Master Plan", countyOrState: "Suffolk County, MA",
+    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
+    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Jul 15, 2026",
   },
   {
-    id: "TXN-8810",
-    orderNumber: "ORD-2026-010",
-    customerName: "Amanda Wilson",
-    customerEmail: "awilson@phoenixdev.gov",
-    projectName: "Desert Ridge Innovation Campus 2026",
-    countyOrState: "Maricopa County, AZ",
-    paymentType: "Pay in Parts (50% Deposit)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 124,
-    totalAmount: 248,
-    status: "Partially Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 3: Web Audit in Progress",
-    date: "Jul 10, 2026"
+    id: "TXN-8810", orderNumber: "ORD-2026-010", customerName: "Amanda Wilson", customerEmail: "awilson@phoenixdev.gov",
+    projectName: "Desert Ridge Innovation Campus 2026", countyOrState: "Maricopa County, AZ",
+    paymentType: PKG.combined.type, paymentMethod: "Stripe Checkout",
+    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 3: 3rd-Party Data Ingestion", date: "Jul 10, 2026",
   },
   {
-    id: "TXN-8811",
-    orderNumber: "ORD-2026-011",
-    customerName: "Christopher Lee",
-    customerEmail: "clee@sfhousing.org",
-    projectName: "Mission Bay Residential Framework",
-    countyOrState: "San Francisco County, CA",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "ACH / U.S. Bank Debit",
-    paidAmount: 149,
-    totalAmount: 149,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 1: Account Login Active",
-    date: "Jul 05, 2026"
+    id: "TXN-8811", orderNumber: "ORD-2026-011", customerName: "Christopher Lee", customerEmail: "clee@sfhousing.org",
+    projectName: "Mission Bay Residential Framework", countyOrState: "San Francisco County, CA",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH / U.S. Bank Debit",
+    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 1: Package Paid", date: "Jul 05, 2026",
   },
   {
-    id: "TXN-8812",
-    orderNumber: "ORD-2026-012",
-    customerName: "Elizabeth Davis",
-    customerEmail: "edavis@dallasgrowth.gov",
-    projectName: "Uptown Pedestrian Mall Expansion",
-    countyOrState: "Dallas County, TX",
-    paymentType: "Report Generation Plan ($99)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 0,
-    totalAmount: 99,
-    status: "Payment Hold",
-    stageUnlocked: false,
-    stageLabel: "Step 5 Hold (Approval Pending)",
-    date: "Jun 28, 2026"
+    id: "TXN-8812", orderNumber: "ORD-2026-012", customerName: "Elizabeth Davis", customerEmail: "edavis@dallasgrowth.gov",
+    projectName: "Uptown Pedestrian Mall Expansion", countyOrState: "Dallas County, TX",
+    paymentType: PKG.subscription.type, paymentMethod: "HubSpot Checkout",
+    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Payment Hold",
+    stageUnlocked: false, stageLabel: "Step 1: Awaiting Full Payment", date: "Jun 28, 2026",
   },
   {
-    id: "TXN-8813",
-    orderNumber: "ORD-2026-013",
-    customerName: "James Anderson",
-    customerEmail: "janderson@seattleland.org",
-    projectName: "South Lake Union Tech Center",
-    countyOrState: "King County, WA",
-    paymentType: "Pay in Full ($248)",
-    paymentMethod: "Corporate Bank Transfer",
-    paidAmount: 248,
-    totalAmount: 248,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 6: Complete Report Delivered",
-    date: "Jun 20, 2026"
+    id: "TXN-8813", orderNumber: "ORD-2026-013", customerName: "James Anderson", customerEmail: "janderson@seattleland.org",
+    projectName: "South Lake Union Tech Center", countyOrState: "King County, WA",
+    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
+    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Jun 20, 2026",
   },
   {
-    id: "TXN-8814",
-    orderNumber: "ORD-2026-014",
-    customerName: "Patricia Thomas",
-    customerEmail: "pthomas@phillyredevelopment.gov",
-    projectName: "University City Knowledge Corridor",
-    countyOrState: "Philadelphia County, PA",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "ACH Wire Transfer",
-    paidAmount: 0,
-    totalAmount: 149,
-    status: "Overdue",
-    stageUnlocked: false,
-    stageLabel: "Step 1 Blocked (30 Days Overdue)",
-    date: "Jun 15, 2026"
+    id: "TXN-8814", orderNumber: "ORD-2026-014", customerName: "Patricia Thomas", customerEmail: "pthomas@phillyredevelopment.gov",
+    projectName: "University City Knowledge Corridor", countyOrState: "Philadelphia County, PA",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Wire Transfer",
+    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Overdue",
+    stageUnlocked: false, stageLabel: "Step 1: Payment Overdue", date: "Jun 15, 2026",
   },
   {
-    id: "TXN-8815",
-    orderNumber: "ORD-2026-015",
-    customerName: "Matthew Jackson",
-    customerEmail: "mjackson@portlandplanning.org",
-    projectName: "Pearl District Mixed-Use Vision",
-    countyOrState: "Multnomah County, OR",
-    paymentType: "Report Generation Plan ($99)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 99,
-    totalAmount: 99,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 5: Certified PDF Exported",
-    date: "Jun 08, 2026"
+    id: "TXN-8815", orderNumber: "ORD-2026-015", customerName: "Matthew Jackson", customerEmail: "mjackson@portlandplanning.org",
+    projectName: "Pearl District Mixed-Use Vision", countyOrState: "Multnomah County, OR",
+    paymentType: PKG.subscription.type, paymentMethod: "ACH Direct Debit",
+    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jun 08, 2026",
   },
   {
-    id: "TXN-8816",
-    orderNumber: "ORD-2026-016",
-    customerName: "Jennifer White",
-    customerEmail: "jwhite@nashvilledev.org",
-    projectName: "Music Row Cultural Heritage Plan",
-    countyOrState: "Davidson County, TN",
-    paymentType: "Pay in Parts (50% Deposit)",
-    paymentMethod: "ACH / Bank Wire",
-    paidAmount: 124,
-    totalAmount: 248,
-    status: "Partially Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 4: Final Score Calculated",
-    date: "Jun 01, 2026"
+    id: "TXN-8816", orderNumber: "ORD-2026-016", customerName: "Jennifer White", customerEmail: "jwhite@nashvilledev.org",
+    projectName: "Music Row Cultural Heritage Plan", countyOrState: "Davidson County, TN",
+    paymentType: PKG.scorecardOnly.type, paymentMethod: "Stripe Checkout",
+    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jun 01, 2026",
   },
   {
-    id: "TXN-8817",
-    orderNumber: "ORD-2026-017",
-    customerName: "Daniel Harris",
-    customerEmail: "dharris@minneapolisurban.gov",
-    projectName: "Nicolet Mall Greenway Project",
-    countyOrState: "Hennepin County, MN",
-    paymentType: "Platform Subscription ($149)",
-    paymentMethod: "ACH Direct Debit",
-    paidAmount: 149,
-    totalAmount: 149,
-    status: "Refunded",
-    stageUnlocked: false,
-    stageLabel: "Subscription Cancelled / Refunded",
-    date: "May 24, 2026"
+    id: "TXN-8817", orderNumber: "ORD-2026-017", customerName: "Daniel Harris", customerEmail: "dharris@minneapolisurban.gov",
+    projectName: "Nicolet Mall Greenway Project", countyOrState: "Hennepin County, MN",
+    paymentType: PKG.subscription.type, paymentMethod: "ACH Direct Debit",
+    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Refunded",
+    stageUnlocked: false, stageLabel: "Package Cancelled / Refunded", date: "May 24, 2026",
   },
   {
-    id: "TXN-8818",
-    orderNumber: "ORD-2026-018",
-    customerName: "Victoria Martin",
-    customerEmail: "vmartin@charlottedevelopment.org",
-    projectName: "Uptown Financial Center Phase II",
-    countyOrState: "Mecklenburg County, NC",
-    paymentType: "Pay in Full ($248)",
-    paymentMethod: "Corporate Bank Transfer",
-    paidAmount: 248,
-    totalAmount: 248,
-    status: "Paid",
-    stageUnlocked: true,
-    stageLabel: "Step 6: Complete Report Delivered",
-    date: "May 18, 2026"
-  }
+    id: "TXN-8818", orderNumber: "ORD-2026-018", customerName: "Victoria Martin", customerEmail: "vmartin@charlottedevelopment.org",
+    projectName: "Uptown Financial Center Phase II", countyOrState: "Mecklenburg County, NC",
+    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
+    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
+    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "May 18, 2026",
+  },
 ];
 
 export default function PaymentsPage() {
@@ -352,13 +180,15 @@ export default function PaymentsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(ITEMS_PER_PAGE);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   // Receipt Modal State
   const [selectedReceiptTxn, setSelectedReceiptTxn] = React.useState<AuditTransactionRow | null>(null);
 
   // Filtered Transactions Calculation
   const filteredTransactions = React.useMemo(() => {
-    return transactions.filter(t => {
+    let rows = transactions.filter(t => {
       const matchesSearch =
         t.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -375,19 +205,31 @@ export default function PaymentsPage() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [transactions, searchQuery, statusFilter]);
+
+    if (sorting.length > 0) {
+      const { id, desc } = sorting[0];
+      rows = [...rows].sort((a, b) => {
+        const av = (a as any)[id];
+        const bv = (b as any)[id];
+        if (typeof av === "number" && typeof bv === "number") return desc ? bv - av : av - bv;
+        return desc
+          ? String(bv ?? "").localeCompare(String(av ?? ""))
+          : String(av ?? "").localeCompare(String(bv ?? ""));
+      });
+    }
+    return rows;
+  }, [transactions, searchQuery, statusFilter, sorting]);
 
   // Pagination Calculations
-  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) || 1;
   const paginatedTransactions = React.useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredTransactions.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredTransactions, currentPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filteredTransactions.slice(start, start + pageSize);
+  }, [filteredTransactions, currentPage, pageSize]);
 
   // Reset to Page 1 when filter/search changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, pageSize, sorting]);
 
   // Metrics Summary
   const metrics = React.useMemo(() => {
@@ -396,6 +238,9 @@ export default function PaymentsPage() {
     const partialCount = transactions.filter(t => t.status === "Partially Paid").length;
     const holdCount = transactions.filter(t => t.status === "Payment Hold").length;
     const issueCount = transactions.filter(t => t.status === "Overdue" || t.status === "Failed").length;
+    const scorecardOnlyCount = transactions.filter(t => t.paymentType.startsWith("Scorecard Only")).length;
+    const subscriptionCount = transactions.filter(t => t.paymentType.startsWith("Scorecard Subscription")).length;
+    const combinedCount = transactions.filter(t => t.paymentType.startsWith("Combined Package")).length;
 
     return {
       totalCollected,
@@ -403,6 +248,9 @@ export default function PaymentsPage() {
       partialCount,
       holdCount,
       issueCount,
+      scorecardOnlyCount,
+      subscriptionCount,
+      combinedCount,
       totalCount: transactions.length
     };
   }, [transactions]);
@@ -450,6 +298,73 @@ export default function PaymentsPage() {
     }
   };
 
+  const paymentColumns = React.useMemo<ColumnDef<AuditTransactionRow>[]>(() => [
+    {
+      accessorKey: "customerName",
+      header: "Order / Customer",
+      cell: ({ row }) => {
+        const txn = row.original;
+        return (
+          <div className="flex items-center gap-2.5">
+            <div
+              onClick={() => setSelectedReceiptTxn(txn)}
+              className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-500 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer hover:bg-slate-200/70 hover:scale-105 transition-all"
+            >
+              <UserIcon weight="duotone" className="w-4 h-4 text-slate-500" />
+            </div>
+            <div>
+              <div
+                onClick={() => setSelectedReceiptTxn(txn)}
+                className="font-bold text-slate-900 text-xs hover:text-blue-600 transition-colors cursor-pointer"
+              >
+                {txn.customerName}
+              </div>
+              <div className="text-[10px] text-slate-400 font-mono">{txn.orderNumber} • {txn.date}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "paymentType",
+      header: "Payment Type",
+      cell: ({ row }) => (
+        <span className="font-bold text-slate-800 text-xs">{row.original.paymentType}</span>
+      ),
+    },
+    {
+      accessorKey: "paidAmount",
+      header: "Amount Paid",
+      cell: ({ row }) => (
+        <span className="font-black text-slate-900 text-xs">
+          ${row.original.paidAmount.toLocaleString("en-US")}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Payment Tracking Status",
+      cell: ({ row }) => renderStatusBadge(row.original.status),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Action</div>,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setSelectedReceiptTxn(row.original)}
+            className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] hover:bg-red-50 cursor-pointer rounded-xl h-7 px-2.5"
+          >
+            View Receipt
+          </Button>
+        </div>
+      ),
+    },
+  ], []);
+
   return (
     <div className="space-y-3 sm:space-y-3.5 w-full pb-0 text-left">
       {/* 4 High-Impact Stat Cards (MATCHES ORDERS PAGE DESIGN EXACTLY: Dark Red, Light Red, Slate, Dark Gray Theme) */}
@@ -487,7 +402,7 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        {/* Card 2: Platform Subscriptions (LIGHT RED) */}
+        {/* Card 2: Scorecard Only package */}
         <div className="relative rounded-2xl p-3.5 sm:p-4 overflow-hidden bg-[#b5111b] text-white shadow-md hover:shadow-xl transition-all duration-300 group cursor-default border border-red-500/30">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
@@ -502,12 +417,12 @@ export default function PaymentsPage() {
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-100 block drop-shadow-xs">Platform Subscriptions</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-100 block drop-shadow-xs">Scorecard Only</span>
               <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight drop-shadow-md">
-                $149 <span className="text-xs font-bold text-red-100">/ Account</span>
+                $15,000 <span className="text-xs font-bold text-red-100">/ Plan</span>
               </h3>
               <span className="text-[10px] font-bold text-white flex items-center gap-1 mt-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-2.5 py-0.5 rounded-full w-fit">
-                Step 1 Billing (On Login)
+                {metrics.scorecardOnlyCount} orders
               </span>
             </div>
             <div className="w-20 sm:w-24 h-10 shrink-0 opacity-95 group-hover:scale-110 transition-transform duration-300 pr-1">
@@ -527,7 +442,7 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        {/* Card 3: Report Audit Fees (LIGHT GRAY SLATE) */}
+        {/* Card 3: Subscription + Combined packages */}
         <div className="relative rounded-2xl p-3.5 sm:p-4 overflow-hidden bg-[#475569] text-white shadow-md hover:shadow-xl transition-all duration-300 group cursor-default border border-slate-500/40">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
@@ -541,12 +456,12 @@ export default function PaymentsPage() {
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-100 block drop-shadow-xs">Report Generation Fees</span>
-              <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight drop-shadow-md">
-                $99 <span className="text-xs font-bold text-slate-200">/ Report</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-100 block drop-shadow-xs">Multi-Year & Combined</span>
+              <h3 className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight drop-shadow-md">
+                $36k <span className="text-xs font-bold text-slate-200">/ $48k</span>
               </h3>
               <span className="text-[10px] font-bold text-white flex items-center gap-1 mt-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-2.5 py-0.5 rounded-full w-fit">
-                Step 2 Billing (On Delivery)
+                Sub {metrics.subscriptionCount} · Combined {metrics.combinedCount}
               </span>
             </div>
             <div className="w-16 sm:w-20 h-10 shrink-0 opacity-95 group-hover:scale-110 transition-transform duration-300 pr-1 flex items-center justify-center">
@@ -595,13 +510,12 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Main Payment & Settlement Audit Ledger Table */}
-      <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-xl overflow-hidden">
-        {/* Integrated Toolbar */}
-        <div className="p-2.5 sm:p-3 border-b border-slate-200/80 bg-slate-50/50 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+      {/* Toolbar + shared DataTable (no outer card — DataTable has its own chrome) */}
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Search Box */}
           <div className="relative w-full lg:w-80">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <MagnifyingGlassIcon weight="bold" className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search by Customer, Order #, Project or Type..."
@@ -614,7 +528,7 @@ export default function PaymentsPage() {
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <XIcon weight="bold" className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -679,164 +593,21 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        {/* Ledger Table */}
-        <div className="overflow-x-auto min-h-[360px]">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                <th className="px-3 py-2">Order / Customer</th>
-                <th className="px-3 py-2">Payment Type</th>
-                <th className="px-3 py-2">Payment Method</th>
-                <th className="px-3 py-2">Amount Paid / Total</th>
-                <th className="px-3 py-2">Payment Tracking Status</th>
-                <th className="px-3 py-2">Project Stage Lock</th>
-                <th className="px-3 py-2 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-medium">
-              {paginatedTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                    No transactions match your search filter.
-                  </td>
-                </tr>
-              ) : (
-                paginatedTransactions.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
-                    {/* Customer & Order */}
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          onClick={() => setSelectedReceiptTxn(row)}
-                          className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-500 flex items-center justify-center shrink-0 shadow-2xs cursor-pointer hover:bg-slate-200/70 hover:scale-105 transition-all"
-                        >
-                          <User className="w-4 h-4 text-slate-500" />
-                        </div>
-                        <div>
-                          <div
-                            onClick={() => setSelectedReceiptTxn(row)}
-                            className="font-bold text-slate-900 text-xs hover:text-blue-600 transition-colors cursor-pointer"
-                          >
-                            {row.customerName}
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-mono">{row.orderNumber} • {row.date}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Payment Type Column */}
-                    <td className="px-3 py-2.5 font-bold text-slate-800 text-xs">
-                      {row.paymentType}
-                    </td>
-
-                    {/* Payment Method */}
-                    <td className="px-3 py-2.5 text-slate-600 text-xs">
-                      {row.paymentMethod}
-                    </td>
-
-                    {/* Amount Paid / Total */}
-                    <td className="px-3 py-2.5 font-black text-slate-900 text-xs">
-                      ${row.paidAmount} <span className="text-slate-400 font-normal">/ ${row.totalAmount}</span>
-                    </td>
-
-                    {/* Payment Tracking Status (MATCHES USERS TABLE BADGE DESIGN) */}
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      {renderStatusBadge(row.status)}
-                    </td>
-
-                    {/* Project Stage Lock Column */}
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      {row.stageUnlocked ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                          <Unlock className="w-3 h-3 text-emerald-600" />
-                          {row.stageLabel}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
-                          <Lock className="w-3 h-3 text-rose-600" />
-                          {row.stageLabel}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSelectedReceiptTxn(row)}
-                        className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] hover:bg-red-50 cursor-pointer rounded-xl h-7 px-2.5"
-                      >
-                        View Receipt
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Table Pagination Bar (MATCHES USERS MODULE TABLE EXACTLY) */}
-        {filteredTransactions.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium text-slate-600">
-            <div>
-              Showing <span className="font-bold text-slate-900">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{" "}
-              <span className="font-bold text-slate-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)}</span> of{" "}
-              <span className="font-bold text-slate-900">{filteredTransactions.length}</span> transactions
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs text-slate-700"
-                title="First Page"
-              >
-                &laquo;
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs text-slate-700"
-              >
-                &lsaquo; Prev
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    "w-8 h-8 rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-2xs",
-                    currentPage === page
-                      ? "bg-[#B5111B] text-white shadow-xs font-black"
-                      : "border border-slate-200 bg-white hover:bg-slate-100 text-slate-700"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs text-slate-700"
-              >
-                Next &rsaquo;
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center justify-center font-bold text-xs shadow-2xs text-slate-700"
-                title="Last Page"
-              >
-                &raquo;
-              </button>
-            </div>
-          </div>
-        )}
-      </Card>
+        <DataTable
+          columns={paymentColumns}
+          data={paginatedTransactions}
+          totalItems={filteredTransactions.length}
+          page={currentPage}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          sorting={sorting}
+          onSortingChange={setSorting}
+        />
+      </div>
 
       {/* RECEIPT MODAL */}
       {selectedReceiptTxn && (
@@ -862,12 +633,8 @@ export default function PaymentsPage() {
                 <span className="font-bold text-slate-900">{selectedReceiptTxn.paymentType}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-2">
-                <span className="text-slate-500 font-medium">Payment Method:</span>
-                <span className="font-bold text-slate-900">{selectedReceiptTxn.paymentMethod}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-2">
                 <span className="text-slate-500 font-medium">Amount Settled:</span>
-                <span className="font-black text-emerald-700 text-sm">${selectedReceiptTxn.paidAmount}</span>
+                <span className="font-black text-emerald-700 text-sm">${selectedReceiptTxn.paidAmount.toLocaleString('en-US')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">Project Lock Status:</span>

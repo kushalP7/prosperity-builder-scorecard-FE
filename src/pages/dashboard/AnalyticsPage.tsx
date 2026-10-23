@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useAppStore } from "@/store"
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard"
-import { FolderOpen, Download } from "lucide-react"
+import { FolderOpenIcon, DownloadSimpleIcon } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 
 export default function GlobalAnalyticsPage() {
@@ -32,7 +32,7 @@ export default function GlobalAnalyticsPage() {
         </div>
         <div className="flex items-center gap-3 w-full md:max-w-md md:ml-auto">
           <div className="relative flex-1 min-w-0">
-            <FolderOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <FolderOpenIcon weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <select
               className="w-full pl-10 pr-10 py-2.5 bg-background border border-border rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
               value={selectedProjectId}
@@ -51,7 +51,7 @@ export default function GlobalAnalyticsPage() {
             </div>
           </div>
           <Button variant="outline" className="gap-2 shrink-0 rounded-xl h-[42px] border-border shadow-sm bg-background">
-            <Download className="h-4 w-4" />
+            <DownloadSimpleIcon weight="bold" className="h-4 w-4" />
             Export
           </Button>
         </div>

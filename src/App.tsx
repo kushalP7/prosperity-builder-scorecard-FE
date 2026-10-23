@@ -84,11 +84,11 @@ export function App() {
           />
           <Route path="/framework" element={<FrameworkPage />} />
           <Route path="/glossary" element={<GlossaryPage />} />
-          {/* <Route path="/contact" element={<ContactPage />} /> KP */}
-          {/* <Route path="/enterprise-contact" element={<Navigate to="/contact" replace />}/> KP  */}
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/enterprise-contact" element={<Navigate to="/contact" replace />} />
           {/* KP */}
-          <Route path="/pricing" element={<PricingPage />} />
-          {/* <Route path="/pricing" element={<Navigate to="/contact" replace />} /> KP */}
+          {/* <Route path="/pricing" element={<PricingPage />} /> */}
+          <Route path="/pricing" element={<Navigate to="/contact" replace />} />
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/project-portfolio" element={<ProjectPortfolioPage />} />
           <Route

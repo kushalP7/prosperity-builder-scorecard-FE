@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Download, ExternalLink } from "lucide-react";
+import {
+  PlayIcon,
+  PauseIcon,
+  ArrowCounterClockwiseIcon,
+  ArrowClockwiseIcon,
+  SpeakerHighIcon,
+  SpeakerSlashIcon,
+  DownloadSimpleIcon,
+} from "@phosphor-icons/react";
 
 interface CustomAudioPlayerProps {
   src: string;
@@ -206,7 +214,7 @@ export function CustomAudioPlayer({
             title="Rewind 15 seconds"
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
+            <ArrowCounterClockwiseIcon weight="bold" className="w-4 h-4" />
           </button>
 
           <button
@@ -215,7 +223,7 @@ export function CustomAudioPlayer({
             title="Forward 15 seconds"
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
           >
-            <RotateCw className="w-4 h-4" />
+            <ArrowClockwiseIcon weight="bold" className="w-4 h-4" />
           </button>
         </div>
 
@@ -228,9 +236,9 @@ export function CustomAudioPlayer({
             title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-current" />
+              <PauseIcon weight="fill" className="w-5 h-5 fill-current" />
             ) : (
-              <Play className="w-5 h-5 fill-current translate-x-0.5" />
+              <PlayIcon weight="fill" className="w-5 h-5 fill-current translate-x-0.5" />
             )}
           </button>
         </div>
@@ -245,9 +253,9 @@ export function CustomAudioPlayer({
               title={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted || volume === 0 ? (
-                <VolumeX className="w-4 h-4 text-[#B5111B]" />
+                <SpeakerSlashIcon weight="bold" className="w-4 h-4 text-[#B5111B]" />
               ) : (
-                <Volume2 className="w-4 h-4" />
+                <SpeakerHighIcon weight="bold" className="w-4 h-4" />
               )}
             </button>
             <input
@@ -270,7 +278,7 @@ export function CustomAudioPlayer({
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
               title="Download or open audio stream"
             >
-              <Download className="w-4 h-4" />
+              <DownloadSimpleIcon weight="bold" className="w-4 h-4" />
             </a>
           )}
         </div>

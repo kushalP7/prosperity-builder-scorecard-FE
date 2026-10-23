@@ -1,6 +1,6 @@
 "use client"
 
-import { ShieldCheck, MapPin } from "lucide-react"
+import { ShieldCheckIcon, MapPinIcon } from "@phosphor-icons/react"
 import { CommunityWedgeWheel } from "./CommunityWedgeWheel"
 
 export function HeroSection() {
@@ -27,12 +27,12 @@ export function HeroSection() {
             {/* Header Heritage & Location Bar - Left Vertical Crimson Accent Bar (Single Line) */}
             <div className="border-l-2 border-[#E11D48] pl-3 py-0.5 flex flex-wrap items-center gap-2.5 sm:gap-3">
               <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-black uppercase tracking-widest text-[#E11D48]">
-                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <ShieldCheckIcon weight="duotone" className="w-4 h-4 shrink-0 text-[#E11D48]" />
                 <span>ESTABLISHED 1992</span>
               </div>
               <span className="text-white/30 text-xs font-normal">•</span>
               <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-rose-100/90">
-                <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <MapPinIcon weight="duotone" className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>Davidson, North Carolina</span>
               </div>
             </div>

@@ -1,7 +1,6 @@
 "use client"
 
-import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { Dropdown } from "@/components/ui/dropdown"
 
 export interface PaginationProps {
@@ -73,7 +72,7 @@ export function Pagination({
             className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition shadow-2xs cursor-pointer"
             title="Previous Page"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <CaretLeftIcon weight="bold" className="w-4 h-4" />
           </button>
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
@@ -116,7 +115,7 @@ export function Pagination({
             className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition shadow-2xs cursor-pointer"
             title="Next Page"
           >
-            <ChevronRight className="w-4 h-4" />
+            <CaretRightIcon weight="bold" className="w-4 h-4" />
           </button>
         </div>
       )}

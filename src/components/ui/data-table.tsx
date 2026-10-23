@@ -9,14 +9,14 @@ import {
   SortingState,
 } from "@tanstack/react-table"
 import {
-  ChevronLeft,
-  ChevronRight,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Loader2,
-  FileQuestion,
-} from "lucide-react"
+  CaretLeftIcon,
+  CaretRightIcon,
+  ArrowsDownUpIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  SpinnerGapIcon,
+  FileDottedIcon,
+} from "@phosphor-icons/react"
 import { Dropdown } from "@/components/ui/dropdown"
 
 interface DataTableProps<TData, TValue> {
@@ -29,6 +29,8 @@ interface DataTableProps<TData, TValue> {
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
   pageSizeOptions?: number[]
+  /** Scroll inside the table card when pageSize is greater than this (default 10). Orders uses 5. */
+  scrollAfterPageSize?: number
   isLoading?: boolean
   emptyMessage?: string
   emptySubtext?: string
@@ -48,6 +50,7 @@ export function DataTable<TData, TValue>({
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
+  scrollAfterPageSize = 10,
   isLoading = false,
   emptyMessage = "No records found",
   emptySubtext = "No records match your active search terms and filter criteria.",
@@ -78,6 +81,8 @@ export function DataTable<TData, TValue>({
   const computedTotalPages = totalPages !== undefined ? totalPages : Math.max(1, Math.ceil(total / pageSize))
   const startItem = total > 0 ? (page - 1) * pageSize + 1 : 0
   const endItem = Math.min(total, page * pageSize)
+  // Default page size stays natural height; larger sizes scroll inside the card (not the page)
+  const scrollInsideCard = pageSize > scrollAfterPageSize
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -86,18 +91,27 @@ export function DataTable<TData, TValue>({
         {/* Loading Overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center gap-2 animate-in fade-in duration-150">
-            <Loader2 className="w-7 h-7 text-[#B5111B] animate-spin" />
+            <SpinnerGapIcon weight="bold" className="w-7 h-7 text-[#B5111B] animate-spin" />
             <span className="text-xs font-bold text-slate-700">Updating records...</span>
           </div>
         )}
 
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div
+          className={`scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent ${
+            scrollInsideCard ? "overflow-auto" : "overflow-x-auto"
+          }`}
+          style={
+            scrollInsideCard
+              ? { maxHeight: "min(36rem, calc(100dvh - 18rem))" }
+              : undefined
+          }
+        >
           <table className="w-full text-left border-collapse min-w-[720px]">
-            <thead>
+            <thead className="sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr
                   key={headerGroup.id}
-                  className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider"
+                  className="bg-slate-50/95 backdrop-blur-sm border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider shadow-[0_1px_0_0_rgb(226_232_240)]"
                 >
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort()
@@ -106,7 +120,7 @@ export function DataTable<TData, TValue>({
                     return (
                       <th
                         key={header.id}
-                        className={`py-3 px-4 select-none ${canSort ? "cursor-pointer hover:bg-slate-100/70 transition-colors" : ""
+                        className={`py-3 px-4 select-none bg-slate-50/95 ${canSort ? "cursor-pointer hover:bg-slate-100/70 transition-colors" : ""
                           }`}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                       >
@@ -115,11 +129,11 @@ export function DataTable<TData, TValue>({
                           {canSort && (
                             <span className="text-slate-400">
                               {sortDirection === "asc" ? (
-                                <ArrowUp className="w-3.5 h-3.5 text-[#B5111B]" />
+                                <ArrowUpIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B]" />
                               ) : sortDirection === "desc" ? (
-                                <ArrowDown className="w-3.5 h-3.5 text-[#B5111B]" />
+                                <ArrowDownIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B]" />
                               ) : (
-                                <ArrowUpDown className="w-3 h-3 text-slate-300" />
+                                <ArrowsDownUpIcon weight="bold" className="w-3 h-3 text-slate-300" />
                               )}
                             </span>
                           )}
@@ -136,7 +150,7 @@ export function DataTable<TData, TValue>({
                 <tr>
                   <td colSpan={columns.length} className="py-16 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center space-y-2.5 max-w-sm mx-auto">
-                      <FileQuestion className="w-10 h-10 text-slate-300" />
+                      <FileDottedIcon weight="duotone" className="w-10 h-10 text-slate-300" />
                       <p className="text-sm font-bold text-slate-800">{emptyMessage}</p>
                       {emptySubtext && <p className="text-xs text-slate-500">{emptySubtext}</p>}
                       {emptyAction && <div className="pt-2">{emptyAction}</div>}
@@ -203,7 +217,7 @@ export function DataTable<TData, TValue>({
               className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition shadow-2xs cursor-pointer"
               title="Previous Page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <CaretLeftIcon weight="bold" className="w-4 h-4" />
             </button>
 
             {Array.from({ length: computedTotalPages }, (_, i) => i + 1).map((pg) => {
@@ -246,7 +260,7 @@ export function DataTable<TData, TValue>({
               className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition shadow-2xs cursor-pointer"
               title="Next Page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <CaretRightIcon weight="bold" className="w-4 h-4" />
             </button>
           </div>
         )}

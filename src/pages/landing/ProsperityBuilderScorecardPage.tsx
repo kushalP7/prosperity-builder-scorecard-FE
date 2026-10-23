@@ -5,8 +5,10 @@ import { Link } from "@/lib/router-compat"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { ReportShowcaseSection } from "@/components/landing/ReportShowcaseSection"
+import { EnterpriseContactModal } from "@/components/landing/EnterpriseContactModal"
 
 export default function ProsperityBuilderScorecardPage() {
+  const [contactModalOpen, setContactModalOpen] = React.useState<boolean>(false)
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       {/* Top Navigation */}
@@ -30,23 +32,24 @@ export default function ProsperityBuilderScorecardPage() {
 
             {/* Clean Navigation Links */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/categories"
-                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors"
+              <button
+                type="button"
+                onClick={() => setContactModalOpen(true)}
+                className="px-5 py-2.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold transition-colors cursor-pointer"
               >
-                Explore 12 Categories
-              </Link>
-              <Link
-                // href="/contact" //KP
-                href="/pricing"
-                className="px-5 py-2.5 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold transition-colors"
-              >
-                {/* Request Enterprise Consultation */}
                 View Pricing Plans
-              </Link>
+              </button>
             </div>
           </div>
         </section>
+
+        {/* Enterprise Contact Modal */}
+        <EnterpriseContactModal
+          isOpen={contactModalOpen}
+          onClose={() => setContactModalOpen(false)}
+          title="Pricing Plans &amp; Subscription Inquiry"
+          subtitle="Please fill out your details to discuss pricing plans and subscription options."
+        />
 
         {/* 1. Scorecard PDF Report Design Showcase (Interactive 3D Folio) */}
         <ReportShowcaseSection />

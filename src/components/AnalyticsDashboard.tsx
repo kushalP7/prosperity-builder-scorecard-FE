@@ -3,9 +3,50 @@
 import * as React from "react"
 import { use } from "react"
 import { useAppStore } from "@/store"
-import { PieChart as PieChartIcon, Settings2, Hash, AlertCircle, Wallet, ShoppingCart, Users, DollarSign, Target, ArrowUpRight, ArrowDownRight, ChevronDown, MoreVertical, ShieldAlert, ShieldCheck, Siren, Map, Building2, Wrench, Activity, AlertTriangle, FileText, CheckCircle2, Shield, Flame, Crosshair, Bus, Palette, GraduationCap, Briefcase, ShoppingBag, Heart, Landmark, Home, Trees, Compass, Leaf, TrendingUp, Cpu } from "lucide-react"
+import {
+  ChartPieIcon,
+  GearIcon,
+  HashIcon,
+  WarningCircleIcon,
+  WalletIcon,
+  ShoppingCartIcon,
+  UsersIcon,
+  CurrencyDollarIcon,
+  TargetIcon,
+  ArrowUpRightIcon,
+  ArrowDownRightIcon,
+  CaretDownIcon,
+  DotsThreeVerticalIcon,
+  ShieldWarningIcon,
+  ShieldCheckIcon,
+  SirenIcon,
+  MapTrifoldIcon,
+  BuildingsIcon,
+  WrenchIcon,
+  ActivityIcon,
+  WarningIcon,
+  FileTextIcon,
+  CheckCircleIcon,
+  ShieldIcon,
+  FlameIcon,
+  CrosshairIcon,
+  BusIcon,
+  PaletteIcon,
+  GraduationCapIcon,
+  BriefcaseIcon,
+  ShoppingBagIcon,
+  HeartIcon,
+  BankIcon,
+  HouseIcon,
+  TreeEvergreenIcon,
+  CompassIcon,
+  LeafIcon,
+  TrendUpIcon,
+  CpuIcon
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
+import { RoseLoader } from "@/components/ui/loader"
 import { evaluateWidgetData, calculateGaugeValue } from "@/lib/analyticsEngine"
 import { apiClient } from "@/lib/api"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ComposedChart, Label } from 'recharts'
@@ -191,108 +232,51 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
   const { projects, widgets, templates, toggleProjectWidget, updateDashboardLayout } = useAppStore()
   const [isConfigOpen, setIsConfigOpen] = React.useState(false)
   const [hoveredRoseSlice, setHoveredRoseSlice] = React.useState<{ widgetId: string; name: string; value: number; percent: string; color: string; x: number; y: number } | null>(null)
-  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false)
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(true)
 
   const project = projects.find(p => p.id === projectId)
 
+  // Always refresh + show loader when the selected project changes
   React.useEffect(() => {
-    if (projectId && (!project?.data || Object.keys(project.data).length === 0)) {
-      setIsLoadingDetails(true)
-      apiClient.getProject(projectId).then(fresh => {
-        if (fresh && fresh.data && Object.keys(fresh.data).length > 0) {
-          useAppStore.setState(state => ({
-            projects: state.projects.map(p => p.id === projectId ? { ...p, ...fresh, data: fresh.data } : p),
-            activeProject: state.activeProject?.id === projectId ? { ...state.activeProject, ...fresh, data: fresh.data } : state.activeProject
-          }));
+    if (!projectId) return
+
+    let cancelled = false
+    setIsLoadingDetails(true)
+    const startedAt = Date.now()
+
+    apiClient.getProject(projectId)
+      .then((fresh) => {
+        if (cancelled || !fresh) return
+        useAppStore.setState((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === projectId ? { ...p, ...fresh, data: fresh.data ?? p.data } : p
+          ),
+          activeProject:
+            state.activeProject?.id === projectId
+              ? { ...state.activeProject, ...fresh, data: fresh.data ?? state.activeProject.data }
+              : state.activeProject,
+        }))
+      })
+      .catch(console.error)
+      .finally(() => {
+        const finish = () => {
+          if (!cancelled) setIsLoadingDetails(false)
         }
-      }).catch(console.error).finally(() => {
-        setIsLoadingDetails(false)
-      });
+        // Keep loader visible briefly so project switches always feel intentional
+        const elapsed = Date.now() - startedAt
+        if (elapsed < 350) {
+          window.setTimeout(finish, 350 - elapsed)
+        } else {
+          finish()
+        }
+      })
+
+    return () => {
+      cancelled = true
     }
-  }, [projectId, project?.data]);
+  }, [projectId])
 
-  if (!project) return <div className="p-8">Project not found</div>
-
-  const assignedSectionIds = (project.assignedSections || []).map(s => s.id);
-  let enabledWidgets = (project.enabledWidgets && project.enabledWidgets.length > 0)
-    ? widgets.filter(w => project.enabledWidgets!.includes(w.id))
-    : [];
-  if (enabledWidgets.length === 0) {
-    enabledWidgets = widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
-  }
-  const isStatCard = (w: any) => w.chartType === 'stat_card' || (w.title && w.title.endsWith(' Score'));
-  const statCards = enabledWidgets.filter(w => isStatCard(w));
-  const otherChartsRaw = enabledWidgets.filter(w => !isStatCard(w));
-
-  const sectionScores = statCards.map(widget => {
-    const cleanTitle = widget.title.endsWith(' Score') ? widget.title.slice(0, -6).trim() : widget.title.trim();
-    const rollupCat = (project as any).rollup?.categoryScores?.find((cs: any) =>
-      cs.categoryLabel?.toLowerCase() === cleanTitle.toLowerCase() ||
-      cleanTitle.toLowerCase().includes(cs.categoryLabel?.toLowerCase()) ||
-      cs.categoryLabel?.toLowerCase().includes(cleanTitle.toLowerCase())
-    );
-    if (rollupCat && rollupCat.scoreTenScale !== undefined) {
-      return {
-        name: cleanTitle,
-        score: Number(rollupCat.scoreTenScale)
-      };
-    }
-
-    const data = evaluateWidgetData(widget, project, templates);
-    let totalClient = 0;
-    let totalHighest = 0;
-    let hasBoth = false;
-    data.forEach((dp: any) => {
-      if (typeof dp['Client Total Score'] === 'number' && typeof dp['Highest Score'] === 'number') {
-        totalClient += dp['Client Total Score'];
-        totalHighest += dp['Highest Score'];
-        hasBoth = true;
-      }
-    });
-    let rawScore = 0;
-    if (hasBoth && totalHighest > 0) {
-      rawScore = (totalClient / totalHighest) * 10;
-    } else {
-      const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
-      if (positivePoints.length > 0) {
-        const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
-        rawScore = avg > 10 ? Math.min(10, avg / 10) : avg;
-      } else {
-        rawScore = data[0]?.value || 0;
-      }
-    }
-    const finalScore = Math.min(10, Math.max(0, rawScore));
-
-    return {
-      name: cleanTitle,
-      score: Number(finalScore.toFixed(1))
-    };
-  });
-
-  const scoredSections = sectionScores.filter(s => s.score > 0);
-  const overallScore = (project as any).rollup?.overallScoreTenScale !== undefined
-    ? Number((project as any).rollup.overallScoreTenScale)
-    : (scoredSections.length > 0
-        ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
-        : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0));
-
-  const statCardsSortedByScore = statCards
-    .map((widget, index) => ({ widget, score: sectionScores[index]?.score ?? 0 }))
-    .sort((a, b) => b.score - a.score);
-
-  const overallGaugeWidget = {
-    id: 'overall-gauge',
-    title: 'Overall Score',
-    chartType: 'speed_gauge',
-    categoryId: 'none',
-    aggregation: 'none'
-  } as any;
-  const otherChartsWithData = otherChartsRaw.map(widget => ({
-    widget,
-    data: evaluateWidgetData(widget, project, templates)
-  }));
-
-  // Standard category section ordering
+  // Standard category section ordering (stable across renders; must stay above any early return)
   const CATEGORY_ORDER = [
     'Accessibility & Transportation',
     'Arts & Culture',
@@ -317,6 +301,91 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     return 'Other';
   };
 
+  const isStatCard = (w: any) => w.chartType === 'stat_card' || (w.title && w.title.endsWith(' Score'));
+
+  const assignedSectionIds = (project?.assignedSections || []).map((s: any) => s.id);
+  let enabledWidgets = (project?.enabledWidgets && project.enabledWidgets.length > 0)
+    ? widgets.filter(w => project!.enabledWidgets!.includes(w.id))
+    : [];
+  if (project && enabledWidgets.length === 0) {
+    enabledWidgets = widgets.filter(w => !w.sectionId || assignedSectionIds.includes(w.sectionId));
+  }
+  const statCards = enabledWidgets.filter(w => isStatCard(w));
+  const otherChartsRaw = enabledWidgets.filter(w => !isStatCard(w));
+
+  const sectionScores = project
+    ? statCards.map(widget => {
+        const cleanTitle = widget.title.endsWith(' Score') ? widget.title.slice(0, -6).trim() : widget.title.trim();
+        const rollupCat = (project as any).rollup?.categoryScores?.find((cs: any) =>
+          cs.categoryLabel?.toLowerCase() === cleanTitle.toLowerCase() ||
+          cleanTitle.toLowerCase().includes(cs.categoryLabel?.toLowerCase()) ||
+          cs.categoryLabel?.toLowerCase().includes(cleanTitle.toLowerCase())
+        );
+        if (rollupCat && rollupCat.scoreTenScale !== undefined) {
+          return {
+            name: cleanTitle,
+            score: Number(rollupCat.scoreTenScale)
+          };
+        }
+
+        const data = evaluateWidgetData(widget, project, templates);
+        let totalClient = 0;
+        let totalHighest = 0;
+        let hasBoth = false;
+        data.forEach((dp: any) => {
+          if (typeof dp['Client Total Score'] === 'number' && typeof dp['Highest Score'] === 'number') {
+            totalClient += dp['Client Total Score'];
+            totalHighest += dp['Highest Score'];
+            hasBoth = true;
+          }
+        });
+        let rawScore = 0;
+        if (hasBoth && totalHighest > 0) {
+          rawScore = (totalClient / totalHighest) * 10;
+        } else {
+          const positivePoints = data.filter((d: any) => typeof d.value === 'number' && d.value > 0);
+          if (positivePoints.length > 0) {
+            const avg = positivePoints.reduce((sum: number, d: any) => sum + d.value, 0) / positivePoints.length;
+            rawScore = avg > 10 ? Math.min(10, avg / 10) : avg;
+          } else {
+            rawScore = data[0]?.value || 0;
+          }
+        }
+        const finalScore = Math.min(10, Math.max(0, rawScore));
+
+        return {
+          name: cleanTitle,
+          score: Number(finalScore.toFixed(1))
+        };
+      })
+    : [];
+
+  const scoredSections = sectionScores.filter(s => s.score > 0);
+  const overallScore = project && (project as any).rollup?.overallScoreTenScale !== undefined
+    ? Number((project as any).rollup.overallScoreTenScale)
+    : (scoredSections.length > 0
+        ? scoredSections.reduce((a, b) => a + b.score, 0) / scoredSections.length
+        : (sectionScores.length > 0 ? sectionScores.reduce((a, b) => a + b.score, 0) / sectionScores.length : 0));
+
+  const statCardsSortedByScore = statCards
+    .map((widget, index) => ({ widget, score: sectionScores[index]?.score ?? 0 }))
+    .sort((a, b) => b.score - a.score);
+
+  const overallGaugeWidget = {
+    id: 'overall-gauge',
+    title: 'Overall Score',
+    chartType: 'speed_gauge',
+    categoryId: 'none',
+    aggregation: 'none'
+  } as any;
+  const otherChartsWithData = project
+    ? otherChartsRaw.map(widget => ({
+        widget,
+        data: evaluateWidgetData(widget, project, templates)
+      }))
+    : [];
+
+  // Hooks must run every render (before any early return) — loading gate used to skip this useMemo
   const groupedCategoryCharts = React.useMemo(() => {
     const charts = [...otherChartsWithData];
     return charts.sort((a, b) => {
@@ -344,66 +413,81 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     });
   }, [otherChartsWithData]);
 
+  if (isLoadingDetails) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        className="bg-surface rounded-2xl border border-border min-h-[420px] flex flex-col items-center justify-center gap-3 shadow-sm animate-in fade-in duration-200"
+      >
+        <RoseLoader size="md" />
+        <p className="text-sm font-semibold text-slate-600">Updating dashboard for selected project...</p>
+      </div>
+    )
+  }
+
+  if (!project) return <div className="p-8">Project not found</div>
+
   const getWidgetTheme = (title: string) => {
     const lower = title.toLowerCase();
 
     if (lower.includes('accessibility') || lower.includes('transportation')) {
-      return { icon: Bus, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
+      return { icon: BusIcon, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
     }
     if (lower.includes('arts') || lower.includes('culture')) {
-      return { icon: Palette, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
+      return { icon: PaletteIcon, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
     }
     if (lower.includes('crime') || lower.includes('safety')) {
-      return { icon: Siren, color: '#ef4444', bg: 'bg-red-500/10 text-red-600 border-red-500/20' };
+      return { icon: SirenIcon, color: '#ef4444', bg: 'bg-red-500/10 text-red-600 border-red-500/20' };
     }
     if (lower.includes('education')) {
-      return { icon: GraduationCap, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' };
+      return { icon: GraduationCapIcon, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' };
     }
     if (lower.includes('employment') || lower.includes('labor')) {
-      return { icon: Briefcase, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+      return { icon: BriefcaseIcon, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
     }
     if (lower.includes('goods') || lower.includes('services')) {
-      return { icon: ShoppingBag, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+      return { icon: ShoppingBagIcon, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
     }
     if (lower.includes('healthcare') || lower.includes('wellness')) {
-      return { icon: Heart, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
+      return { icon: HeartIcon, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
     }
     if (lower.includes('historic') || lower.includes('preservation')) {
-      return { icon: Landmark, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
+      return { icon: BankIcon, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
     }
     if (lower.includes('housing')) {
-      return { icon: Home, color: '#2563eb', bg: 'bg-sky-500/10 text-sky-600 border-sky-500/20' };
+      return { icon: HouseIcon, color: '#2563eb', bg: 'bg-sky-500/10 text-sky-600 border-sky-500/20' };
     }
     if (lower.includes('infrastructure')) {
-      return { icon: Building2, color: '#f97316', bg: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
+      return { icon: BuildingsIcon, color: '#f97316', bg: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
     }
     if (lower.includes('open space') || lower.includes('recreation')) {
-      return { icon: Trees, color: '#16a34a', bg: 'bg-green-500/10 text-green-600 border-green-500/20' };
+      return { icon: TreeEvergreenIcon, color: '#16a34a', bg: 'bg-green-500/10 text-green-600 border-green-500/20' };
     }
     if (lower.includes('planning') || lower.includes('land use')) {
-      return { icon: Map, color: '#7c3aed', bg: 'bg-violet-500/10 text-violet-600 border-violet-500/20' };
+      return { icon: MapTrifoldIcon, color: '#7c3aed', bg: 'bg-violet-500/10 text-violet-600 border-violet-500/20' };
     }
     if (lower.includes('sustainability') || lower.includes('environment')) {
-      return { icon: Leaf, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+      return { icon: LeafIcon, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
     }
     if (lower.includes('economic') || lower.includes('vitality') || lower.includes('growth')) {
-      return { icon: TrendingUp, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+      return { icon: TrendUpIcon, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
     }
     if (lower.includes('digital') || lower.includes('smart city')) {
-      return { icon: Cpu, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
+      return { icon: CpuIcon, color: '#06b6d4', bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' };
     }
     if (lower.includes('community') || lower.includes('equity')) {
-      return { icon: Users, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
+      return { icon: UsersIcon, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' };
     }
 
     const themes = [
-      { icon: Target, color: '#b5111a', bg: 'bg-red-500/10 text-red-600 border-red-500/20' },
-      { icon: Wallet, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
-      { icon: ShoppingCart, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-      { icon: Users, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-      { icon: DollarSign, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-      { icon: PieChartIcon, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
-      { icon: Activity, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' }
+      { icon: TargetIcon, color: '#b5111a', bg: 'bg-red-500/10 text-red-600 border-red-500/20' },
+      { icon: WalletIcon, color: '#6366f1', bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
+      { icon: ShoppingCartIcon, color: '#3b82f6', bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+      { icon: UsersIcon, color: '#10b981', bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+      { icon: CurrencyDollarIcon, color: '#f59e0b', bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+      { icon: ChartPieIcon, color: '#8b5cf6', bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
+      { icon: ActivityIcon, color: '#ec4899', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20' }
     ];
     let hash = 0;
     for (let i = 0; i < title.length; i++) {
@@ -499,7 +583,7 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
     if (data.length === 0) {
       return (
         <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-muted/20 rounded-md border border-dashed">
-          <AlertCircle className="h-6 w-6 mb-2 opacity-50" />
+          <WarningCircleIcon weight="duotone" className="h-6 w-6 mb-2 opacity-50" />
           <span className="text-sm">No data available</span>
         </div>
       );
@@ -683,14 +767,14 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
       {enabledWidgets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 text-center border border-dashed border-border/60 rounded-3xl bg-surface/30 backdrop-blur-sm">
           <div className="p-4 bg-muted/30 rounded-full mb-4">
-            <PieChartIcon className="h-10 w-10 text-muted-foreground opacity-50" />
+            <ChartPieIcon weight="duotone" className="h-10 w-10 text-muted-foreground opacity-50" />
           </div>
           <h3 className="text-xl font-bold text-foreground">Dashboard is Empty</h3>
           <p className="text-sm text-muted-foreground max-w-sm mt-2 mb-8 leading-relaxed">
             You haven't enabled any widgets for this project yet. Click below to select widgets created in the Analytics Maker.
           </p>
           <Button onClick={() => setIsConfigOpen(true)} variant="outline" className="rounded-full px-8 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
-            <Settings2 className="h-4 w-4 mr-2" />
+            <GearIcon weight="duotone" className="h-4 w-4 mr-2" />
             Select Widgets
           </Button>
         </div>

@@ -2,7 +2,16 @@
 
 import * as React from "react"
 import { Link, usePathname } from "@/lib/router-compat"
-import { Menu, X, ChevronDown, Award, Layers, DollarSign, Building2, BarChart3 } from "lucide-react"
+import {
+  ListIcon,
+  XIcon,
+  CaretDownIcon,
+  CertificateIcon,
+  StackIcon,
+  CurrencyDollarIcon,
+  BuildingsIcon,
+  ChartBarIcon,
+} from "@phosphor-icons/react"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -17,32 +26,32 @@ export function LandingHeader() {
       name: "Scorecard Overview",
       description: "Comprehensive municipal dossier framework",
       href: "/prosperity-builder-scorecard",
-      icon: Award,
+      icon: CertificateIcon,
     },
-    {
-      name: "Categories",
-      description: "12 core community performance modules",
-      href: "/categories",
-      icon: Layers,
-    },
+    // {
+    //   name: "Categories",
+    //   description: "12 core community performance modules",
+    //   href: "/categories",
+    //   icon: Layers,
+    // },
     {
       name: "Executive Analytics",
       description: "Cross-jurisdiction data dashboards & insights",
       href: "/executive-analytics",
-      icon: BarChart3,
-    },
-    {
-      name: "Pricing Plans",
-      description: "Single reports & annual subscription tiers",
-      href: "/pricing",
-      icon: DollarSign,
+      icon: ChartBarIcon,
     },
     // {
-    //   name: "Inquire for Pricing Plans",
-    //   description: "Make an inquiry for pricing plans",
-    //   href: "/contact",
+    //   name: "Pricing Plans",
+    //   description: "Single reports & annual subscription tiers",
+    //   href: "/pricing",
     //   icon: DollarSign,
-    // }, //KP
+    // },
+    {
+      name: "Inquire for Pricing Plans",
+      description: "Make an inquiry for pricing plans",
+      href: "/contact",
+      icon: CurrencyDollarIcon,
+    },
   ];
 
   const contactSubItems = [
@@ -50,7 +59,7 @@ export function LandingHeader() {
       name: "Enterprise Contact",
       description: "Custom municipal proposal & sales inquiry",
       href: "/contact",
-      icon: Building2,
+      icon: BuildingsIcon,
     },
   ]
 
@@ -65,12 +74,12 @@ export function LandingHeader() {
     { name: "Projects", href: "/project-portfolio" },
     { name: "Media Sphere", href: "/videos" },
     { name: "About Us", href: "/about" },
-    // {
-    //   name: "Contact Us",
-    //   href: "/contact",
-    //   isDropdown: true,
-    //   dropdownKey: "contact" as const,
-    // }, //KP
+    {
+      name: "Contact Us",
+      href: "/contact",
+      isDropdown: true,
+      dropdownKey: "contact" as const,
+    },
   ]
 
   const isScorecardActive =
@@ -164,7 +173,7 @@ export function LandingHeader() {
                       }`}
                   >
                     <span>{item.name}</span>
-                    <ChevronDown
+                    <CaretDownIcon
                       className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen
                         ? "rotate-180 text-[#B5111B]"
                         : "text-slate-400 group-hover:text-[#B5111B]"
@@ -198,7 +207,7 @@ export function LandingHeader() {
                                   : "bg-slate-100 text-slate-600 group-hover:text-[#B5111B]"
                                   }`}
                               >
-                                <IconComponent className="w-4 h-4" />
+                                <IconComponent weight="duotone" className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
                                 <div className="text-xs font-bold leading-tight">
@@ -251,9 +260,9 @@ export function LandingHeader() {
           aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? (
-            <X className="w-6 h-6" />
+            <XIcon className="w-6 h-6" />
           ) : (
-            <Menu className="w-6 h-6" />
+            <ListIcon className="w-6 h-6" />
           )}
         </button>
       </div>
@@ -293,7 +302,7 @@ export function LandingHeader() {
                   className="p-1 text-slate-500 hover:text-[#B5111B]"
                   aria-label="Toggle scorecard subcategories"
                 >
-                  <ChevronDown
+                  <CaretDownIcon
                     className={`w-4 h-4 transition-transform duration-200 ${mobileScorecardOpen ? "rotate-180 text-[#B5111B]" : ""
                       }`}
                   />
@@ -378,7 +387,7 @@ export function LandingHeader() {
                   className="p-1 text-slate-500 hover:text-[#B5111B]"
                   aria-label="Toggle contact subcategories"
                 >
-                  <ChevronDown
+                  <CaretDownIcon
                     className={`w-4 h-4 transition-transform duration-200 ${mobileContactOpen ? "rotate-180 text-[#B5111B]" : ""
                       }`}
                   />

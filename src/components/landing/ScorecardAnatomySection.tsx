@@ -1,8 +1,8 @@
-"use client"
-
-import { Link } from "@/lib/router-compat"
+import * as React from "react"
+import { EnterpriseContactModal } from "@/components/landing/EnterpriseContactModal"
 
 export function ScorecardAnatomySection() {
+  const [contactModalOpen, setContactModalOpen] = React.useState<boolean>(false)
   return (
     <section className="py-16 sm:py-24 bg-white border-t border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
@@ -178,16 +178,23 @@ export function ScorecardAnatomySection() {
           </div>
 
           <div className="flex justify-center">
-            <Link
-              // href="/contact" //KP
-              href="/pricing"
-              className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-6 py-3 rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-md transition-all hover:scale-102"
+            <button
+              type="button"
+              onClick={() => setContactModalOpen(true)}
+              className="bg-[#B5111B] hover:bg-[#8F0D15] text-white px-6 py-3 rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-md transition-all hover:scale-102 cursor-pointer"
             >
-              {/* <span>Request Enterprise Consultation</span> */}
-              <span>View Subscription Plans & Pricing</span>
-            </Link>
+              <span>View Subscription Plans &amp; Pricing</span>
+            </button>
           </div>
         </div>
+
+        {/* Enterprise Contact Modal */}
+        <EnterpriseContactModal
+          isOpen={contactModalOpen}
+          onClose={() => setContactModalOpen(false)}
+          title="Subscription Plans &amp; Pricing Inquiry"
+          subtitle="Please fill out your details to discuss subscription pricing and certified report generation."
+        />
       </div>
     </section>
   );

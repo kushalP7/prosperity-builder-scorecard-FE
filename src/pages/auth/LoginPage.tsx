@@ -3,28 +3,22 @@
 import * as React from "react"
 import { Link, useRouter } from "@/lib/router-compat"
 import { useAppStore } from "@/store"
+import { CommunityWedgeWheel } from "@/components/landing/CommunityWedgeWheel"
 import {
-  Eye,
-  EyeOff,
-  Loader2,
-  Building2,
-  ShieldCheck,
-  Quote,
-  ArrowLeft,
-  UserPlus,
-  LogIn,
-  Lock,
-  Mail,
-  User as UserIcon,
-  CheckCircle2,
-  HelpCircle,
-  X,
-  MapPin,
-  TrendingUp,
-  Activity,
-  BadgeCheck,
-  FileCheck
-} from "lucide-react"
+  EyeIcon,
+  EyeSlashIcon,
+  SpinnerGapIcon,
+  BuildingsIcon,
+  ArrowLeftIcon,
+  UserPlusIcon,
+  SignInIcon,
+  LockSimpleIcon,
+  EnvelopeSimpleIcon,
+  UserIcon,
+  CheckCircleIcon,
+  QuestionIcon,
+  XIcon,
+} from "@phosphor-icons/react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -121,8 +115,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50 font-sans selection:bg-rose-100 selection:text-rose-900">
 
-      {/* Left Column: Unique Visual Brand & Product Showcase Panel */}
-      <div className="hidden md:flex md:w-1/2 lg:w-5/12 text-white flex-col justify-between p-8 lg:p-12 relative overflow-hidden bg-gradient-to-br from-[#090204] via-[#110306] to-[#1a0508] border-r border-rose-950/40 shadow-2xl">
+      {/* Left Column: Brand panel with hero collage (tablet/desktop only — form-first on mobile) */}
+      <div className="hidden md:flex md:w-1/2 lg:w-5/12 md:min-h-screen text-white flex-col p-6 lg:p-10 relative overflow-hidden bg-gradient-to-br from-[#090204] via-[#110306] to-[#1a0508] border-r border-rose-950/40 shadow-2xl">
 
         {/* Modern Blueprint / Planning Coordinate Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_35%,#000_60%,transparent_100%)] pointer-events-none" />
@@ -132,149 +126,64 @@ export default function LoginPage() {
         <div className="absolute top-1/2 -right-32 w-80 h-80 bg-red-700/15 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-32 left-1/4 w-80 h-80 bg-rose-950/40 rounded-full blur-[90px] pointer-events-none" />
 
-        {/* Top & Middle Content Container */}
-        <div className="relative z-10 space-y-6">
+        {/* Logo Badge & Back Link */}
+        <div className="relative z-10 flex items-center justify-between shrink-0">
+          <Link
+            href="/"
+            className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl w-fit shadow-xl border border-white/20 hover:scale-105 transition-all block cursor-pointer group"
+            title="Return to Home"
+          >
+            <img src="/branding/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
+          </Link>
 
-          {/* Logo Badge & Back Link */}
-          <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl w-fit shadow-xl border border-white/20 hover:scale-105 transition-all block cursor-pointer group"
-              title="Return to Home"
-            >
-              <img src="/branding/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
-            </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-2 rounded-xl border border-white/10 transition-all cursor-pointer backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeftIcon weight="bold" className="w-3.5 h-3.5" />
+            <span>Back to Website</span>
+          </Link>
+        </div>
 
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-2 rounded-xl border border-white/10 transition-all cursor-pointer backdrop-blur-md shadow-xs"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Website</span>
-            </Link>
+        {/* Brand headline */}
+        <div className="relative z-10 space-y-2.5 pt-6 shrink-0">
+          <h1 className="text-3xl lg:text-[2.5rem] font-black text-white tracking-tight leading-[1.15]">
+            Prosperity Builder{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-white to-rose-300">
+              Scorecard
+            </span>
+            <sup className="text-base font-semibold text-rose-300 ml-1">®</sup>
+          </h1>
+          <p className="text-xs lg:text-sm text-slate-300/90 leading-relaxed font-normal max-w-md">
+            The proprietary analytics engine for assessing municipal master plans, capital investment readiness, and regional prosperity indices.
+          </p>
+        </div>
+
+        {/* Hero collage — larger to own the panel */}
+        <div className="relative z-10 flex-1 flex items-center justify-center min-h-0 py-3 lg:py-4">
+          <div className="w-full max-w-[440px] lg:max-w-[520px] xl:max-w-[580px]">
+            <CommunityWedgeWheel />
           </div>
+        </div>
 
-          {/* Hero Titles & Headline */}
-          <div className="space-y-2.5 pt-2">
-            <h1 className="text-3xl lg:text-[2.5rem] font-black text-white tracking-tight leading-[1.15]">
-              Prosperity Builder <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-white to-rose-300">Scorecard</span><sup className="text-base font-semibold text-rose-300 ml-1">®</sup>
-            </h1>
-
-            <p className="text-xs lg:text-sm text-slate-300/90 leading-relaxed font-normal max-w-md">
-              The proprietary analytics engine for assessing municipal master plans, capital investment readiness, and regional prosperity indices.
-            </p>
+        {/* Slim proof metrics */}
+        <div className="relative z-10 grid grid-cols-3 gap-2 shrink-0 pb-4">
+          <div className="px-2.5 py-2.5 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center">
+            <div className="text-sm lg:text-base font-black text-white leading-none">140+</div>
+            <div className="text-[10px] text-slate-300 font-medium leading-tight mt-1">Master Plans</div>
           </div>
-
-          {/* UNIQUE PRODUCT SHOWCASE WIDGET (Live Municipal Scorecard Card) */}
-          <div className="relative rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-xl border border-white/15 p-4 sm:p-5 shadow-2xl space-y-3.5 hover:border-white/25 transition-all">
-
-            {/* Top Badge Row */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-600 to-[#8F0D15] flex items-center justify-center text-white font-black text-xs shadow-md border border-rose-400/30">
-                  <Activity className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white tracking-wide">
-                    Davidson Town Center Master Plan
-                  </div>
-                  <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
-                    <span>Mecklenburg County, NC • 2026 Evaluation</span>
-                  </div>
-                </div>
-              </div>
-
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-extrabold tracking-wide uppercase">
-                <BadgeCheck className="w-3.5 h-3.5" />
-                <span>Calibrated</span>
-              </span>
-            </div>
-
-            {/* Scorecard Metric Breakdown */}
-            <div className="grid grid-cols-3 gap-3 items-center bg-black/40 rounded-xl p-3 border border-white/5">
-              <div className="col-span-1 text-center border-r border-white/10 pr-2 space-y-0.5">
-                <div className="text-2xl lg:text-3xl font-black text-white tracking-tight leading-none">
-                  8.7<span className="text-xs font-normal text-slate-400">/10</span>
-                </div>
-                <div className="text-[9px] uppercase tracking-wider font-extrabold text-emerald-400 flex items-center justify-center gap-1 pt-0.5">
-                  <TrendingUp className="w-2.5 h-2.5" />
-                  <span>Excellent</span>
-                </div>
-              </div>
-
-              <div className="col-span-2 space-y-2 pl-1.5">
-                <div>
-                  <div className="flex justify-between text-[10px] text-slate-300 font-medium mb-1">
-                    <span>Economic Vitality & Jobs</span>
-                    <span className="text-white font-bold font-mono">92%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-rose-500 to-emerald-400 rounded-full w-[92%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[10px] text-slate-300 font-medium mb-1">
-                    <span>Land Use & Infrastructure</span>
-                    <span className="text-white font-bold font-mono">84%</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-rose-500 to-amber-400 rounded-full w-[84%]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Verification Footer Inside Card */}
-            <div className="flex items-center justify-between text-[10px] text-slate-300/80 pt-0.5">
-              <span className="flex items-center gap-1.5 font-medium">
-                <FileCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Deterministic Category Weighting</span>
-              </span>
-              <span className="font-mono text-slate-400 text-[10px] bg-white/[0.06] px-2 py-0.5 rounded-md border border-white/10">
-                Audit: Verified
-              </span>
-            </div>
-
+          <div className="px-2.5 py-2.5 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center">
+            <div className="text-sm lg:text-base font-black text-rose-400 leading-none">100%</div>
+            <div className="text-[10px] text-slate-300 font-medium leading-tight mt-1">Deterministic</div>
           </div>
-
-          {/* Key Proof Metrics Row */}
-          <div className="grid grid-cols-3 gap-2.5 pt-1">
-            <div className="p-3 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center space-y-0.5">
-              <div className="text-base lg:text-lg font-black text-white">140+</div>
-              <div className="text-[10px] text-slate-300 font-medium leading-tight">Master Plans</div>
-            </div>
-            <div className="p-3 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center space-y-0.5">
-              <div className="text-base lg:text-lg font-black text-rose-400">100%</div>
-              <div className="text-[10px] text-slate-300 font-medium leading-tight">Deterministic</div>
-            </div>
-            <div className="p-3 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center space-y-0.5">
-              <div className="text-base lg:text-lg font-black text-white">Certified</div>
-              <div className="text-[10px] text-slate-300 font-medium leading-tight">PDF Dossiers</div>
-            </div>
+          <div className="px-2.5 py-2.5 bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 text-center">
+            <div className="text-sm lg:text-base font-black text-white leading-none">Certified</div>
+            <div className="text-[10px] text-slate-300 font-medium leading-tight mt-1">PDF Dossiers</div>
           </div>
-
-          {/* Kathleen Rose Leadership Endorsement */}
-          <div className="p-3.5 bg-white/[0.03] backdrop-blur-md rounded-2xl border border-white/10 space-y-1.5 relative shadow-sm">
-            <Quote className="w-4 h-4 text-rose-400/40 absolute top-3 right-3" />
-            <p className="text-[11px] text-slate-200 leading-relaxed italic pr-5 font-normal">
-              &ldquo;The Prosperity Builder Scorecard provides leadership with an objective, data-backed assessment that accelerates master plan approvals.&rdquo;
-            </p>
-            <div className="flex items-center justify-between pt-1 border-t border-white/10">
-              <div className="text-[10px] font-bold text-rose-300">
-                Kathleen Rose, CCIM, CRE
-              </div>
-              <div className="text-[9px] text-slate-400 font-medium">
-                President & CEO, Rose Associates
-              </div>
-            </div>
-          </div>
-
         </div>
 
         {/* Footer */}
-        <div className="relative z-10 text-xs text-slate-400 border-t border-white/10 pt-4 mt-4 flex items-center justify-between">
+        <div className="relative z-10 text-xs text-slate-400 border-t border-white/10 pt-4 shrink-0 flex items-center justify-between">
           <span className="text-slate-400 font-mono text-[11px]">
             &copy; {new Date().getFullYear()} Rose Associates
           </span>
@@ -286,10 +195,10 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column: Clean Enterprise Sign In / Register Form */}
-      <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-16 bg-white md:bg-slate-50/60 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-between min-h-screen p-5 sm:p-8 lg:p-12 xl:p-16 bg-white md:bg-slate-50/60 overflow-y-auto">
 
         {/* Mobile Header */}
-        <div className="md:hidden pb-6 flex items-center justify-between border-b border-slate-200/80 mb-4">
+        <div className="md:hidden pb-5 flex items-center justify-between border-b border-slate-200/80 mb-4">
           <Link href="/">
             <img src="/branding/logo.png" alt="Rose Associates" className="h-8 w-auto object-contain" />
           </Link>
@@ -297,12 +206,12 @@ export default function LoginPage() {
             href="/"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#B5111B] bg-slate-100 px-3 py-1.5 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeftIcon weight="bold" className="w-3.5 h-3.5" />
             <span>Website</span>
           </Link>
         </div>
 
-        <div className="max-w-md w-full mx-auto my-auto space-y-6">
+        <div className="max-w-md w-full mx-auto my-auto space-y-5 sm:space-y-6">
 
           {/* Header & Mode Switcher */}
           <div className="space-y-4">
@@ -317,7 +226,7 @@ export default function LoginPage() {
                     : 'text-slate-500 hover:text-slate-900'
                   }`}
               >
-                <LogIn className="w-3.5 h-3.5" />
+                <SignInIcon weight="bold" className="w-3.5 h-3.5" />
                 <span>Sign In</span>
               </button>
               <button
@@ -328,7 +237,7 @@ export default function LoginPage() {
                     : 'text-slate-500 hover:text-slate-900'
                   }`}
               >
-                <UserPlus className="w-3.5 h-3.5" />
+                <UserPlusIcon weight="duotone" className="w-3.5 h-3.5" />
                 <span>Create Account</span>
               </button>
             </div>
@@ -365,7 +274,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4" />
+                    <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="email"
@@ -396,7 +305,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
+                    <LockSimpleIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="password"
@@ -414,7 +323,7 @@ export default function LoginPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeSlashIcon weight="duotone" className="w-4 h-4" /> : <EyeIcon weight="duotone" className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -440,7 +349,7 @@ export default function LoginPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <SpinnerGapIcon weight="bold" className="w-4 h-4 animate-spin" />
                     <span>Signing in...</span>
                   </>
                 ) : (
@@ -459,7 +368,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <UserIcon className="w-4 h-4" />
+                    <UserIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="reg-name"
@@ -480,7 +389,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4" />
+                    <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="reg-email"
@@ -501,7 +410,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Building2 className="w-4 h-4" />
+                    <BuildingsIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="reg-dept"
@@ -521,7 +430,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
+                    <LockSimpleIcon weight="duotone" className="w-4 h-4" />
                   </div>
                   <input
                     id="reg-password"
@@ -538,7 +447,7 @@ export default function LoginPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeSlashIcon weight="duotone" className="w-4 h-4" /> : <EyeIcon weight="duotone" className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -546,7 +455,7 @@ export default function LoginPage() {
               {/* Permissions Notice */}
               <div className="p-3 bg-slate-100 rounded-xl border border-slate-200/80 text-[11px] text-slate-600 space-y-1">
                 <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Verified Organization Account</span>
                 </div>
                 <div>New accounts receive secure portal access. Super Admins may adjust scope & privileges upon review.</div>
@@ -560,7 +469,7 @@ export default function LoginPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <SpinnerGapIcon weight="bold" className="w-4 h-4 animate-spin" />
                     <span>Creating account...</span>
                   </>
                 ) : (
@@ -576,7 +485,7 @@ export default function LoginPage() {
         <div className="text-center text-xs text-slate-500 pt-6">
           Need help accessing your account? Contact{" "}
           <a
-            href="mailto:support@roseassociates.com"
+            href="mailto:info@roseassociates.com"
             className="text-slate-800 font-semibold hover:text-[#B5111B] transition-colors underline underline-offset-2"
           >
             Rose Associates Support
@@ -593,11 +502,11 @@ export default function LoginPage() {
               onClick={() => setShowForgotModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <XIcon weight="bold" className="w-4 h-4" />
             </button>
 
             <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-[#B5111B]">
-              <HelpCircle className="w-6 h-6" />
+              <QuestionIcon weight="duotone" className="w-6 h-6" />
             </div>
 
             <div className="space-y-1">
@@ -609,7 +518,7 @@ export default function LoginPage() {
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1">
               <div className="font-semibold text-slate-900">Contact Administrator:</div>
-              <div className="font-mono text-slate-600 text-[11px]">admin@roseassociates.com</div>
+              <div className="font-mono text-slate-600 text-[11px]">info@roseassociates.com</div>
             </div>
 
             <button
