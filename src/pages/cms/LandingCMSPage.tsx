@@ -29,11 +29,15 @@ import {
   DownloadSimpleIcon,
   WarningCircleIcon,
   CaretLeftIcon,
-  CaretRightIcon
+  CaretRightIcon,
+  CaretUpIcon,
+  CaretDownIcon,
+  HandshakeIcon,
 } from "@phosphor-icons/react"
 import { reportsApi, LandingReportItem } from "@/lib/reports-api"
 import { mediaApi, LandingMediaItem, getYouTubeThumbnail } from "@/lib/media-api"
 import { projectsApi, LandingProjectItem, PORTFOLIO_CATEGORIES } from "@/lib/projects-api"
+import { partnersApi, LandingPartnerItem } from "@/lib/partners-api"
 import { Dropdown } from "@/components/ui/dropdown"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -56,13 +60,13 @@ function getPdfFilename(url?: string): string {
 
 export default function LandingCMSPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = React.useState<"reports" | "media" | "projects">("reports")
+  const [activeTab, setActiveTab] = React.useState<"reports" | "media" | "projects" | "partners">("reports")
 
   // Confirm Delete Dialog State
   const [deleteTarget, setDeleteTarget] = React.useState<{
     id: string
     title: string
-    type: "project" | "report" | "media"
+    type: "project" | "report" | "media" | "partner"
   } | null>(null)
   const [isDeleting, setIsDeleting] = React.useState(false)
 
@@ -135,6 +139,30 @@ export default function LandingCMSPage() {
     status: "published" as "published" | "draft",
   })
 
+  // Partners Data & Controls
+  const [partners, setPartners] = React.useState<LandingPartnerItem[]>([])
+  const [partnersLoading, setPartnersLoading] = React.useState(false)
+  const [partnersViewMode, setPartnersViewMode] = React.useState<"grid" | "list">("grid")
+  const [partnersSearch, setPartnersSearch] = React.useState("")
+  const [debouncedPartnersSearch, setDebouncedPartnersSearch] = React.useState("")
+  const [partnersStatusFilter, setPartnersStatusFilter] = React.useState<string>("all")
+  const [partnersPage, setPartnersPage] = React.useState<number>(1)
+  const [partnersPerPage, setPartnersPerPage] = React.useState<number>(12)
+  const [totalPartners, setTotalPartners] = React.useState<number>(0)
+  const [totalPartnerPages, setTotalPartnerPages] = React.useState<number>(1)
+
+  // Partner Add/Edit Modal State
+  const [partnerModalOpen, setPartnerModalOpen] = React.useState(false)
+  const [editingPartner, setEditingPartner] = React.useState<LandingPartnerItem | null>(null)
+  const [uploadingLogo, setUploadingLogo] = React.useState(false)
+  const [stagedLogoFile, setStagedLogoFile] = React.useState<File | null>(null)
+  const [stagedLogoPreviewUrl, setStagedLogoPreviewUrl] = React.useState<string | null>(null)
+  const [partnerFormData, setPartnerFormData] = React.useState({
+    name: "",
+    logoUrl: "",
+    status: "published" as "published" | "draft",
+  })
+
   // Debounce search input (300ms)
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -162,12 +190,21 @@ export default function LandingCMSPage() {
     return () => clearTimeout(timer)
   }, [projectsSearch])
 
+  // Debounce partners search input (300ms)
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPartnersSearch(partnersSearch)
+      setPartnersPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [partnersSearch])
+
   // Sync tab and report filters with URL on initial mount
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       const tab = params.get("tab")
-      if (tab === "media" || tab === "reports" || tab === "projects") {
+      if (tab === "media" || tab === "reports" || tab === "projects" || tab === "partners") {
         setActiveTab(tab)
       }
       if (tab === "reports" || !tab) {
@@ -208,6 +245,16 @@ export default function LandingCMSPage() {
         if (params.get("sortBy")) setProjectsSortBy((params.get("sortBy") as any) || "newest")
         if (params.get("page")) setProjectsPage(Math.max(1, parseInt(params.get("page") || "1", 10)))
         if (params.get("limit")) setProjectsPerPage(Math.max(1, parseInt(params.get("limit") || "10", 10)))
+      }
+      if (tab === "partners") {
+        if (params.get("search")) {
+          setPartnersSearch(params.get("search") || "")
+          setDebouncedPartnersSearch(params.get("search") || "")
+        }
+        if (params.get("status")) setPartnersStatusFilter(params.get("status") || "all")
+        if (params.get("view")) setPartnersViewMode(params.get("view") === "list" ? "list" : "grid")
+        if (params.get("page")) setPartnersPage(Math.max(1, parseInt(params.get("page") || "1", 10)))
+        if (params.get("limit")) setPartnersPerPage(Math.max(1, parseInt(params.get("limit") || "12", 10)))
       }
     }
   }, [])
@@ -296,7 +343,29 @@ export default function LandingCMSPage() {
     projectsSortBy,
   ])
 
-  const handleTabChange = (tab: "reports" | "media" | "projects") => {
+  // Sync URL route path when partner filters, pagination, or view changes
+  React.useEffect(() => {
+    if (typeof window === "undefined" || activeTab !== "partners") return
+    const params = new URLSearchParams()
+    params.set("tab", "partners")
+    if (partnersPage > 1) params.set("page", String(partnersPage))
+    if (partnersPerPage !== 12) params.set("limit", String(partnersPerPage))
+    if (debouncedPartnersSearch.trim()) params.set("search", debouncedPartnersSearch.trim())
+    if (partnersStatusFilter !== "all") params.set("status", partnersStatusFilter)
+    if (partnersViewMode !== "grid") params.set("view", partnersViewMode)
+
+    const newQuery = params.toString() ? `?${params.toString()}` : ""
+    window.history.replaceState(null, "", `/landing-cms${newQuery}`)
+  }, [
+    activeTab,
+    partnersPage,
+    partnersPerPage,
+    debouncedPartnersSearch,
+    partnersStatusFilter,
+    partnersViewMode,
+  ])
+
+  const handleTabChange = (tab: "reports" | "media" | "projects" | "partners") => {
     setActiveTab(tab)
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", `/landing-cms?tab=${tab}`)
@@ -450,6 +519,36 @@ export default function LandingCMSPage() {
     }
   }, [activeTab, loadProjects])
 
+  const loadPartners = React.useCallback(async () => {
+    setPartnersLoading(true)
+    try {
+      const res = await partnersApi.getPaginatedPartners({
+        page: partnersPage,
+        limit: partnersPerPage,
+        search: debouncedPartnersSearch,
+        status: partnersStatusFilter,
+      })
+      setPartners(Array.isArray(res.data) ? res.data : [])
+      setTotalPartners(res.total || 0)
+      setTotalPartnerPages(res.totalPages || 1)
+    } catch (err: any) {
+      console.error("Failed to fetch partners:", err)
+    } finally {
+      setPartnersLoading(false)
+    }
+  }, [
+    partnersPage,
+    partnersPerPage,
+    debouncedPartnersSearch,
+    partnersStatusFilter,
+  ])
+
+  React.useEffect(() => {
+    if (activeTab === "partners") {
+      loadPartners()
+    }
+  }, [activeTab, loadPartners])
+
   const cleanupStagedPdf = () => {
     if (stagedPdfPreviewUrl?.startsWith("blob:")) {
       try {
@@ -597,6 +696,147 @@ export default function LandingCMSPage() {
     }
   }
 
+  const cleanupStagedLogo = () => {
+    if (stagedLogoPreviewUrl?.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(stagedLogoPreviewUrl)
+      } catch { }
+    }
+    setStagedLogoFile(null)
+    setStagedLogoPreviewUrl(null)
+  }
+
+  const closePartnerModal = () => {
+    cleanupStagedLogo()
+    setPartnerModalOpen(false)
+  }
+
+  const openCreatePartnerModal = () => {
+    cleanupStagedLogo()
+    setEditingPartner(null)
+    setPartnerFormData({
+      name: "",
+      logoUrl: "",
+      status: "published",
+    })
+    setPartnerModalOpen(true)
+  }
+
+  const openEditPartnerModal = (partner: LandingPartnerItem) => {
+    cleanupStagedLogo()
+    setEditingPartner(partner)
+    setPartnerFormData({
+      name: partner.name,
+      logoUrl: partner.logoUrl || "",
+      status: partner.status,
+    })
+    setPartnerModalOpen(true)
+  }
+
+  const handleDeletePartner = (partner: LandingPartnerItem) => {
+    setDeleteTarget({
+      id: partner.id,
+      title: partner.name,
+      type: "partner",
+    })
+  }
+
+  const handleTogglePartnerStatus = async (partner: LandingPartnerItem) => {
+    const newStatus = partner.status === "published" ? "draft" : "published"
+    try {
+      await partnersApi.updatePartner(partner.id, { status: newStatus })
+      loadPartners()
+    } catch (err: any) {
+      alert(`Status update failed: ${err.message}`)
+    }
+  }
+
+  const handleMovePartner = async (partner: LandingPartnerItem, direction: "up" | "down") => {
+    try {
+      await partnersApi.movePartner(partner.id, direction)
+      loadPartners()
+    } catch (err: any) {
+      alert(`Reorder failed: ${err.message}`)
+    }
+  }
+
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file.")
+      return
+    }
+
+    if (stagedLogoPreviewUrl?.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(stagedLogoPreviewUrl)
+      } catch { }
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setStagedLogoFile(file)
+    setStagedLogoPreviewUrl(previewUrl)
+    setPartnerFormData((prev) => ({ ...prev, logoUrl: previewUrl }))
+  }
+
+  const handleSavePartner = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!partnerFormData.name.trim()) {
+      alert("Please enter a partner name.")
+      return
+    }
+
+    let finalLogoUrl = partnerFormData.logoUrl
+
+    if (stagedLogoFile) {
+      setUploadingLogo(true)
+      try {
+        const res = await partnersApi.uploadLogo(stagedLogoFile)
+        if (!res?.url) throw new Error("No URL returned from upload")
+        finalLogoUrl = res.url
+        if (stagedLogoPreviewUrl) {
+          try {
+            URL.revokeObjectURL(stagedLogoPreviewUrl)
+          } catch { }
+        }
+        setStagedLogoFile(null)
+        setStagedLogoPreviewUrl(null)
+      } catch (err: any) {
+        setUploadingLogo(false)
+        alert(`Logo upload failed: ${err.message}`)
+        return
+      } finally {
+        setUploadingLogo(false)
+      }
+    } else if (finalLogoUrl?.startsWith("blob:")) {
+      finalLogoUrl = editingPartner?.logoUrl || ""
+    }
+
+    if (!finalLogoUrl) {
+      alert("Please upload a partner logo.")
+      return
+    }
+
+    const payload = {
+      name: partnerFormData.name.trim(),
+      logoUrl: finalLogoUrl,
+      status: partnerFormData.status,
+    }
+
+    try {
+      if (editingPartner) {
+        await partnersApi.updatePartner(editingPartner.id, payload)
+      } else {
+        await partnersApi.createPartner(payload)
+      }
+      setPartnerModalOpen(false)
+      loadPartners()
+    } catch (err: any) {
+      alert(`Save failed: ${err.message}`)
+    }
+  }
 
   // Delete Actions
   const handleConfirmDelete = async () => {
@@ -612,6 +852,9 @@ export default function LandingCMSPage() {
       } else if (deleteTarget.type === "media") {
         await mediaApi.deleteMedia(deleteTarget.id)
         loadMedia()
+      } else if (deleteTarget.type === "partner") {
+        await partnersApi.deletePartner(deleteTarget.id)
+        loadPartners()
       }
       setDeleteTarget(null)
     } catch (err: any) {
@@ -1326,6 +1569,132 @@ export default function LandingCMSPage() {
     setProjectsPage(1)
   }, [projectsSortBy])
 
+  // TanStack Table Column Definitions for Partners List View
+  const partnerColumns = React.useMemo<ColumnDef<LandingPartnerItem>[]>(() => [
+    {
+      id: "index",
+      header: "#",
+      cell: ({ row }) => (
+        <span className="font-bold text-slate-400">
+          {(partnersPage - 1) * partnersPerPage + row.index + 1}
+        </span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "name",
+      accessorKey: "name",
+      header: "Partner",
+      cell: ({ row }) => {
+        const partner = row.original
+        return (
+          <div className="flex items-center gap-3 min-w-[200px]">
+            <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 p-1.5">
+              <img
+                src={partner.logoUrl}
+                alt={partner.name}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => openEditPartnerModal(partner)}
+              className="font-bold text-slate-900 hover:text-[#B5111B] transition-colors truncate text-left cursor-pointer"
+            >
+              {partner.name}
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-center">Status</div>,
+      cell: ({ row }) => {
+        const partner = row.original
+        return (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => handleTogglePartnerStatus(partner)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border transition cursor-pointer ${partner.status === "published"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
+                }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${partner.status === "published" ? "bg-emerald-500" : "bg-slate-400"}`}
+              />
+              <span>{partner.status === "published" ? "Active" : "Inactive"}</span>
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      id: "order",
+      header: () => <div className="text-center">Order</div>,
+      cell: ({ row }) => {
+        const partner = row.original
+        const isFirst = partnersPage === 1 && row.index === 0
+        const isLast = partnersPage === totalPartnerPages && row.index === partners.length - 1
+        return (
+          <div className="flex items-center justify-center gap-1">
+            <button
+              type="button"
+              disabled={isFirst}
+              onClick={() => handleMovePartner(partner, "up")}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Move up"
+            >
+              <CaretUpIcon weight="bold" className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={isLast}
+              onClick={() => handleMovePartner(partner, "down")}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Move down"
+            >
+              <CaretDownIcon weight="bold" className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const partner = row.original
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => openEditPartnerModal(partner)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+              title="Edit partner"
+            >
+              <PencilSimpleIcon weight="bold" className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeletePartner(partner)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+              title="Delete partner"
+            >
+              <TrashIcon weight="bold" className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
+  ], [partnersPage, partnersPerPage, totalPartnerPages, partners.length])
+
   return (
     <div className="space-y-6">
       {/* STICKY TOP CONTROLS (Capsule Tabs + Unified Advanced Filter Bar) */}
@@ -1366,6 +1735,18 @@ export default function LandingCMSPage() {
           >
             <FolderOpenIcon weight="duotone" className="w-4 h-4" />
             <span>Featured Projects</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("partners")}
+            className={`px-3.5 py-2 text-xs md:text-sm font-semibold transition-all duration-200 rounded-xl cursor-pointer select-none flex items-center gap-2 shrink-0 ${activeTab === "partners"
+              ? "bg-[#B5111B] text-white shadow-md shadow-red-900/30 scale-[1.02] font-bold border border-[#B5111B]"
+              : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
+              }`}
+          >
+            <HandshakeIcon weight="duotone" className="w-4 h-4" />
+            <span>Partners</span>
           </button>
         </div>
 
@@ -1782,6 +2163,99 @@ export default function LandingCMSPage() {
                   { value: "title_desc", label: "Sort by: Title (Z-A)" },
                 ]}
                 className="sm:ml-auto"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* PARTNERS FILTER & TOOLBAR */}
+        {activeTab === "partners" && (
+          <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div className="relative flex-1 min-w-0">
+                <MagnifyingGlassIcon weight="bold" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={partnersSearch}
+                  onChange={(e) => setPartnersSearch(e.target.value)}
+                  placeholder="Search partners by name..."
+                  className="w-full pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200/90 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
+                />
+                {partnersSearch && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPartnersSearch("")
+                      setDebouncedPartnersSearch("")
+                      setPartnersPage(1)
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    <XIcon weight="bold" className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0">
+                <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200/80 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPartnersViewMode("grid")}
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${partnersViewMode === "grid"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    title="Grid View"
+                  >
+                    <SquaresFourIcon weight="duotone" className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPartnersViewMode("list")}
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${partnersViewMode === "list"
+                      ? "bg-[#B5111B] text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    title="List View"
+                  >
+                    <ListBulletsIcon weight="duotone" className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <Link
+                  href="/#project-partners"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                  title="View live partners section"
+                >
+                  <EyeIcon weight="bold" className="w-4 h-4" />
+                  <span className="hidden md:inline">Preview Page</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={openCreatePartnerModal}
+                  className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2 sm:py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <PlusIcon weight="bold" className="w-4 h-4" />
+                  <span>Add Partner</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Dropdown
+                value={partnersStatusFilter}
+                onChange={(val) => {
+                  setPartnersStatusFilter(val)
+                  setPartnersPage(1)
+                }}
+                title="FILTER BY STATUS:"
+                options={[
+                  { value: "all", label: "All Statuses" },
+                  { value: "published", label: "Active" },
+                  { value: "draft", label: "Inactive" },
+                ]}
               />
             </div>
           </div>
@@ -2476,6 +2950,232 @@ export default function LandingCMSPage() {
         </div>
       )}
 
+      {/* PARTNERS TAB CONTENT */}
+      {activeTab === "partners" && (
+        <div className="space-y-4">
+          {partnersLoading && partners.length === 0 ? (
+            <div className="p-16 text-center flex flex-col items-center gap-3">
+              <CircleNotchIcon weight="bold" className="w-8 h-8 text-[#B5111B] animate-spin" />
+              <span className="text-xs font-bold text-slate-600">Loading partners...</span>
+            </div>
+          ) : partners.length === 0 && !partnersLoading ? (
+            <div className="border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center bg-white space-y-3 shadow-xs">
+              <HandshakeIcon weight="duotone" className="w-12 h-12 text-slate-300 mx-auto" />
+              <h3 className="text-base font-bold text-slate-800">No Partners Found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                No partners match your active search terms and filter criteria.
+              </p>
+              <button
+                type="button"
+                onClick={openCreatePartnerModal}
+                className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+              >
+                <PlusIcon weight="bold" className="w-4 h-4" />
+                <span>Add First Partner</span>
+              </button>
+            </div>
+          ) : partnersViewMode === "grid" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {partners.map((partner, index) => {
+                  const isMenuOpen = openActionMenuId === partner.id
+                  const isFirst = partnersPage === 1 && index === 0
+                  const isLast = partnersPage === totalPartnerPages && index === partners.length - 1
+                  return (
+                    <div
+                      key={partner.id}
+                      className="group relative bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition overflow-hidden flex flex-col"
+                    >
+                      <div className="relative h-36 bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6">
+                        <img
+                          src={partner.logoUrl}
+                          alt={partner.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+
+                        <div className="absolute top-3 right-3 z-30">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenActionMenuId(isMenuOpen ? null : partner.id)
+                            }}
+                            className="w-8 h-8 rounded-full bg-slate-900/65 hover:bg-slate-900/85 text-white flex items-center justify-center transition shadow-md cursor-pointer backdrop-blur-xs"
+                            title="Actions Menu"
+                          >
+                            <DotsThreeVerticalIcon weight="bold" className="w-4 h-4 text-white" />
+                          </button>
+
+                          {isMenuOpen && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-left"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null)
+                                  openEditPartnerModal(partner)
+                                }}
+                                className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                              >
+                                <PencilSimpleIcon weight="bold" className="w-4 h-4 text-slate-500" />
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null)
+                                  handleTogglePartnerStatus(partner)
+                                }}
+                                className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                              >
+                                <WarningCircleIcon weight="duotone" className="w-4 h-4 text-slate-500" />
+                                <span>{partner.status === "published" ? "Deactivate" : "Activate"}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isFirst}
+                                onClick={() => {
+                                  setOpenActionMenuId(null)
+                                  handleMovePartner(partner, "up")
+                                }}
+                                className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <CaretUpIcon weight="bold" className="w-4 h-4 text-slate-500" />
+                                <span>Move Up</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isLast}
+                                onClick={() => {
+                                  setOpenActionMenuId(null)
+                                  handleMovePartner(partner, "down")
+                                }}
+                                className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#B5111B] hover:bg-red-50/50 flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <CaretDownIcon weight="bold" className="w-4 h-4 text-slate-500" />
+                                <span>Move Down</span>
+                              </button>
+
+                              <div className="border-t border-slate-100 my-1" />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null)
+                                  handleDeletePartner(partner)
+                                }}
+                                className="w-full px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                              >
+                                <TrashIcon weight="bold" className="w-4 h-4 text-red-600" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePartnerStatus(partner)}
+                              className="inline-flex items-center gap-1.5 hover:text-[#B5111B] transition-colors cursor-pointer"
+                              title="Click to toggle status"
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full ${partner.status === "published" ? "bg-emerald-500" : "bg-slate-400"}`}
+                              />
+                              <span>{partner.status === "published" ? "Active" : "Inactive"}</span>
+                            </button>
+                          </div>
+
+                          <div className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#B5111B]">
+                            Partner
+                          </div>
+
+                          <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2">
+                            {partner.name}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            disabled={isFirst}
+                            onClick={() => handleMovePartner(partner, "up")}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
+                            title="Move up"
+                          >
+                            <CaretUpIcon weight="bold" className="w-3.5 h-3.5" />
+                            <span>Up</span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isLast}
+                            onClick={() => handleMovePartner(partner, "down")}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition"
+                            title="Move down"
+                          >
+                            <CaretDownIcon weight="bold" className="w-3.5 h-3.5" />
+                            <span>Down</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <Pagination
+                page={partnersPage}
+                totalPages={totalPartnerPages}
+                totalItems={totalPartners}
+                pageSize={partnersPerPage}
+                onPageChange={setPartnersPage}
+                onPageSizeChange={(newSize) => {
+                  setPartnersPerPage(newSize)
+                  setPartnersPage(1)
+                }}
+                isLoading={partnersLoading}
+              />
+            </div>
+          ) : (
+            <DataTable
+              columns={partnerColumns}
+              data={partners}
+              totalItems={totalPartners}
+              page={partnersPage}
+              pageSize={partnersPerPage}
+              totalPages={totalPartnerPages}
+              onPageChange={setPartnersPage}
+              onPageSizeChange={(newSize) => {
+                setPartnersPerPage(newSize)
+                setPartnersPage(1)
+              }}
+              isLoading={partnersLoading}
+              emptyMessage="No Partners Found"
+              emptySubtext="No partners match your active search terms and filter criteria."
+              emptyAction={
+                <button
+                  type="button"
+                  onClick={openCreatePartnerModal}
+                  className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <PlusIcon weight="bold" className="w-4 h-4" />
+                  <span>Add First Partner</span>
+                </button>
+              }
+            />
+          )}
+        </div>
+      )}
+
       {/* PROJECT CREATE / EDIT MODAL */}
       {projectModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -2739,6 +3439,129 @@ export default function LandingCMSPage() {
         </div>
       )}
 
+      {/* PARTNER CREATE / EDIT MODAL */}
+      {partnerModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10">
+              <div className="flex items-center gap-2">
+                <HandshakeIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
+                <h3 className="text-base font-bold text-slate-900">
+                  {editingPartner ? "Edit Partner" : "Add Partner"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closePartnerModal}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <XIcon weight="bold" className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePartner} className="p-6 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700 block">Partner Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={partnerFormData.name}
+                  onChange={(e) => setPartnerFormData({ ...partnerFormData, name: e.target.value })}
+                  placeholder="e.g. Stantec"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#B5111B] focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <label className="font-bold text-slate-700 block">Partner Logo *</label>
+
+                {(stagedLogoPreviewUrl || (partnerFormData.logoUrl && !partnerFormData.logoUrl.startsWith("blob:"))) && (
+                  <div className="flex items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <img
+                      src={stagedLogoPreviewUrl || partnerFormData.logoUrl}
+                      alt="Logo preview"
+                      className="max-h-20 max-w-full object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold cursor-pointer transition">
+                    <UploadSimpleIcon weight="duotone" className="w-3.5 h-3.5" />
+                    <span>{partnerFormData.logoUrl ? "Replace Logo" : "Upload Logo"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoSelect}
+                      disabled={uploadingLogo}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {(stagedLogoFile || partnerFormData.logoUrl) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cleanupStagedLogo()
+                        setPartnerFormData((prev) => ({ ...prev, logoUrl: "" }))
+                      }}
+                      className="inline-flex items-center gap-1 text-red-600 hover:underline font-bold cursor-pointer"
+                    >
+                      <XIcon weight="bold" className="w-3 h-3" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
+                <span className="font-bold text-slate-700">Status:</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPartnerFormData({
+                      ...partnerFormData,
+                      status: partnerFormData.status === "published" ? "draft" : "published",
+                    })
+                  }
+                  className={`px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-wider transition cursor-pointer ${partnerFormData.status === "published"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-slate-200 text-slate-700"
+                    }`}
+                >
+                  {partnerFormData.status === "published" ? "Active" : "Inactive"}
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={closePartnerModal}
+                  disabled={uploadingLogo}
+                  className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingLogo}
+                  className="px-5 py-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60 flex items-center gap-2"
+                >
+                  {uploadingLogo ? (
+                    <>
+                      <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />
+                      <span>Uploading Logo...</span>
+                    </>
+                  ) : (
+                    <span>{editingPartner ? "Update Partner" : "Add Partner"}</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* GLOBAL CONFIRM DELETE MODAL */}
       <ConfirmDialog
         isOpen={Boolean(deleteTarget)}
@@ -2752,14 +3575,18 @@ export default function LandingCMSPage() {
             ? "Delete Portfolio Project"
             : deleteTarget?.type === "report"
               ? "Delete Market Report"
-              : "Delete Media Item"
+              : deleteTarget?.type === "partner"
+                ? "Delete Partner"
+                : "Delete Media Item"
         }
         description={
           deleteTarget?.type === "project"
             ? "Are you sure you want to delete this portfolio project? It will be removed from the active projects list and map."
             : deleteTarget?.type === "report"
               ? "Are you sure you want to delete this report? It will no longer be visible on your landing page."
-              : "Are you sure you want to delete this media item? It will be removed from your active media sphere."
+              : deleteTarget?.type === "partner"
+                ? "Are you sure you want to delete this partner? It will no longer appear on the landing page."
+                : "Are you sure you want to delete this media item? It will be removed from your active media sphere."
         }
         itemName={deleteTarget?.title}
         confirmText="Delete"

@@ -12,6 +12,7 @@ import {
   BuildingsIcon,
   ChartBarIcon,
 } from "@phosphor-icons/react"
+import { LandingScrollEffects } from "@/components/landing/LandingScrollEffects"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -133,6 +134,7 @@ export function LandingHeader() {
 
   return (
     <header className="sticky top-0 z-[1000] bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-2xs">
+      <LandingScrollEffects />
       <div className="h-0.5 bg-gradient-to-r from-[#5C090E] via-[#B5111B] to-[#E11D48]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">

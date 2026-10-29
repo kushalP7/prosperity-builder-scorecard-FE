@@ -155,6 +155,91 @@ body {
   animation-play-state: paused;
 }
 
+/* ── Landing scroll reveals (Knovea-style) ───────────────────────── */
+.scroll-reveal {
+  --reveal-delay: 0ms;
+  opacity: 0;
+  transform: translate3d(0, 36px, 0) scale(0.975);
+  filter: blur(2px);
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay),
+    filter 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay);
+  will-change: opacity, transform, filter;
+}
+
+.scroll-reveal.reveal-up {
+  transform: translate3d(0, 40px, 0) scale(0.97);
+}
+
+.scroll-reveal.reveal-fade {
+  transform: none;
+  filter: none;
+}
+
+.scroll-reveal.reveal-scale {
+  transform: translate3d(0, 28px, 0) scale(0.94);
+}
+
+.scroll-reveal.reveal-left {
+  transform: translate3d(-40px, 16px, 0) scale(0.98);
+}
+
+.scroll-reveal.reveal-right {
+  transform: translate3d(40px, 16px, 0) scale(0.98);
+}
+
+.scroll-reveal.is-inview {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+.reveal-stagger > .reveal-child {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0) scale(0.97);
+  filter: blur(1.5px);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-child-index, 0) * 90ms + 80ms),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-child-index, 0) * 90ms + 80ms),
+    filter 0.75s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-child-index, 0) * 90ms + 80ms);
+  will-change: opacity, transform, filter;
+}
+
+.scroll-reveal.is-inview .reveal-stagger > .reveal-child,
+.reveal-stagger.is-inview > .reveal-child {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+/* Hero entrance cascade (plays on load) */
+.hero-reveal-item {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0) scale(0.98);
+  animation: hero-reveal-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+@keyframes hero-reveal-in {
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .reveal-stagger > .reveal-child,
+  .hero-reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* Prevent image dragging across all browsers */
 img {
   -webkit-user-drag: none;
