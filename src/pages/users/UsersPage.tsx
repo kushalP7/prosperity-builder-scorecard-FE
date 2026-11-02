@@ -10,7 +10,6 @@ import {
   DotsThreeVerticalIcon,
   PencilSimpleIcon,
   TrashIcon,
-  KeyIcon,
   PowerIcon,
   ClockIcon,
   WarningCircleIcon,
@@ -25,15 +24,19 @@ import { apiClient } from "@/lib/api"
 import { useAppStore } from "@/store"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
+import { createPortal } from "react-dom"
 
-export type UserRole = 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
+export type UserRole = 'super_admin' | 'project_lead' | 'assessment_specialist' | 'customer';
 export type UserStatus = 'active' | 'pending' | 'suspended';
+export type SubscriptionStatus = 'none' | 'active' | 'expired' | 'cancelled';
 
 export interface UserData {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  subscriptionStatus: SubscriptionStatus;
+  subscriptionPackage?: string | null;
   department: string;
   status: UserStatus;
   lastActive: string;
@@ -90,7 +93,14 @@ const ROLE_OPTIONS: BrandRedSelectOption[] = [
   { value: "super_admin", label: "Super Admin" },
   { value: "project_lead", label: "Project Lead" },
   { value: "assessment_specialist", label: "Assessment Specialist" },
-  { value: "client_viewer", label: "Client Representative" },
+  { value: "customer", label: "Customer" },
+];
+
+const SUBSCRIPTION_STATUS_OPTIONS: BrandRedSelectOption[] = [
+  { value: "none", label: "No subscription" },
+  { value: "active", label: "Active" },
+  { value: "expired", label: "Expired" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const STATUS_OPTIONS: BrandRedSelectOption[] = [
@@ -101,56 +111,149 @@ const STATUS_OPTIONS: BrandRedSelectOption[] = [
 
 const DEPARTMENT_OPTIONS: BrandRedSelectOption[] = DEPARTMENTS.map(d => ({ value: d, label: d }));
 
+function mapApiUser(u: any): UserData {
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: (['client_viewer', 'viewer', 'subscriber'].includes(u.role) ? 'customer' : u.role) || 'customer',
+    subscriptionStatus: (u.subscriptionStatus || 'none') as SubscriptionStatus,
+    subscriptionPackage: u.subscriptionPackage || null,
+    department: u.department || 'Planning Board',
+    status: u.status || 'active',
+    lastActive: u.lastActive ? new Date(u.lastActive).toLocaleDateString() : 'Just now',
+    avatarBg: u.avatarBg || 'bg-slate-700 text-white',
+    assignedProjectsCount: u.assignedProjectsCount || 0,
+    createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '2026-01-01',
+  };
+}
+
 export default function UsersPage() {
   const { currentUser } = useAppStore();
   const [users, setUsers] = React.useState<UserData[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(true);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState<string>("");
   const [selectedRole, setSelectedRole] = React.useState<string>("all");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const [pageSize, setPageSize] = React.useState(ITEMS_PER_PAGE);
+  const [totalItems, setTotalItems] = React.useState(0);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [mounted, setMounted] = React.useState(false);
+  const isFirstSearchDebounce = React.useRef(true);
 
   // Current user's authenticated role
-  const userRole = (currentUser?.role as UserRole) || 'client_viewer';
+  const userRole = (currentUser?.role as UserRole) || 'customer';
 
-  // Load live users from backend database
+  React.useEffect(() => {
+    setMounted(true);
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search")) {
+      const s = params.get("search") || "";
+      setSearchQuery(s);
+      setDebouncedSearch(s);
+    }
+    const role = params.get("role");
+    if (role && ["super_admin", "project_lead", "assessment_specialist", "customer"].includes(role)) {
+      setSelectedRole(role);
+    }
+    const st = params.get("status");
+    if (st && ["active", "pending", "suspended"].includes(st)) setSelectedStatus(st);
+    if (params.get("page")) setCurrentPage(Math.max(1, parseInt(params.get("page") || "1", 10)));
+    if (params.get("limit")) {
+      setPageSize(Math.max(1, parseInt(params.get("limit") || String(ITEMS_PER_PAGE), 10)));
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (isFirstSearchDebounce.current) {
+      isFirstSearchDebounce.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !mounted) return;
+    const params = new URLSearchParams();
+    if (currentPage > 1) params.set("page", String(currentPage));
+    if (pageSize !== ITEMS_PER_PAGE) params.set("limit", String(pageSize));
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+    if (selectedRole !== "all") params.set("role", selectedRole);
+    if (selectedStatus !== "all") params.set("status", selectedStatus);
+    const newQuery = params.toString() ? `?${params.toString()}` : "";
+    window.history.replaceState(null, "", `/users${newQuery}`);
+  }, [currentPage, pageSize, debouncedSearch, selectedRole, selectedStatus, mounted]);
+
   const fetchUsers = React.useCallback(async () => {
     setIsLoadingUsers(true);
     try {
-      const apiUsers = await apiClient.getUsers();
-      if (Array.isArray(apiUsers)) {
-        setUsers(apiUsers.map((u: any) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          role: u.role || 'client_viewer',
-          department: u.department || 'Planning Board',
-          status: u.status || 'active',
-          lastActive: u.lastActive ? new Date(u.lastActive).toLocaleDateString() : 'Just now',
-          avatarBg: u.avatarBg || 'bg-slate-700 text-white',
-          assignedProjectsCount: u.assignedProjectsCount || 0,
-          createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '2026-01-01',
-        })));
+      const res = await apiClient.getUsers({
+        search: debouncedSearch.trim(),
+        role: selectedRole,
+        status: selectedStatus,
+        page: currentPage,
+        limit: pageSize,
+      });
+      if (res) {
+        setUsers((res.data || []).map(mapApiUser));
+        setTotalItems(typeof res.total === "number" ? res.total : (res.data || []).length);
+      } else {
+        setUsers([]);
+        setTotalItems(0);
       }
     } catch (err) {
       console.error('Failed to load users from backend:', err);
     } finally {
       setIsLoadingUsers(false);
     }
-  }, []);
+  }, [debouncedSearch, selectedRole, selectedStatus, currentPage, pageSize]);
 
   React.useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (mounted) fetchUsers();
+  }, [fetchUsers, mounted]);
 
   // Menu & Modal States
   const [activeMenuUserId, setActiveMenuUserId] = React.useState<string | null>(null);
+  const [actionMenuPos, setActionMenuPos] = React.useState<{ top: number; left: number; openUp: boolean } | null>(null);
+  const actionButtonRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
   const [isAddUserOpen, setIsAddUserOpen] = React.useState<boolean>(false);
   const [editingUser, setEditingUser] = React.useState<UserData | null>(null);
   const [deletingUser, setDeletingUser] = React.useState<UserData | null>(null);
   const [profileDrawerUser, setProfileDrawerUser] = React.useState<UserData | null>(null);
+
+  const closeActionMenu = React.useCallback(() => {
+    setActiveMenuUserId(null);
+    setActionMenuPos(null);
+  }, []);
+
+  const openActionMenu = React.useCallback((userId: string) => {
+    if (activeMenuUserId === userId) {
+      closeActionMenu();
+      return;
+    }
+    const btn = actionButtonRefs.current[userId];
+    if (!btn) {
+      setActiveMenuUserId(userId);
+      return;
+    }
+    const rect = btn.getBoundingClientRect();
+    const menuHeight = 260;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < menuHeight + 12;
+    setActionMenuPos({
+      top: openUp ? rect.top - 8 : rect.bottom + 8,
+      left: Math.max(12, rect.right - 224),
+      openUp,
+    });
+    setActiveMenuUserId(userId);
+  }, [activeMenuUserId, closeActionMenu]);
 
   // Form States for Add/Edit
   const [formName, setFormName] = React.useState<string>("");
@@ -159,11 +262,6 @@ export default function UsersPage() {
   const [formRole, setFormRole] = React.useState<UserRole>("assessment_specialist");
   const [formDepartment, setFormDepartment] = React.useState<string>(DEPARTMENTS[0]);
   const [formStatus, setFormStatus] = React.useState<UserStatus>("active");
-
-  // Reset page to 1 when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedRole, selectedStatus, pageSize, sorting]);
 
   // RBAC Permission Check Helpers
   const isSuperAdmin = userRole === 'super_admin';
@@ -190,45 +288,18 @@ export default function UsersPage() {
     return false;
   };
 
-  // Filtered Users List
-  const filteredUsers = React.useMemo(() => {
-    let rows = users.filter(user => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.department.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesRole = selectedRole === "all" || user.role === selectedRole;
-      const matchesStatus = selectedStatus === "all" || user.status === selectedStatus;
-
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-
-    if (sorting.length > 0) {
-      const { id, desc } = sorting[0];
-      rows = [...rows].sort((a, b) => {
-        const av = (a as any)[id];
-        const bv = (b as any)[id];
-        return desc
-          ? String(bv ?? "").localeCompare(String(av ?? ""))
-          : String(av ?? "").localeCompare(String(bv ?? ""));
-      });
-    }
-    return rows;
-  }, [users, searchQuery, selectedRole, selectedStatus, sorting]);
-
-  // Pagination Logic
+  // Client-side sort of current page only
   const paginatedUsers = React.useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, currentPage, pageSize]);
-
-  // Metrics
-  const totalCount = users.length;
-  const superAdminCount = users.filter(u => u.role === 'super_admin').length;
-  const projectLeadCount = users.filter(u => u.role === 'project_lead').length;
-  const specialistCount = users.filter(u => u.role === 'assessment_specialist').length;
-  const clientViewerCount = users.filter(u => u.role === 'client_viewer').length;
+    if (sorting.length === 0) return users;
+    const { id, desc } = sorting[0];
+    return [...users].sort((a, b) => {
+      const av = (a as any)[id];
+      const bv = (b as any)[id];
+      return desc
+        ? String(bv ?? "").localeCompare(String(av ?? ""))
+        : String(av ?? "").localeCompare(String(bv ?? ""));
+    });
+  }, [users, sorting]);
 
   // Form Handlers
   const handleOpenAddUser = () => {
@@ -335,14 +406,6 @@ export default function UsersPage() {
     setDeletingUser(null);
   };
 
-  const handleResetPassword = (user: UserData) => {
-    if (!canEditUser(user)) {
-      toast.error(`Permission Denied: Cannot reset password for ${user.name}.`);
-      return;
-    }
-    toast.success(`Password reset link generated for ${user.email}`);
-  };
-
   // Helper Badge Renderers
   const renderRoleBadge = (role: UserRole | string) => {
     switch (role) {
@@ -364,11 +427,41 @@ export default function UsersPage() {
             Assessment Specialist
           </span>
         );
-      case 'client_viewer':
+      case 'customer':
       default:
         return (
           <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 inline-block w-fit">
-            Client Rep
+            Customer
+          </span>
+        );
+    }
+  };
+
+  const renderSubscriptionBadge = (status: SubscriptionStatus) => {
+    switch (status) {
+      case 'active':
+        return (
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block w-fit">
+            Subscribed
+          </span>
+        );
+      case 'expired':
+        return (
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200 inline-block w-fit">
+            Expired
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 inline-block w-fit">
+            Cancelled
+          </span>
+        );
+      case 'none':
+      default:
+        return (
+          <span className="px-2.5 py-0.5 rounded-xl text-[11px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200 inline-block w-fit">
+            No plan
           </span>
         );
     }
@@ -431,6 +524,18 @@ export default function UsersPage() {
       cell: ({ row }) => renderRoleBadge(row.original.role),
     },
     {
+      accessorKey: "subscriptionStatus",
+      header: "Subscription",
+      cell: ({ row }) => (
+        <div className="space-y-1">
+          {renderSubscriptionBadge(row.original.subscriptionStatus)}
+          {row.original.subscriptionPackage && (
+            <div className="text-[10px] font-semibold text-slate-400">{row.original.subscriptionPackage}</div>
+          )}
+        </div>
+      ),
+    },
+    {
       accessorKey: "department",
       header: "Department",
       cell: ({ row }) => (
@@ -451,125 +556,32 @@ export default function UsersPage() {
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Actions</div>,
+      header: "Actions",
       enableSorting: false,
+      meta: { align: "right", cellClassName: "w-[72px]" },
       cell: ({ row }) => {
         const user = row.original;
-        const isLowerRow = paginatedUsers.length >= 4 && row.index >= paginatedUsers.length - 2 && row.index > 1;
         return (
-          <div className="text-right relative">
-            <div className="inline-block text-left">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setActiveMenuUserId(activeMenuUserId === user.id ? null : user.id)}
-                className="w-7 h-7 p-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 flex items-center justify-center cursor-pointer transition-colors"
-                title="Actions"
-              >
-                <DotsThreeVerticalIcon weight="bold" className="w-3.5 h-3.5" />
-              </Button>
-
-              {activeMenuUserId === user.id && (
-                <div className={cn(
-                  "absolute w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-30 animate-in fade-in zoom-in-95 duration-150 text-left",
-                  isLowerRow ? "bottom-full mb-1 right-4" : "top-10 right-4"
-                )}>
-                  <div className="px-3 py-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
-                    User Actions:
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setProfileDrawerUser(user);
-                      setActiveMenuUserId(null);
-                    }}
-                    className="w-full text-left px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
-                  >
-                    <EyeIcon weight="duotone" className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>View Activity Drawer</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleOpenEditUser(user);
-                      setActiveMenuUserId(null);
-                    }}
-                    disabled={!canEditUser(user)}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                      canEditUser(user)
-                        ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                        : "text-slate-300 cursor-not-allowed"
-                    )}
-                  >
-                    <PencilSimpleIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    <span>Edit Details</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleResetPassword(user);
-                      setActiveMenuUserId(null);
-                    }}
-                    disabled={!canEditUser(user)}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                      canEditUser(user)
-                        ? "text-slate-700 hover:bg-amber-50 hover:text-amber-900"
-                        : "text-slate-300 cursor-not-allowed"
-                    )}
-                  >
-                    <KeyIcon weight="duotone" className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Reset Password</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      handleToggleUserStatus(user);
-                      setActiveMenuUserId(null);
-                    }}
-                    disabled={!canToggleStatus(user)}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer",
-                      canToggleStatus(user)
-                        ? user.status === 'active'
-                          ? "text-slate-700 hover:bg-rose-50 hover:text-rose-900"
-                          : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-900"
-                        : "text-slate-300 cursor-not-allowed"
-                    )}
-                  >
-                    <PowerIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    <span>{user.status === 'active' ? 'Suspend Access' : 'Activate User'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (!canDeleteUser(user)) {
-                        toast.error(`Permission Denied: Only Admins can delete users.`);
-                      } else {
-                        setDeletingUser(user);
-                      }
-                      setActiveMenuUserId(null);
-                    }}
-                    disabled={!canDeleteUser(user)}
-                    className={cn(
-                      "w-full text-left px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer border-t border-slate-100 mt-1 pt-1.5",
-                      canDeleteUser(user)
-                        ? "text-rose-600 hover:bg-rose-50 hover:text-rose-800"
-                        : "text-slate-300 cursor-not-allowed"
-                    )}
-                  >
-                    <TrashIcon weight="duotone" className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                    <span>Delete User</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          <Button
+            ref={(el) => {
+              actionButtonRefs.current[user.id] = el;
+            }}
+            size="sm"
+            variant="ghost"
+            onClick={() => openActionMenu(user.id)}
+            className="w-7 h-7 p-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 inline-flex items-center justify-center cursor-pointer transition-colors"
+            title="Actions"
+          >
+            <DotsThreeVerticalIcon weight="bold" className="w-3.5 h-3.5" />
+          </Button>
         );
       },
     },
-  ], [activeMenuUserId, paginatedUsers.length, userRole]);
+  ], [openActionMenu]);
+
+  const activeMenuUser = activeMenuUserId
+    ? users.find((u) => u.id === activeMenuUserId) || paginatedUsers.find((u) => u.id === activeMenuUserId) || null
+    : null;
 
   return (
     <div className="space-y-3 sm:space-y-3.5 w-full pb-0">
@@ -591,15 +603,89 @@ export default function UsersPage() {
 
       </div>
 
-      {/* Backdrop overlay for closing action menu */}
-          {activeMenuUserId && (
-            <div
-              className="fixed inset-0 z-20 bg-transparent"
+      {/* Action menu portal — avoids DataTable overflow clipping */}
+      {activeMenuUser && actionMenuPos && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-[60]" onClick={closeActionMenu} />
+          <div
+            className="fixed z-[70] w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 animate-in fade-in zoom-in-95 duration-150"
+            style={{
+              top: actionMenuPos.openUp ? undefined : actionMenuPos.top,
+              bottom: actionMenuPos.openUp ? window.innerHeight - actionMenuPos.top : undefined,
+              left: actionMenuPos.left,
+            }}
+          >
+            <div className="px-3 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
+              User Actions:
+            </div>
+            <button
               onClick={() => {
-                setActiveMenuUserId(null);
+                setProfileDrawerUser(activeMenuUser);
+                closeActionMenu();
               }}
-            />
-          )}
+              className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
+            >
+              <EyeIcon weight="duotone" className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>View Activity Drawer</span>
+            </button>
+            <button
+              onClick={() => {
+                handleOpenEditUser(activeMenuUser);
+                closeActionMenu();
+              }}
+              disabled={!canEditUser(activeMenuUser)}
+              className={cn(
+                "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors",
+                canEditUser(activeMenuUser)
+                  ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+                  : "text-slate-300 cursor-not-allowed",
+              )}
+            >
+              <PencilSimpleIcon weight="duotone" className="w-4 h-4 text-slate-500 shrink-0" />
+              <span>Edit Details</span>
+            </button>
+            <button
+              onClick={() => {
+                handleToggleUserStatus(activeMenuUser);
+                closeActionMenu();
+              }}
+              disabled={!canToggleStatus(activeMenuUser)}
+              className={cn(
+                "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors",
+                canToggleStatus(activeMenuUser)
+                  ? activeMenuUser.status === "active"
+                    ? "text-slate-700 hover:bg-rose-50 hover:text-rose-900 cursor-pointer"
+                    : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer"
+                  : "text-slate-300 cursor-not-allowed",
+              )}
+            >
+              <PowerIcon weight="duotone" className="w-4 h-4 text-slate-500 shrink-0" />
+              <span>{activeMenuUser.status === "active" ? "Suspend Access" : "Activate User"}</span>
+            </button>
+            <button
+              onClick={() => {
+                if (!canDeleteUser(activeMenuUser)) {
+                  toast.error("Permission Denied: Only Admins can delete users.");
+                } else {
+                  setDeletingUser(activeMenuUser);
+                }
+                closeActionMenu();
+              }}
+              disabled={!canDeleteUser(activeMenuUser)}
+              className={cn(
+                "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors border-t border-slate-100 mt-1 pt-2",
+                canDeleteUser(activeMenuUser)
+                  ? "text-rose-600 hover:bg-rose-50 hover:text-rose-800 cursor-pointer"
+                  : "text-slate-300 cursor-not-allowed",
+              )}
+            >
+              <TrashIcon weight="duotone" className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>Delete User</span>
+            </button>
+          </div>
+        </>,
+        document.body,
+      )}
 
           {/* Toolbar + shared DataTable (no outer card — DataTable has its own chrome) */}
           <div className="space-y-3 sm:space-y-4">
@@ -626,37 +712,33 @@ export default function UsersPage() {
               )}
             </div>
 
-            {/* Role Filter Tabs */}
-            <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shrink-0 overflow-x-auto">
-              {[
-                { id: "all", label: "All Roles" },
-                { id: "super_admin", label: "Super Admins" },
-                { id: "project_lead", label: "Project Leads" },
-                { id: "assessment_specialist", label: "Specialists" },
-                { id: "client_viewer", label: "Client Reps" },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedRole(tab.id)}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
-                    selectedRole === tab.id
-                      ? "bg-[#7c0d15] text-white shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-100"
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Status Filter & Add User Button */}
+          {/* Role / Status Filters & Add User Button */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Common Status Filter Dropdown */}
+            <Dropdown
+              value={selectedRole}
+              onChange={(v) => {
+                setSelectedRole(v);
+                setCurrentPage(1);
+              }}
+              align="right"
+              title="FILTER BY ROLE:"
+              options={[
+                { value: "all", label: "All Roles" },
+                { value: "super_admin", label: "Super Admins" },
+                { value: "project_lead", label: "Project Leads" },
+                { value: "assessment_specialist", label: "Specialists" },
+                { value: "customer", label: "Customers" },
+              ]}
+            />
+
             <Dropdown
               value={selectedStatus}
-              onChange={setSelectedStatus}
+              onChange={(v) => {
+                setSelectedStatus(v);
+                setCurrentPage(1);
+              }}
               align="right"
               title="FILTER BY STATUS:"
               options={[
@@ -687,7 +769,7 @@ export default function UsersPage() {
         <DataTable
           columns={userColumns}
           data={paginatedUsers}
-          totalItems={filteredUsers.length}
+          totalItems={totalItems}
           page={currentPage}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
@@ -947,9 +1029,12 @@ export default function UsersPage() {
               <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-left">
                 {/* Account Summary Banner (LIGHT SLATE GRAY THEME matching Payment System Policy) */}
                 <div className="p-4 bg-slate-50/90 border border-slate-200/90 rounded-2xl space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Account Overview</span>
-                    {renderRoleBadge(profileDrawerUser.role)}
+                    <div className="flex items-center gap-1.5">
+                      {renderRoleBadge(profileDrawerUser.role)}
+                      {renderSubscriptionBadge(profileDrawerUser.subscriptionStatus)}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5 text-xs pt-1">
                     <div className="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs space-y-0.5">

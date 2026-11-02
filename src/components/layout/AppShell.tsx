@@ -12,6 +12,7 @@ import {
   ReceiptIcon,
   CurrencyDollarIcon,
   UsersIcon,
+  EnvelopeSimpleIcon,
   GearIcon,
   TableIcon,
   XIcon,
@@ -19,20 +20,32 @@ import {
   ListIcon,
   ShieldWarningIcon,
   ArrowLeftIcon,
+  UserCircleIcon,
+  ShoppingCartIcon,
 } from "@phosphor-icons/react"
 import { RoseLoader } from "@/components/ui/loader"
-import { canAccessRoute, canAccessModule, AppModule } from "@/lib/permissions"
+import {
+  canAccessRoute,
+  canAccessModule,
+  hasActiveSubscription,
+  isCustomerRole,
+  getCustomerHomePath,
+  AppModule,
+} from "@/lib/permissions"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, currentUser, logout } = useAppStore()
+  const { isAuthenticated, currentUser, logout, setCurrentUser } = useAppStore()
   const router = useRouter()
   const pathname = usePathname()
   const [mounted, setMounted] = React.useState(false)
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const entitlementRefreshed = React.useRef(false)
 
   const PUBLIC_ROUTES = [
     "/",
     "/login",
+    "/set-password",
+    "/checkout",
     "/about",
     "/contact",
     "/enterprise-contact",
@@ -65,6 +78,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setMounted(true)
   }, [])
 
+  // Re-fetch /auth/me once per session so mark-paid / entitlement changes
+  // are not stuck behind a stale localStorage user (subscriptionStatus).
+  React.useEffect(() => {
+    if (!mounted || !isAuthenticated || entitlementRefreshed.current) return
+    entitlementRefreshed.current = true
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { apiClient } = await import("@/lib/api")
+        const me = await apiClient.getMe()
+        if (!cancelled && me) setCurrentUser(me as any)
+      } catch {
+        /* keep stored user */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, isAuthenticated, setCurrentUser])
+
   React.useEffect(() => {
     if (mounted && !isAuthenticated && !isPublicPage) {
       router.push("/login")
@@ -76,6 +109,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSidebarOpen(false)
   }, [pathname])
 
+  const userRole = (currentUser?.role || 'customer').toLowerCase()
+  const subStatus = currentUser?.subscriptionStatus
+  const customer = isCustomerRole(userRole)
+  const subscribed = hasActiveSubscription(subStatus)
+  const isRouteAllowed = canAccessRoute(userRole, pathname, subStatus)
+  const customerHome = getCustomerHomePath(subStatus)
+
+  // Customers on admin/restricted routes → checkout (no sub) or projects (subscribed)
+  React.useEffect(() => {
+    if (!mounted || !isAuthenticated || isPublicPage) return
+    if (customer && !isRouteAllowed) {
+      router.replace(customerHome)
+    }
+  }, [mounted, isAuthenticated, isPublicPage, customer, isRouteAllowed, customerHome, router])
+
   // If on public pages (/ or /login), render children standalone without admin sidebar/header
   if (isPublicPage) {
     return <>{children}</>
@@ -86,22 +134,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <RoseLoader fullScreen />
   }
 
-  const userRole = (currentUser?.role || 'client_viewer').toLowerCase()
-  const isRouteAllowed = canAccessRoute(userRole, pathname)
+  // Avoid flashing Access Restricted while customer redirect runs
+  if (customer && !isRouteAllowed) {
+    return <RoseLoader fullScreen />
+  }
 
-  const rawNavItems: Array<{ href: string; label: string; icon: any; module: AppModule }> = [
-    { href: "/overall-analytics", label: "Overall Dashboard", icon: ChartBarIcon, module: 'overall-analytics' },
-    { href: "/analytics", label: "Dashboard", icon: SquaresFourIcon, module: 'analytics' },
-    { href: "/projects", label: "Projects", icon: FolderOpenIcon, module: 'projects' },
-    { href: "/section-maker", label: "Section Maker", icon: StackIcon, module: 'section-maker' },
-    { href: "/orders", label: "Orders", icon: ReceiptIcon, module: 'orders' },
-    { href: "/payments", label: "Payments", icon: CurrencyDollarIcon, module: 'payments' },
-    { href: "/users", label: "Users", icon: UsersIcon, module: 'users' },
-    { href: "/settings", label: "Settings", icon: GearIcon, module: 'settings' },
-    { href: "/landing-cms", label: "Landing CMS", icon: TableIcon, module: 'landing-cms' },
-  ]
-
-  const navItems = rawNavItems
+  // Customer sidebar is a strict whitelist (never inherit admin modules).
+  // Staff/admin never see Profile — that module is customer-only.
+  const navItems: Array<{ href: string; label: string; icon: any; module: AppModule | 'checkout' }> = customer
+    ? [
+        ...(subscribed
+          ? [
+              { href: "/analytics", label: "Dashboard", icon: SquaresFourIcon, module: 'analytics' as const },
+              { href: "/projects", label: "Projects", icon: FolderOpenIcon, module: 'projects' as const },
+            ]
+          : [{ href: "/checkout", label: "Buy package", icon: ShoppingCartIcon, module: 'checkout' as const }]),
+        { href: "/profile", label: "Profile", icon: UserCircleIcon, module: 'profile' },
+      ]
+    : (
+        [
+          { href: "/overall-analytics", label: "Overall Dashboard", icon: ChartBarIcon, module: 'overall-analytics' },
+          { href: "/analytics", label: "Dashboard", icon: SquaresFourIcon, module: 'analytics' },
+          { href: "/projects", label: "Projects", icon: FolderOpenIcon, module: 'projects' },
+          { href: "/section-maker", label: "Section Maker", icon: StackIcon, module: 'section-maker' },
+          { href: "/orders", label: "Orders", icon: ReceiptIcon, module: 'orders' },
+          { href: "/payments", label: "Payments", icon: CurrencyDollarIcon, module: 'payments' },
+          { href: "/users", label: "Users", icon: UsersIcon, module: 'users' },
+          { href: "/inquiries", label: "Inquiries", icon: EnvelopeSimpleIcon, module: 'inquiries' },
+          { href: "/settings", label: "Settings", icon: GearIcon, module: 'settings' },
+          { href: "/landing-cms", label: "Landing CMS", icon: TableIcon, module: 'landing-cms' },
+        ] as Array<{ href: string; label: string; icon: any; module: AppModule }>
+      ).filter((item) => canAccessModule(userRole, item.module, subStatus))
 
   const handleLogout = () => {
     logout()
@@ -128,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         {/* Sidebar Header with Brand Logo (Center Aligned) & Mobile Close Button */}
         <div className="relative px-4 py-5 min-h-[4.5rem] flex items-center justify-center border-b border-slate-100 md:border-b-0">
-          <Link href="/landing-cms" className="flex items-center justify-center w-full">
+          <Link href={customer ? customerHome : "/projects"} className="flex items-center justify-center w-full">
             <img src="/branding/logo.png" alt="Rose Associates" className="max-h-12 w-auto object-contain mx-auto" />
           </Link>
           <button
@@ -168,8 +231,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="p-3 border-t border-slate-200/80 bg-slate-50/80 mt-auto shrink-0">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                <div className="w-8 h-8 rounded-full bg-[#B5111B]/10 text-[#B5111B] flex items-center justify-center font-bold text-xs border border-[#B5111B]/20 shrink-0 shadow-2xs mt-0.5">
-                  {currentUser.name ? currentUser.name.charAt(0) : "A"}
+                <div className="w-8 h-8 rounded-full bg-[#B5111B]/10 text-[#B5111B] flex items-center justify-center font-bold text-xs border border-[#B5111B]/20 shrink-0 shadow-2xs mt-0.5 overflow-hidden">
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    (currentUser.name ? currentUser.name.charAt(0) : "A").toUpperCase()
+                  )}
                 </div>
                 <div className="flex flex-col text-left min-w-0 flex-1">
                   <span className="text-xs font-bold text-slate-900 truncate leading-tight" title={currentUser.name}>
@@ -217,7 +288,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div id="app-header-actions" className="flex items-center gap-3"></div>
+          <div className="flex items-center gap-3 min-w-0">
+            <div id="app-header-actions" className="flex items-center gap-3"></div>
+            {currentUser?.name && (
+              <p className="hidden sm:block text-sm text-slate-700 truncate max-w-[220px] md:max-w-xs">
+                Welcome, <span className="font-bold text-slate-900">{currentUser.name}</span>
+              </p>
+            )}
+          </div>
         </header>
 
         {/* Scrollable Page Body with RBAC Route Guard Fallback */}
@@ -235,11 +313,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <div className="pt-2">
                 <Link
-                  href="/landing-cms"
+                  href={customer ? customerHome : "/projects"}
                   className="inline-flex items-center gap-2 bg-[#B5111B] hover:bg-[#8F0D15] text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all"
                 >
                   <ArrowLeftIcon weight="bold" className="w-4 h-4" />
-                  <span>Return to Landing CMS</span>
+                  <span>
+                    {customer
+                      ? subscribed
+                        ? "Go to Projects"
+                        : "Buy package"
+                      : "Go to Projects"}
+                  </span>
                 </Link>
               </div>
             </div>

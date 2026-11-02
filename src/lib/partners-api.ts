@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/api';
+
 export interface LandingPartnerItem {
   id: string;
   name: string;
@@ -174,7 +176,7 @@ export const partnersApi = {
 
   async createPartner(data: Partial<LandingPartnerItem>): Promise<LandingPartnerItem> {
     const url = `${API_BASE}/landing-cms/partners`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -185,7 +187,7 @@ export const partnersApi = {
 
   async updatePartner(id: string, data: Partial<LandingPartnerItem>): Promise<LandingPartnerItem> {
     const url = `${API_BASE}/landing-cms/partners/${id}`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -196,7 +198,7 @@ export const partnersApi = {
 
   async movePartner(id: string, direction: 'up' | 'down'): Promise<LandingPartnerItem> {
     const url = `${API_BASE}/landing-cms/partners/${id}/move`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ direction }),
@@ -207,7 +209,7 @@ export const partnersApi = {
 
   async deletePartner(id: string): Promise<{ success: boolean }> {
     const url = `${API_BASE}/landing-cms/partners/${id}`;
-    const res = await fetch(url, { method: 'DELETE' });
+    const res = await apiFetch(url, { method: 'DELETE' });
     return handleResponse<{ success: boolean }>(res);
   },
 
@@ -216,10 +218,7 @@ export const partnersApi = {
     formData.append('file', file);
 
     const url = `${API_BASE}/uploads/image?folder=${encodeURIComponent(folder)}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await apiFetch(url, { method: 'POST', body: formData }, 120000);
     const json = await handleResponse<any>(res);
     return json && json.data ? json.data : json;
   },

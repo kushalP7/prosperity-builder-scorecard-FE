@@ -5,6 +5,7 @@ import {
   MagnifyingGlassIcon,
   XIcon,
   UserIcon,
+  PrinterIcon,
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
@@ -12,23 +13,20 @@ import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
+import { apiClient } from "@/lib/api"
+import { downloadPaymentReceiptPdf } from "@/lib/payment-receipt"
 
 export type PaymentTrackingStatus = 'Paid' | 'Partially Paid' | 'Payment Hold' | 'Overdue' | 'Failed' | 'Refunded';
 
-/** Matches landing pricing packages (full upfront) */
-export type SubscriptionPackageType =
-  | "Scorecard Only ($15,000)"
-  | "Scorecard Subscription ($36,000)"
-  | "Combined Package ($48,000)";
-
 export interface AuditTransactionRow {
   id: string;
+  orderId: string;
   orderNumber: string;
   customerName: string;
   customerEmail: string;
   projectName: string;
   countyOrState: string;
-  paymentType: SubscriptionPackageType;
+  paymentType: string;
   paymentMethod: string;
   paidAmount: number;
   totalAmount: number;
@@ -40,220 +38,180 @@ export interface AuditTransactionRow {
 
 const ITEMS_PER_PAGE = 10;
 
-const PKG = {
-  scorecardOnly: { type: "Scorecard Only ($15,000)" as const, amount: 15000 },
-  subscription: { type: "Scorecard Subscription ($36,000)" as const, amount: 36000 },
-  combined: { type: "Combined Package ($48,000)" as const, amount: 48000 },
-};
+function formatLedgerDate(value?: string | Date | null) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
 
-const INITIAL_TRANSACTIONS: AuditTransactionRow[] = [
-  {
-    id: "TXN-8801", orderNumber: "ORD-2026-001", customerName: "Johnathan Smith", customerEmail: "jsmith@wakegov.com",
-    projectName: "Metropolis Master Plan 2026", countyOrState: "Wake County, NC",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "Stripe Checkout",
-    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Payment Hold",
-    stageUnlocked: false, stageLabel: "Step 1: Awaiting Full Payment", date: "Aug 18, 2026",
-  },
-  {
-    id: "TXN-8802", orderNumber: "ORD-2026-002", customerName: "Elena Rodriguez", customerEmail: "erodriguez@nycedc.org",
-    projectName: "Hudson Yards District Vision 2026", countyOrState: "New York County, NY",
-    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
-    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Aug 17, 2026",
-  },
-  {
-    id: "TXN-8803", orderNumber: "ORD-2026-003", customerName: "Marcus Vance", customerEmail: "mvance@riversidedev.org",
-    projectName: "Riverside Gateway Plan 2026", countyOrState: "Cook County, IL",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Direct Debit",
-    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 3: 3rd-Party Data Ingestion", date: "Aug 15, 2026",
-  },
-  {
-    id: "TXN-8804", orderNumber: "ORD-2026-004", customerName: "Sarah Jenkins", customerEmail: "s.jenkins@midtownalliance.org",
-    projectName: "Midtown Tech District 2026", countyOrState: "Fulton County, GA",
-    paymentType: PKG.subscription.type, paymentMethod: "HubSpot Checkout",
-    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Payment Hold",
-    stageUnlocked: false, stageLabel: "Step 1: Package Checkout Hold", date: "Aug 12, 2026",
-  },
-  {
-    id: "TXN-8805", orderNumber: "ORD-2026-005", customerName: "Robert Chen", customerEmail: "rchen@harborport.gov",
-    projectName: "Harbor View Revitalization 2026", countyOrState: "King County, WA",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Wire Transfer",
-    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Overdue",
-    stageUnlocked: false, stageLabel: "Step 1: Payment Overdue", date: "Aug 01, 2026",
-  },
-  {
-    id: "TXN-8806", orderNumber: "ORD-2026-006", customerName: "Sophia Martinez", customerEmail: "smartinez@austincommunity.org",
-    projectName: "Community Gardens 2026", countyOrState: "Travis County, TX",
-    paymentType: PKG.subscription.type, paymentMethod: "Stripe Checkout",
-    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Failed",
-    stageUnlocked: false, stageLabel: "Step 1: Checkout Failed", date: "Jul 28, 2026",
-  },
-  {
-    id: "TXN-8807", orderNumber: "ORD-2026-007", customerName: "David Miller", customerEmail: "dmiller@denverurban.gov",
-    projectName: "Downtown Transportation Corridor 2026", countyOrState: "Denver County, CO",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "Corporate ACH Debit",
-    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 2: Intake Questionnaire", date: "Jul 25, 2026",
-  },
-  {
-    id: "TXN-8808", orderNumber: "ORD-2026-008", customerName: "Jessica Taylor", customerEmail: "jtaylor@miamidev.org",
-    projectName: "Brickell Financial Hub Assessment", countyOrState: "Miami-Dade County, FL",
-    paymentType: PKG.subscription.type, paymentMethod: "ACH / Bank Wire",
-    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jul 20, 2026",
-  },
-  {
-    id: "TXN-8809", orderNumber: "ORD-2026-009", customerName: "Michael Brown", customerEmail: "mbrown@bostonplanning.org",
-    projectName: "Seaport Innovation District Master Plan", countyOrState: "Suffolk County, MA",
-    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
-    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Jul 15, 2026",
-  },
-  {
-    id: "TXN-8810", orderNumber: "ORD-2026-010", customerName: "Amanda Wilson", customerEmail: "awilson@phoenixdev.gov",
-    projectName: "Desert Ridge Innovation Campus 2026", countyOrState: "Maricopa County, AZ",
-    paymentType: PKG.combined.type, paymentMethod: "Stripe Checkout",
-    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 3: 3rd-Party Data Ingestion", date: "Jul 10, 2026",
-  },
-  {
-    id: "TXN-8811", orderNumber: "ORD-2026-011", customerName: "Christopher Lee", customerEmail: "clee@sfhousing.org",
-    projectName: "Mission Bay Residential Framework", countyOrState: "San Francisco County, CA",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH / U.S. Bank Debit",
-    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 1: Package Paid", date: "Jul 05, 2026",
-  },
-  {
-    id: "TXN-8812", orderNumber: "ORD-2026-012", customerName: "Elizabeth Davis", customerEmail: "edavis@dallasgrowth.gov",
-    projectName: "Uptown Pedestrian Mall Expansion", countyOrState: "Dallas County, TX",
-    paymentType: PKG.subscription.type, paymentMethod: "HubSpot Checkout",
-    paidAmount: 0, totalAmount: PKG.subscription.amount, status: "Payment Hold",
-    stageUnlocked: false, stageLabel: "Step 1: Awaiting Full Payment", date: "Jun 28, 2026",
-  },
-  {
-    id: "TXN-8813", orderNumber: "ORD-2026-013", customerName: "James Anderson", customerEmail: "janderson@seattleland.org",
-    projectName: "South Lake Union Tech Center", countyOrState: "King County, WA",
-    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
-    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "Jun 20, 2026",
-  },
-  {
-    id: "TXN-8814", orderNumber: "ORD-2026-014", customerName: "Patricia Thomas", customerEmail: "pthomas@phillyredevelopment.gov",
-    projectName: "University City Knowledge Corridor", countyOrState: "Philadelphia County, PA",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "ACH Wire Transfer",
-    paidAmount: 0, totalAmount: PKG.scorecardOnly.amount, status: "Overdue",
-    stageUnlocked: false, stageLabel: "Step 1: Payment Overdue", date: "Jun 15, 2026",
-  },
-  {
-    id: "TXN-8815", orderNumber: "ORD-2026-015", customerName: "Matthew Jackson", customerEmail: "mjackson@portlandplanning.org",
-    projectName: "Pearl District Mixed-Use Vision", countyOrState: "Multnomah County, OR",
-    paymentType: PKG.subscription.type, paymentMethod: "ACH Direct Debit",
-    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jun 08, 2026",
-  },
-  {
-    id: "TXN-8816", orderNumber: "ORD-2026-016", customerName: "Jennifer White", customerEmail: "jwhite@nashvilledev.org",
-    projectName: "Music Row Cultural Heritage Plan", countyOrState: "Davidson County, TN",
-    paymentType: PKG.scorecardOnly.type, paymentMethod: "Stripe Checkout",
-    paidAmount: PKG.scorecardOnly.amount, totalAmount: PKG.scorecardOnly.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 4: Admin Review & Report", date: "Jun 01, 2026",
-  },
-  {
-    id: "TXN-8817", orderNumber: "ORD-2026-017", customerName: "Daniel Harris", customerEmail: "dharris@minneapolisurban.gov",
-    projectName: "Nicolet Mall Greenway Project", countyOrState: "Hennepin County, MN",
-    paymentType: PKG.subscription.type, paymentMethod: "ACH Direct Debit",
-    paidAmount: PKG.subscription.amount, totalAmount: PKG.subscription.amount, status: "Refunded",
-    stageUnlocked: false, stageLabel: "Package Cancelled / Refunded", date: "May 24, 2026",
-  },
-  {
-    id: "TXN-8818", orderNumber: "ORD-2026-018", customerName: "Victoria Martin", customerEmail: "vmartin@charlottedevelopment.org",
-    projectName: "Uptown Financial Center Phase II", countyOrState: "Mecklenburg County, NC",
-    paymentType: PKG.combined.type, paymentMethod: "Corporate Bank Transfer",
-    paidAmount: PKG.combined.amount, totalAmount: PKG.combined.amount, status: "Paid",
-    stageUnlocked: true, stageLabel: "Step 5: Final Release", date: "May 18, 2026",
-  },
-];
+function mapLedgerRow(raw: any): AuditTransactionRow {
+  const statusRaw = String(raw.status || "");
+  let status: PaymentTrackingStatus = "Payment Hold";
+  if (statusRaw === "Paid") status = "Paid";
+  else if (statusRaw === "Failed") status = "Failed";
+  else if (statusRaw === "Refunded") status = "Refunded";
+  else if (/overdue/i.test(statusRaw)) status = "Overdue";
+
+  const paid = status === "Paid";
+  return {
+    id: raw.id,
+    orderId: String(raw.orderId || ""),
+    orderNumber: raw.orderNumber || "—",
+    customerName: raw.customerName || "—",
+    customerEmail: raw.customerEmail || "—",
+    projectName: raw.projectName || "—",
+    countyOrState: raw.countyOrState || "—",
+    paymentType: raw.paymentType || "Package",
+    paymentMethod: raw.method || (raw.cardLast4 ? `Card •••• ${raw.cardLast4}` : "Card (Stub)"),
+    paidAmount: paid ? Number(raw.paidAmount || 0) : 0,
+    totalAmount: Number(raw.totalAmount || raw.paidAmount || 0),
+    status,
+    stageUnlocked: paid,
+    stageLabel: paid
+      ? "Step 2+: Project unlocked"
+      : status === "Failed"
+        ? "Step 1: Checkout Failed"
+        : status === "Refunded"
+          ? "Package Cancelled / Refunded"
+          : "Step 1: Awaiting Full Payment",
+    date: formatLedgerDate(raw.date),
+  };
+}
 
 export default function PaymentsPage() {
-  const [transactions, setTransactions] = React.useState<AuditTransactionRow[]>(INITIAL_TRANSACTIONS);
+  const [transactions, setTransactions] = React.useState<AuditTransactionRow[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(ITEMS_PER_PAGE);
+  const [totalItems, setTotalItems] = React.useState(0);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [mounted, setMounted] = React.useState(false);
+  const isFirstSearchDebounce = React.useRef(true);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [packagePrices, setPackagePrices] = React.useState({ scorecard: 15000, subscription: 36000, combined: 48000 });
+  const [metrics, setMetrics] = React.useState({
+    totalCollected: 0,
+    paidCount: 0,
+    failedCount: 0,
+    refundedCount: 0,
+    scorecardOnlyCount: 0,
+    subscriptionCount: 0,
+    combinedCount: 0,
+    totalCount: 0,
+  });
 
   // Receipt Modal State
   const [selectedReceiptTxn, setSelectedReceiptTxn] = React.useState<AuditTransactionRow | null>(null);
 
-  // Filtered Transactions Calculation
-  const filteredTransactions = React.useMemo(() => {
-    let rows = transactions.filter(t => {
-      const matchesSearch =
-        t.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.paymentType.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "paid" && t.status === "Paid") ||
-        (statusFilter === "partial" && t.status === "Partially Paid") ||
-        (statusFilter === "hold" && t.status === "Payment Hold") ||
-        (statusFilter === "issue" && (t.status === "Overdue" || t.status === "Failed"));
-
-      return matchesSearch && matchesStatus;
-    });
-
-    if (sorting.length > 0) {
-      const { id, desc } = sorting[0];
-      rows = [...rows].sort((a, b) => {
-        const av = (a as any)[id];
-        const bv = (b as any)[id];
-        if (typeof av === "number" && typeof bv === "number") return desc ? bv - av : av - bv;
-        return desc
-          ? String(bv ?? "").localeCompare(String(av ?? ""))
-          : String(av ?? "").localeCompare(String(bv ?? ""));
-      });
-    }
-    return rows;
-  }, [transactions, searchQuery, statusFilter, sorting]);
-
-  // Pagination Calculations
-  const paginatedTransactions = React.useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredTransactions.slice(start, start + pageSize);
-  }, [filteredTransactions, currentPage, pageSize]);
-
-  // Reset to Page 1 when filter/search changes
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, pageSize, sorting]);
+    setMounted(true);
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search")) {
+      const s = params.get("search") || "";
+      setSearchQuery(s);
+      setDebouncedSearch(s);
+    }
+    const st = params.get("status");
+    if (st && ["paid", "failed", "refunded"].includes(st)) setStatusFilter(st);
+    if (params.get("page")) setCurrentPage(Math.max(1, parseInt(params.get("page") || "1", 10)));
+    if (params.get("limit")) {
+      setPageSize(Math.max(1, parseInt(params.get("limit") || String(ITEMS_PER_PAGE), 10)));
+    }
+  }, []);
 
-  // Metrics Summary
-  const metrics = React.useMemo(() => {
-    const totalCollected = transactions.reduce((sum, t) => sum + t.paidAmount, 0);
-    const paidCount = transactions.filter(t => t.status === "Paid").length;
-    const partialCount = transactions.filter(t => t.status === "Partially Paid").length;
-    const holdCount = transactions.filter(t => t.status === "Payment Hold").length;
-    const issueCount = transactions.filter(t => t.status === "Overdue" || t.status === "Failed").length;
-    const scorecardOnlyCount = transactions.filter(t => t.paymentType.startsWith("Scorecard Only")).length;
-    const subscriptionCount = transactions.filter(t => t.paymentType.startsWith("Scorecard Subscription")).length;
-    const combinedCount = transactions.filter(t => t.paymentType.startsWith("Combined Package")).length;
+  React.useEffect(() => {
+    if (isFirstSearchDebounce.current) {
+      isFirstSearchDebounce.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    return {
-      totalCollected,
-      paidCount,
-      partialCount,
-      holdCount,
-      issueCount,
-      scorecardOnlyCount,
-      subscriptionCount,
-      combinedCount,
-      totalCount: transactions.length
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !mounted) return;
+    const params = new URLSearchParams();
+    if (currentPage > 1) params.set("page", String(currentPage));
+    if (pageSize !== ITEMS_PER_PAGE) params.set("limit", String(pageSize));
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    const newQuery = params.toString() ? `?${params.toString()}` : "";
+    window.history.replaceState(null, "", `/payments${newQuery}`);
+  }, [currentPage, pageSize, debouncedSearch, statusFilter, mounted]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const packages = await apiClient.getOrderPackages();
+      if (cancelled) return;
+      const byType = Object.fromEntries(packages.map((p) => [p.packageType, p.amount]));
+      setPackagePrices({
+        scorecard: Number(byType.scorecard_only || 15000),
+        subscription: Number(byType.subscription || 36000),
+        combined: Number(byType.combined || 48000),
+      });
+    })();
+    return () => {
+      cancelled = true;
     };
-  }, [transactions]);
+  }, []);
+
+  const loadLedger = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const ledger = await apiClient.getPaymentLedger({
+        search: debouncedSearch.trim(),
+        status: statusFilter,
+        page: currentPage,
+        limit: pageSize,
+      });
+      if (!ledger) {
+        setTransactions([]);
+        setTotalItems(0);
+        return;
+      }
+      setTransactions((ledger.data || []).map(mapLedgerRow));
+      setTotalItems(typeof ledger.total === "number" ? ledger.total : (ledger.data || []).length);
+      if (ledger.summary) {
+        setMetrics({
+          totalCollected: Number(ledger.summary.totalCollected || 0),
+          paidCount: Number(ledger.summary.paidCount || 0),
+          failedCount: Number(ledger.summary.failedCount || 0),
+          refundedCount: Number(ledger.summary.refundedCount || 0),
+          scorecardOnlyCount: Number(ledger.summary.scorecardOnlyCount || 0),
+          subscriptionCount: Number(ledger.summary.subscriptionCount || 0),
+          combinedCount: Number(ledger.summary.combinedCount || 0),
+          totalCount: Number(ledger.summary.totalCount || 0),
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch, statusFilter, currentPage, pageSize]);
+
+  React.useEffect(() => {
+    if (mounted) loadLedger();
+  }, [loadLedger, mounted]);
+
+  const paginatedTransactions = React.useMemo(() => {
+    if (sorting.length === 0) return transactions;
+    const { id, desc } = sorting[0];
+    return [...transactions].sort((a, b) => {
+      const av = (a as any)[id];
+      const bv = (b as any)[id];
+      if (typeof av === "number" && typeof bv === "number") return desc ? bv - av : av - bv;
+      return desc
+        ? String(bv ?? "").localeCompare(String(av ?? ""))
+        : String(av ?? "").localeCompare(String(bv ?? ""));
+    });
+  }, [transactions, sorting]);
 
   // Status Badge Renderer (MATCHES USERS PAGE EXACTLY)
   const renderStatusBadge = (status: PaymentTrackingStatus) => {
@@ -348,19 +306,18 @@ export default function PaymentsPage() {
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Action</div>,
+      header: "Action",
       enableSorting: false,
+      meta: { align: "right", cellClassName: "w-[120px]" },
       cell: ({ row }) => (
-        <div className="text-right">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setSelectedReceiptTxn(row.original)}
-            className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] hover:bg-red-50 cursor-pointer rounded-xl h-7 px-2.5"
-          >
-            View Receipt
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setSelectedReceiptTxn(row.original)}
+          className="text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] hover:bg-red-50 cursor-pointer rounded-xl h-7 px-2.5"
+        >
+          View Receipt
+        </Button>
       ),
     },
   ], []);
@@ -419,7 +376,7 @@ export default function PaymentsPage() {
             <div className="space-y-1">
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-100 block drop-shadow-xs">Scorecard Only</span>
               <h3 className="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight drop-shadow-md">
-                $15,000 <span className="text-xs font-bold text-red-100">/ Plan</span>
+                ${packagePrices.scorecard.toLocaleString("en-US")} <span className="text-xs font-bold text-red-100">/ Plan</span>
               </h3>
               <span className="text-[10px] font-bold text-white flex items-center gap-1 mt-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-2.5 py-0.5 rounded-full w-fit">
                 {metrics.scorecardOnlyCount} orders
@@ -458,7 +415,8 @@ export default function PaymentsPage() {
             <div className="space-y-1">
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-100 block drop-shadow-xs">Multi-Year & Combined</span>
               <h3 className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight drop-shadow-md">
-                $36k <span className="text-xs font-bold text-slate-200">/ $48k</span>
+                ${(packagePrices.subscription / 1000).toFixed(0)}k{" "}
+                <span className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight drop-shadow-md">/ ${(packagePrices.combined / 1000).toFixed(0)}k</span>
               </h3>
               <span className="text-[10px] font-bold text-white flex items-center gap-1 mt-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-2.5 py-0.5 rounded-full w-fit">
                 Sub {metrics.subscriptionCount} · Combined {metrics.combinedCount}
@@ -492,12 +450,13 @@ export default function PaymentsPage() {
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-200 block drop-shadow-xs">Holds & Overdue</span>
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-200 block drop-shadow-xs">Failed & Refunded</span>
               <h3 className="text-2xl sm:text-3xl font-black text-amber-400 leading-none tracking-tight drop-shadow-md">
-                {metrics.holdCount + metrics.issueCount} <span className="text-xs font-bold text-slate-200">Orders</span>
+                {metrics.failedCount + metrics.refundedCount}{" "}
+                <span className="text-xs font-bold text-slate-200">Attempts</span>
               </h3>
               <span className="text-[10px] font-bold text-white flex items-center gap-1 mt-1.5 bg-black/40 backdrop-blur-md border border-white/20 px-2.5 py-0.5 rounded-full w-fit">
-                Stage Locks Enforced
+                Failed {metrics.failedCount} · Refunded {metrics.refundedCount}
               </span>
             </div>
             <div className="w-20 sm:w-24 h-10 shrink-0 opacity-95 group-hover:scale-110 transition-transform duration-300 pr-1">
@@ -533,70 +492,37 @@ export default function PaymentsPage() {
             )}
           </div>
 
-          {/* Segmented Filter Pills */}
+          {/* Segmented Filter Pills — attempt statuses */}
           <div className="bg-white p-1 rounded-xl border border-slate-200 flex items-center gap-1 overflow-x-auto shadow-2xs">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === "all"
-                  ? "bg-[#B5111B] text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:bg-slate-50"
-              )}
-            >
-              All Payments ({metrics.totalCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("paid")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === "paid"
-                  ? "bg-emerald-600 text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-              )}
-            >
-              Paid ({metrics.paidCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("partial")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === "partial"
-                  ? "bg-amber-500 text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:bg-amber-50 hover:text-amber-700"
-              )}
-            >
-              Partially Paid ({metrics.partialCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("hold")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === "hold"
-                  ? "bg-purple-600 text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
-              )}
-            >
-              Payment Hold ({metrics.holdCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("issue")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                statusFilter === "issue"
-                  ? "bg-rose-900 text-white shadow-xs font-extrabold"
-                  : "text-slate-600 hover:bg-rose-50 hover:text-rose-700"
-              )}
-            >
-              Overdue / Failed ({metrics.issueCount})
-            </button>
+            {([
+              { id: "all", label: `All (${metrics.totalCount})`, active: "bg-[#B5111B] text-white", idle: "text-slate-600 hover:bg-slate-50" },
+              { id: "paid", label: `Paid (${metrics.paidCount})`, active: "bg-emerald-600 text-white", idle: "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700" },
+              { id: "failed", label: `Failed (${metrics.failedCount})`, active: "bg-rose-900 text-white", idle: "text-slate-600 hover:bg-rose-50 hover:text-rose-700" },
+              { id: "refunded", label: `Refunded (${metrics.refundedCount})`, active: "bg-slate-700 text-white", idle: "text-slate-600 hover:bg-slate-100" },
+            ] as const).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setStatusFilter(tab.id);
+                  setCurrentPage(1);
+                }}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
+                  statusFilter === tab.id
+                    ? `${tab.active} shadow-xs font-extrabold`
+                    : tab.idle,
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
         <DataTable
           columns={paymentColumns}
           data={paginatedTransactions}
-          totalItems={filteredTransactions.length}
+          totalItems={totalItems}
           page={currentPage}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
@@ -606,8 +532,9 @@ export default function PaymentsPage() {
           }}
           sorting={sorting}
           onSortingChange={setSorting}
+          isLoading={isLoading}
         />
-      </div>
+            </div>
 
       {/* RECEIPT MODAL */}
       {selectedReceiptTxn && (
@@ -636,21 +563,32 @@ export default function PaymentsPage() {
                 <span className="text-slate-500 font-medium">Amount Settled:</span>
                 <span className="font-black text-emerald-700 text-sm">${selectedReceiptTxn.paidAmount.toLocaleString('en-US')}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-medium">Project Lock Status:</span>
-                <span className={cn("font-bold text-xs", selectedReceiptTxn.stageUnlocked ? "text-emerald-700" : "text-rose-700")}>
-                  {selectedReceiptTxn.stageLabel}
-                </span>
-              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 size="sm"
+                variant="outline"
                 onClick={() => setSelectedReceiptTxn(null)}
-                className="bg-slate-900 text-white rounded-xl font-bold text-xs"
+                className="rounded-xl font-bold text-xs"
               >
-                Close Receipt
+                Close
+              </Button>
+              <Button
+                size="sm"
+                disabled={!selectedReceiptTxn.orderId}
+                onClick={() =>
+                  void downloadPaymentReceiptPdf({
+                    orderId: selectedReceiptTxn.orderId,
+                    attemptId: selectedReceiptTxn.id,
+                    id: selectedReceiptTxn.id,
+                    orderNumber: selectedReceiptTxn.orderNumber,
+                  })
+                }
+                className="bg-[#B5111B] hover:bg-[#8F0D15] text-white rounded-xl font-bold text-xs"
+              >
+                <PrinterIcon className="w-3.5 h-3.5 mr-1" weight="bold" />
+                Download PDF
               </Button>
             </div>
           </div>

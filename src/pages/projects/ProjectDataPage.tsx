@@ -18,11 +18,13 @@ import {
 } from "@phosphor-icons/react"
 import { apiClient } from "@/lib/api"
 import { Button } from "@/components/ui/button"
+import { Dropdown } from "@/components/ui/dropdown"
 import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
+import { isAdminEmptyMetric, expectedLicensedProvider, LICENSED_SOURCE_LABELS } from "@/lib/metric-source-policy"
 
-const getSectionIcon = (label?: string, iconName?: string) => {
+const getSectionIcon = (label?: string) => {
   const l = (label || '').toLowerCase();
   if (l.includes('transport') || l.includes('access')) return BusIcon;
   if (l.includes('art') || l.includes('culture')) return PaletteIcon;
@@ -31,6 +33,23 @@ const getSectionIcon = (label?: string, iconName?: string) => {
   if (l.includes('housing') || l.includes('land')) return BuildingsIcon;
   return KanbanIcon;
 }
+
+/** Preset Source options (Summary + Detailed). Custom values stay free text via Other… */
+const SOURCE_PRESETS = [
+  'US Census QuickFacts',
+  'US Census ACS',
+  'NCDOT GIS Route Network',
+  'BLS',
+  'EPA',
+  'CDC',
+  'ESRI/ArcGIS',
+  'CoStar',
+  "Moody's CRE",
+  'Client / Questionnaire',
+] as const
+
+const SOURCE_CLEAR = '__clear__'
+const SOURCE_OTHER = '__other__'
 
 /** Color + category chip styling for Data Source values */
 function getSourceChipClass(source: string): string {
@@ -141,6 +160,12 @@ function NotesCell({
   )
 }
 
+const SOURCE_DROPDOWN_OPTIONS = [
+  { value: SOURCE_CLEAR, label: 'Clear / None' },
+  ...SOURCE_PRESETS.map((opt) => ({ value: opt, label: opt })),
+  { value: SOURCE_OTHER, label: 'Other…' },
+]
+
 function DataSourceCell({
   value,
   onChange,
@@ -149,33 +174,87 @@ function DataSourceCell({
   onChange: (val: string) => void
 }) {
   const [editing, setEditing] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
+  const [otherMode, setOtherMode] = React.useState(false)
+  const [otherDraft, setOtherDraft] = React.useState('')
+  const otherRef = React.useRef<HTMLInputElement>(null)
   const trimmed = (value || '').trim()
+  const isPreset = (SOURCE_PRESETS as readonly string[]).includes(trimmed)
+
+  const openEditor = () => {
+    const custom = Boolean(trimmed && !isPreset)
+    setOtherMode(custom)
+    setOtherDraft(custom ? trimmed : '')
+    setEditing(true)
+  }
+
+  const commitOther = () => {
+    onChange(otherDraft.trim())
+    setOtherMode(false)
+    setEditing(false)
+  }
 
   React.useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus()
-      inputRef.current?.select()
+    if (editing && otherMode) {
+      otherRef.current?.focus()
+      otherRef.current?.select()
     }
-  }, [editing])
+  }, [editing, otherMode])
 
   if (editing) {
+    const dropdownValue = otherMode ? SOURCE_OTHER : isPreset ? trimmed : trimmed ? SOURCE_OTHER : ''
     return (
-      <input
-        ref={inputRef}
-        type="text"
-        className="w-full min-h-[32px] rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40"
-        value={value || ''}
-        onChange={e => onChange(e.target.value)}
-        onBlur={() => setEditing(false)}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === 'Escape') {
-            e.preventDefault()
+      <div className="flex w-full min-w-[200px] flex-col gap-1.5">
+        <Dropdown
+          value={dropdownValue}
+          onChange={(next) => {
+            if (next === SOURCE_CLEAR) {
+              onChange('')
+              setOtherMode(false)
+              setOtherDraft('')
+              setEditing(false)
+              return
+            }
+            if (next === SOURCE_OTHER) {
+              setOtherMode(true)
+              setOtherDraft(isPreset ? '' : trimmed)
+              return
+            }
+            onChange(next)
+            setOtherMode(false)
+            setOtherDraft('')
             setEditing(false)
-          }
-        }}
-        placeholder="Source..."
-      />
+          }}
+          options={SOURCE_DROPDOWN_OPTIONS}
+          placeholder="Select source…"
+          title="Data source"
+          fullWidth
+          size="sm"
+          buttonClassName="min-h-[32px] rounded-md border-sky-300"
+          menuClassName="min-w-[220px]"
+        />
+        {otherMode && (
+          <input
+            ref={otherRef}
+            type="text"
+            className="w-full min-h-[32px] rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40"
+            value={otherDraft}
+            onChange={(e) => setOtherDraft(e.target.value)}
+            onBlur={commitOther}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                commitOther()
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                setOtherMode(false)
+                setEditing(false)
+              }
+            }}
+            placeholder="Type custom source…"
+          />
+        )}
+      </div>
     )
   }
 
@@ -183,7 +262,7 @@ function DataSourceCell({
     return (
       <button
         type="button"
-        onClick={() => setEditing(true)}
+        onClick={openEditor}
         className="w-full min-h-[32px] rounded-md border border-dashed border-slate-300 bg-transparent px-2 py-1 text-left text-xs text-slate-400 hover:border-slate-400 hover:text-slate-500 transition-colors cursor-pointer"
       >
         Add source…
@@ -194,7 +273,7 @@ function DataSourceCell({
   return (
     <button
       type="button"
-      onClick={() => setEditing(true)}
+      onClick={openEditor}
       title={trimmed}
       className={cn(
         'inline-flex max-w-full items-start rounded-full border px-2.5 py-1 text-left text-[11px] font-semibold leading-snug break-words whitespace-normal cursor-pointer transition-opacity hover:opacity-90',
@@ -687,8 +766,8 @@ export default function ProjectDataPage() {
                           : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
                       )}
                       style={{
-                        backgroundColor: isSelected ? (section.accentColor || '#B5111B') : undefined,
-                        borderColor: isSelected ? (section.accentColor || '#B5111B') : undefined,
+                        backgroundColor: isSelected ? '#B5111B' : undefined,
+                        borderColor: isSelected ? '#B5111B' : undefined,
                         color: isSelected ? '#FFFFFF' : undefined
                       }}
                     >
@@ -783,11 +862,11 @@ export default function ProjectDataPage() {
                             <td
                               colSpan={3}
                               className="px-4 py-3 font-bold text-white text-base relative"
-                              style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                              style={{ backgroundColor: '#B5111B' }}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
-                                  {React.createElement(getSectionIcon(activeSection.label || (activeSection as any).name, activeSection.icon), { className: "h-5 w-5" })}
+                                  {React.createElement(getSectionIcon(activeSection.label || (activeSection as any).name), { className: "h-5 w-5" })}
                                   <span>{activeSection.label || (activeSection as any).name}</span>
                                 </div>
                                 <span className="text-xs opacity-90 font-normal hover:underline flex items-center gap-1">
@@ -811,6 +890,11 @@ export default function ProjectDataPage() {
                             const renderRow = (nodeId: string, label: string, indent: number, isBold: boolean, description?: string) => {
                               const groupData = project.data?.[nodeId] || {}
                               const baseRecord = groupData['__base__'] || { value: '', source: '' }
+                              const adminEmptyAwaiting =
+                                isAdminEmptyMetric(label) &&
+                                (baseRecord.value === null ||
+                                  baseRecord.value === undefined ||
+                                  String(baseRecord.value).trim() === '')
 
                               const handleBaseChange = (field: 'value' | 'source', val: any) => {
                                 let finalVal = val;
@@ -846,19 +930,40 @@ export default function ProjectDataPage() {
                                       )}
                                     </div>
                                   </td>
-                                  <td className="px-1 py-1 border-r border-border align-middle bg-blue-50/20 hover:bg-blue-50/40">
+                                  <td
+                                    className={cn(
+                                      'px-1 py-1 border-r border-border align-middle hover:bg-blue-50/40',
+                                      adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
+                                    )}
+                                  >
                                     <input
                                       type="number"
                                       min={0}
                                       onKeyDown={handleNumberKeyDown}
                                       onPaste={handleNumberPaste}
-                                      placeholder="-"
+                                      placeholder={
+                                        adminEmptyAwaiting
+                                          ? (expectedLicensedProvider(label)
+                                              ? LICENSED_SOURCE_LABELS[expectedLicensedProvider(label)!]
+                                              : 'Staff enter')
+                                          : '-'
+                                      }
+                                      title={
+                                        adminEmptyAwaiting
+                                          ? 'Master Sources: leave empty until Rose enters licensed/staff data'
+                                          : undefined
+                                      }
                                       className="w-full h-full min-h-[32px] bg-transparent px-2 text-center text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-colors border-0"
                                       value={baseRecord.value === null || baseRecord.value === undefined ? '' : String(baseRecord.value)}
                                       onChange={e => handleBaseChange('value', e.target.value)}
                                     />
                                   </td>
-                                  <td className="px-2 py-1.5 align-middle min-w-[240px] bg-blue-50/20 hover:bg-blue-50/40">
+                                  <td
+                                    className={cn(
+                                      'px-2 py-1.5 align-middle min-w-[240px] hover:bg-blue-50/40',
+                                      adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
+                                    )}
+                                  >
                                     <DataSourceCell
                                       value={baseRecord.source || ''}
                                       onChange={val => handleBaseChange('source', val)}
@@ -937,13 +1042,13 @@ export default function ProjectDataPage() {
                               <tr>
                                 <th
                                   className="px-4 py-3 font-bold text-white min-w-[200px]"
-                                  style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                                  style={{ backgroundColor: '#B5111B' }}
                                 >
                                   #
                                 </th>
                                 <th
                                   className="px-2 py-3 font-bold text-white text-center w-28 border-l border-white/20"
-                                  style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                                  style={{ backgroundColor: '#B5111B' }}
                                 >
                                   Data
                                 </th>
@@ -954,14 +1059,14 @@ export default function ProjectDataPage() {
                                       "px-2 py-3 font-bold text-white border-l border-white/20",
                                       isNotesColumn(col.name) ? "text-left min-w-[220px]" : "text-center"
                                     )}
-                                    style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                                    style={{ backgroundColor: '#B5111B' }}
                                   >
                                     {col.name}
                                   </th>
                                 ))}
                                 <th
                                   className="px-3 py-3 font-bold text-white text-left min-w-[240px] border-l border-white/20"
-                                  style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                                  style={{ backgroundColor: '#B5111B' }}
                                 >
                                   Data Source
                                 </th>

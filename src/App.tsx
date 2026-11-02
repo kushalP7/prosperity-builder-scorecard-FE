@@ -26,6 +26,8 @@ import AllVideosPage from "@/pages/landing/AllVideosPage"
 
 // Auth Pages
 import LoginPage from "@/pages/auth/LoginPage"
+import SetPasswordPage from "@/pages/auth/SetPasswordPage"
+import InquiriesPage from "@/pages/inquiries/InquiriesPage"
 
 // CMS Pages (Active Deliverable)
 import LandingCMSPage from "@/pages/cms/LandingCMSPage"
@@ -48,6 +50,8 @@ import SectionMakerPage from "@/pages/section-maker/SectionMakerPage"
 import SectionMakerCategoryPage from "@/pages/section-maker/SectionMakerCategoryPage"
 import OrdersPage from "@/pages/orders/OrdersPage"
 import PaymentsPage from "@/pages/payments/PaymentsPage"
+import CheckoutPage from "@/pages/checkout/CheckoutPage"
+import CustomerProfilePage from "@/pages/profile/CustomerProfilePage"
 import UsersPage from "@/pages/users/UsersPage"
 import SettingsPage from "@/pages/settings/SettingsPage"
 
@@ -86,6 +90,7 @@ export function App() {
           <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/enterprise-contact" element={<Navigate to="/contact" replace />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           {/* KP */}
           {/* <Route path="/pricing" element={<PricingPage />} /> */}
           <Route path="/pricing" element={<Navigate to="/contact" replace />} />
@@ -113,6 +118,9 @@ export function App() {
           <Route path="/videos/all" element={<AllVideosPage />} />
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/set-password" element={<SetPasswordPage />} />
+          {/* Customer Profile */}
+          <Route path="/profile" element={<CustomerProfilePage />} />
           {/* Admin Dashboard */}
           <Route
             path="/overall-analytics"
@@ -136,7 +144,7 @@ export function App() {
           />{" "}
           {/* Future: <ProjectsPage /> */}
           <Route path="/projects/:id" element={<ProjectLayout />}>
-            <Route index element={<Navigate to="data" replace />} />
+            <Route index element={<Navigate to="intake" replace />} />
             <Route path="data" element={<ProjectDataPage />} />
             <Route path="intake" element={<ProjectIntakePage />} />
             <Route path="calibration" element={<ProjectCalibrationPage />} />
@@ -184,6 +192,7 @@ export function App() {
           {/* Future: <PaymentsPage /> */}
           <Route path="/users" element={<UsersPage />} />{" "}
           {/* Future: <UsersPage /> */}
+          <Route path="/inquiries" element={<InquiriesPage />} />
           <Route
             path="/settings"
             element={<SettingsPage />}

@@ -608,7 +608,7 @@ export default function ProjectIntakePage() {
         }}
         onConfirm={handleSubmit}
         title="Submit Client Intake Questionnaire"
-        description="Are you ready to submit the questionnaire? This will lock in your intake responses and trigger automated secondary API ingestion for this project."
+        description="Are you ready to submit the questionnaire? This will lock in your intake responses. Rose Associates staff will run Sync Live APIs & Calculate after sections are assigned so Census/BLS scores can populate."
         itemName={project?.name}
         confirmText="Submit Questionnaire"
         cancelText="Cancel"

@@ -1,3 +1,11 @@
+export type InquiryLeadRole = 'county' | 'city' | 'partner_vendor';
+
+export const INQUIRY_LEAD_ROLE_OPTIONS: { value: InquiryLeadRole; label: string }[] = [
+  { value: 'county', label: 'Authorized County Representative' },
+  { value: 'city', label: 'Authorized City/Town Representative' },
+  { value: 'partner_vendor', label: 'Partners & Vendors' },
+];
+
 export interface CreateInquiryPayload {
   firstName: string;
   lastName: string;
@@ -9,6 +17,8 @@ export interface CreateInquiryPayload {
   state: string;
   country: string;
   organizationType: string;
+  /** Exactly one required: county | city | partner_vendor */
+  leadRole: InquiryLeadRole | '';
   notes?: string;
 }
 

@@ -49,4 +49,7 @@ export const contactInquirySchema = z.object({
   state: z.string().trim().min(1, "State / Province is required."),
   country: z.string().trim().min(1, "Country is required."),
   organizationType: z.string().trim().min(1, "Please select an organization type."),
+  leadRole: z.enum(["county", "city", "partner_vendor"], {
+    message: "Please select one representative type.",
+  }),
 });

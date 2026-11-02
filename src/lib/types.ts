@@ -112,8 +112,6 @@ export const TemplateSectionSchema = z.object({
   id: z.string(),
   label: z.string(),
   description: z.string().optional(),
-  accentColor: z.string().optional(),
-  icon: z.string().optional(),
   version: z.number().optional(),
   isLatest: z.boolean().optional(),
   status: z.string().optional(),
@@ -150,14 +148,11 @@ export const DataRecordSchema = z.object({
 export type DataRecord = z.infer<typeof DataRecordSchema>;
 
 export type ProjectStatus = 
-  | 'ONBOARDING'
   | 'INTAKE_PENDING'
   | 'INTAKE_SUBMITTED'
-  | 'INGESTION_RUNNING'
   | 'CALCULATED'
   | 'IN_REVIEW'
-  | 'PUBLISHED'
-  | 'ARCHIVED';
+  | 'PUBLISHED';
 
 export type MilestoneType = 'INITIAL_40' | 'MID_30' | 'FINAL_30';
 export type PaymentStatusType = 'PENDING' | 'PAID' | 'BYPASSED' | 'FAILED';
@@ -254,21 +249,26 @@ export const ProjectSchema = z.object({
   jurisdictionType: z.string().optional(),
   state: z.string().optional(),
   county: z.string().optional(),
+  city: z.string().nullable().optional(),
   stateFips: z.string().optional(),
   countyFips: z.string().optional(),
+  placeFips: z.string().nullable().optional(),
+  locationConfirmed: z.boolean().optional(),
   year: z.number(),
-  status: z.enum(['ONBOARDING', 'INTAKE_PENDING', 'INTAKE_SUBMITTED', 'INGESTION_RUNNING', 'CALCULATED', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED']).optional(),
+  status: z.enum(['INTAKE_PENDING', 'INTAKE_SUBMITTED', 'CALCULATED', 'IN_REVIEW', 'PUBLISHED']).optional(),
   packageType: z.string().optional(),
-  totalProjectValue: z.number().optional(),
   bypassPayments: z.boolean().optional(),
   image: z.string().optional(),
   assignedSections: z.array(TemplateSectionSchema).default([]),
   enabledWidgets: z.array(z.string()).optional(),
-  dashboardLayout: z.any().optional(),
   data: z.record(z.string(), z.record(z.string(), DataRecordSchema)).default({}),
   paymentMilestones: z.array(z.any()).optional(),
   questionnaireSubmission: z.any().optional(),
   rollup: z.any().optional(),
+  certifiedReportUrl: z.string().nullable().optional(),
+  certifiedReportPublicId: z.string().nullable().optional(),
+  certifiedReportFileName: z.string().nullable().optional(),
+  certifiedReportUploadedAt: z.string().nullable().optional(),
 });
 
 export type Project = {
@@ -279,23 +279,28 @@ export type Project = {
   jurisdictionType?: string;
   state?: string;
   county?: string;
+  city?: string | null;
   stateFips?: string;
   countyFips?: string;
+  placeFips?: string | null;
+  locationConfirmed?: boolean;
   year: number;
   status?: ProjectStatus;
   packageType?: string;
-  totalProjectValue?: number;
   bypassPayments?: boolean;
   image?: string;
   assignedSections: z.infer<typeof TemplateSectionSchema>[];
   enabledWidgets?: string[];
-  dashboardLayout?: any;
   data: Record<string, Record<string, DataRecord>>;
   paymentMilestones?: any[];
   questionnaireSubmission?: any;
   rollup?: any;
   deleted?: boolean;
   deletedAt?: string | null;
+  certifiedReportUrl?: string | null;
+  certifiedReportPublicId?: string | null;
+  certifiedReportFileName?: string | null;
+  certifiedReportUploadedAt?: string | null;
 };
 
 // --- Settings ---

@@ -5,7 +5,6 @@ import { use } from "react"
 import { useAppStore } from "@/store"
 import {
   ChartPieIcon,
-  GearIcon,
   HashIcon,
   WarningCircleIcon,
   WalletIcon,
@@ -44,8 +43,6 @@ import {
   TrendUpIcon,
   CpuIcon
 } from "@phosphor-icons/react"
-import { Button } from "@/components/ui/button"
-import { Modal } from "@/components/ui/modal"
 import { RoseLoader } from "@/components/ui/loader"
 import { evaluateWidgetData, calculateGaugeValue } from "@/lib/analyticsEngine"
 import { apiClient } from "@/lib/api"
@@ -229,8 +226,7 @@ const getScoreCardTheme = (score: number) => {
 }
 
 export function AnalyticsDashboard({ projectId }: { projectId: string }) {
-  const { projects, widgets, templates, toggleProjectWidget, updateDashboardLayout } = useAppStore()
-  const [isConfigOpen, setIsConfigOpen] = React.useState(false)
+  const { projects, widgets, templates } = useAppStore()
   const [hoveredRoseSlice, setHoveredRoseSlice] = React.useState<{ widgetId: string; name: string; value: number; percent: string; color: string; x: number; y: number } | null>(null)
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(true)
 
@@ -770,13 +766,9 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
             <ChartPieIcon weight="duotone" className="h-10 w-10 text-muted-foreground opacity-50" />
           </div>
           <h3 className="text-xl font-bold text-foreground">Dashboard is Empty</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-2 mb-8 leading-relaxed">
-            You haven't enabled any widgets for this project yet. Click below to select widgets created in the Analytics Maker.
+          <p className="text-sm text-muted-foreground max-w-sm mt-2 leading-relaxed">
+            No widgets are available for this project yet. Widgets appear here once they are created in Analytics Maker and linked to this project&apos;s sections.
           </p>
-          <Button onClick={() => setIsConfigOpen(true)} variant="outline" className="rounded-full px-8 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
-            <GearIcon weight="duotone" className="h-4 w-4 mr-2" />
-            Select Widgets
-          </Button>
         </div>
       ) : (
         <div className="w-full flex flex-col gap-6">
@@ -1196,40 +1188,6 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
         </div>
       )}
 
-      <Modal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} title="Configure Project Dashboard">
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 pb-4">
-          <p className="text-sm text-muted-foreground mb-4">
-            Select which global widgets you want to display on this project's dashboard.
-          </p>
-
-          {widgets.length === 0 ? (
-            <div className="text-sm text-center py-8 text-muted-foreground">
-              No global widgets available. Create them in the Analytics Maker first.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {widgets.map(widget => (
-                <label key={widget.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/30 cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    className="mt-1 accent-primary w-4 h-4"
-                    checked={project.enabledWidgets && project.enabledWidgets.length > 0 ? project.enabledWidgets!.includes(widget.id) : (!widget.sectionId || assignedSectionIds.includes(widget.sectionId))}
-                    onChange={(e) => toggleProjectWidget(project.id, widget.id, e.target.checked)}
-                  />
-                  <div>
-                    <h4 className="font-medium text-sm">{widget.title}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Type: {widget.chartType.replace('_', ' ')}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
-
-          <div className="pt-4 flex justify-end">
-            <Button onClick={() => setIsConfigOpen(false)}>Done</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }

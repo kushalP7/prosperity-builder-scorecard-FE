@@ -11,11 +11,22 @@ import {
   ShieldCheckIcon,
   ArrowsClockwiseIcon,
   DatabaseIcon,
-  MedalIcon
+  MedalIcon,
+  FilePdfIcon,
+  UploadSimpleIcon,
+  DownloadSimpleIcon,
+  ArrowSquareOutIcon,
+  XIcon,
 } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/loader"
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
+import { Modal } from "@/components/ui/modal"
+
+type PendingReport = {
+  reportUrl: string
+  reportPublicId?: string
+  reportFileName: string
+}
 
 export default function ProjectCalibrationPage() {
   const routeParams = useParams<{ id: string }>()
@@ -26,7 +37,14 @@ export default function ProjectCalibrationPage() {
   const [loading, setLoading] = React.useState(true)
   const [recalculating, setRecalculating] = React.useState(false)
   const [publishing, setPublishing] = React.useState(false)
-  const [isConfirmPublishOpen, setIsConfirmPublishOpen] = React.useState(false)
+  const [isPublishModalOpen, setIsPublishModalOpen] = React.useState(false)
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = React.useState(false)
+  const [uploadingReport, setUploadingReport] = React.useState(false)
+  const [replacingReport, setReplacingReport] = React.useState(false)
+  const [pendingReport, setPendingReport] = React.useState<PendingReport | null>(null)
+  const [replaceReport, setReplaceReport] = React.useState<PendingReport | null>(null)
+  const publishFileRef = React.useRef<HTMLInputElement>(null)
+  const replaceFileRef = React.useRef<HTMLInputElement>(null)
   const [ingesting, setIngesting] = React.useState(false)
   const [rollup, setRollup] = React.useState<any>(null)
   const [stagedData, setStagedData] = React.useState<any[]>([])
@@ -114,6 +132,11 @@ export default function ProjectCalibrationPage() {
       if (res?.success) {
         toast.success(`Automated ingestion complete (${res.stagedCount} records fetched)`)
         await loadAll()
+      } else {
+        toast.error(
+          res?.message ||
+            'Sync could not run. Assign sections and confirm project location, then try again.',
+        )
       }
     } catch {
       toast.error('Failed to run ingestion')
@@ -155,31 +178,100 @@ export default function ProjectCalibrationPage() {
     }
   }
 
-  const handlePublish = async () => {
-    setIsConfirmPublishOpen(true)
+  const uploadPdfFile = async (file: File): Promise<PendingReport | null> => {
+    if (!file) return null
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Please upload a PDF file')
+      return null
+    }
+    setUploadingReport(true)
+    try {
+      const folder = `projects/${id}/reports`
+      const uploaded = await apiClient.uploadFile(file, folder)
+      const reportUrl = (uploaded as any)?.url || (uploaded as any)?.secure_url
+      if (!reportUrl) throw new Error('Upload did not return a file URL')
+      return {
+        reportUrl,
+        reportPublicId: (uploaded as any)?.public_id || (uploaded as any)?.publicId,
+        reportFileName: file.name,
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to upload PDF')
+      return null
+    } finally {
+      setUploadingReport(false)
+    }
+  }
+
+  const handlePublish = () => {
+    setPendingReport(null)
+    setIsPublishModalOpen(true)
+  }
+
+  const handlePublishFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const uploaded = await uploadPdfFile(file)
+    if (uploaded) setPendingReport(uploaded)
+  }
+
+  const handleReplaceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const uploaded = await uploadPdfFile(file)
+    if (uploaded) setReplaceReport(uploaded)
+  }
+
+  const refreshProjectInStore = async () => {
+    const freshProject = await apiClient.getProject(id)
+    if (freshProject) {
+      useAppStore.setState(state => ({
+        projects: state.projects.map(p => p.id === id ? { ...p, ...freshProject } : p),
+        activeProject: state.activeProject?.id === id ? { ...state.activeProject, ...freshProject } : state.activeProject,
+      }))
+      window.dispatchEvent(new CustomEvent('project-synced', { detail: { id, fresh: freshProject } }))
+    }
+    return freshProject
   }
 
   const executePublish = async () => {
+    if (!pendingReport?.reportUrl) {
+      toast.error('Upload the certified project report PDF before publishing')
+      return
+    }
     setPublishing(true)
     try {
-      const res = await apiClient.publishScorecard(id)
-      if (res) {
-        toast.success('Scorecard officially calibrated and published!')
-        await loadAll()
-        const freshProject = await apiClient.getProject(id)
-        if (freshProject) {
-          useAppStore.setState(state => ({
-            projects: state.projects.map(p => p.id === id ? { ...p, ...freshProject } : p),
-            activeProject: state.activeProject?.id === id ? { ...state.activeProject, ...freshProject } : state.activeProject,
-          }))
-          window.dispatchEvent(new CustomEvent('project-synced', { detail: { id, fresh: freshProject } }))
-        }
-      }
-    } catch {
-      toast.error('Failed to publish scorecard')
+      await apiClient.publishScorecard(id, pendingReport)
+      toast.success('Scorecard officially calibrated and published!')
+      await loadAll()
+      await refreshProjectInStore()
+      setIsPublishModalOpen(false)
+      setPendingReport(null)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to publish scorecard')
     } finally {
       setPublishing(false)
-      setIsConfirmPublishOpen(false)
+    }
+  }
+
+  const executeReplaceReport = async () => {
+    if (!replaceReport?.reportUrl) {
+      toast.error('Upload a new PDF to replace the certified report')
+      return
+    }
+    setReplacingReport(true)
+    try {
+      await apiClient.replaceProjectReport(id, replaceReport)
+      toast.success('Certified report updated')
+      await refreshProjectInStore()
+      setIsReplaceModalOpen(false)
+      setReplaceReport(null)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update certified report')
+    } finally {
+      setReplacingReport(false)
     }
   }
 
@@ -194,6 +286,8 @@ export default function ProjectCalibrationPage() {
 
   const categoryScores = rollup?.categoryScores || []
   const isPublished = project?.status === 'PUBLISHED'
+  const certifiedReportUrl = project?.certifiedReportUrl || null
+  const certifiedReportFileName = project?.certifiedReportFileName || 'Certified Report.pdf'
 
   return (
     <div className="space-y-6 pb-16">
@@ -272,6 +366,60 @@ export default function ProjectCalibrationPage() {
           {publishing ? 'Publishing...' : isPublished ? 'Scorecard Published' : 'Approve & Publish Scorecard'}
         </Button>
       </div>
+
+      {certifiedReportUrl && (
+        <Card className="border-emerald-200/80 shadow-xs overflow-hidden bg-emerald-50/40">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shrink-0">
+                <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-slate-900">Certified project report</div>
+                <div className="text-xs text-slate-500 truncate mt-0.5">{certifiedReportFileName}</div>
+                {project?.certifiedReportUploadedAt && (
+                  <div className="text-[11px] text-slate-400 mt-1">
+                    Uploaded {new Date(project.certifiedReportUploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <a
+                href={certifiedReportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <ArrowSquareOutIcon weight="bold" className="w-3.5 h-3.5" />
+                View
+              </a>
+              <a
+                href={certifiedReportUrl}
+                download={certifiedReportFileName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <DownloadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
+                Download
+              </a>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setReplaceReport(null)
+                  setIsReplaceModalOpen(true)
+                }}
+                className="h-9 px-3 text-xs font-semibold border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+              >
+                <UploadSimpleIcon weight="bold" className="w-3.5 h-3.5 mr-1.5" />
+                Replace PDF
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Category Score Breakdown Grid */}
       <Card className="border-slate-200/90 shadow-xs overflow-hidden">
@@ -449,17 +597,167 @@ export default function ProjectCalibrationPage() {
             </div>
           </CardContent>
         </Card>
-      <ConfirmDialog
-        isOpen={isConfirmPublishOpen}
-        onClose={() => setIsConfirmPublishOpen(false)}
+      <Modal
+        isOpen={isPublishModalOpen}
+        onClose={() => {
+          if (publishing || uploadingReport) return
+          setIsPublishModalOpen(false)
+          setPendingReport(null)
+        }}
         title="Approve & Publish Final Scorecard"
-        description="Are you sure you want to officially publish this scorecard? This marks the municipal assessment complete, unlocks the final release dossier, and sets the project status to PUBLISHED."
-        confirmText="Publish Scorecard"
-        isLoading={publishing}
-        loadingText="Publishing..."
-        variant="primary"
-        onConfirm={executePublish}
-      />
+        className="max-w-lg"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Upload the certified project report PDF to release this scorecard. Customers will be able to view and download it from their profile and project page.
+          </p>
+
+          <input
+            ref={publishFileRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={handlePublishFileChange}
+          />
+
+          {pendingReport ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-slate-900 truncate">{pendingReport.reportFileName}</div>
+                  <div className="text-[11px] text-emerald-700 font-medium">Ready to publish</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingReport(null)}
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-white"
+                aria-label="Remove PDF"
+              >
+                <XIcon weight="bold" className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={uploadingReport}
+              onClick={() => publishFileRef.current?.click()}
+              className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-[#B5111B]/40 p-8 text-center transition-colors disabled:opacity-60"
+            >
+              <UploadSimpleIcon weight="duotone" className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <div className="text-sm font-bold text-slate-800">
+                {uploadingReport ? 'Uploading PDF…' : 'Upload project report PDF'}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">Required before publishing</div>
+            </button>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={publishing || uploadingReport}
+              onClick={() => {
+                setIsPublishModalOpen(false)
+                setPendingReport(null)
+              }}
+              className="h-9 px-4 text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={publishing || uploadingReport || !pendingReport?.reportUrl}
+              onClick={executePublish}
+              className="h-9 px-4 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white"
+            >
+              <ShieldCheckIcon weight="duotone" className="w-4 h-4 mr-1.5" />
+              {publishing ? 'Publishing…' : 'Publish Scorecard'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isReplaceModalOpen}
+        onClose={() => {
+          if (replacingReport || uploadingReport) return
+          setIsReplaceModalOpen(false)
+          setReplaceReport(null)
+        }}
+        title="Replace Certified Report"
+        className="max-w-lg"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Upload a new PDF to replace the current certified report. The project stays published.
+          </p>
+
+          <input
+            ref={replaceFileRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={handleReplaceFileChange}
+          />
+
+          {replaceReport ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-slate-900 truncate">{replaceReport.reportFileName}</div>
+                  <div className="text-[11px] text-emerald-700 font-medium">Ready to replace</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReplaceReport(null)}
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-white"
+                aria-label="Remove PDF"
+              >
+                <XIcon weight="bold" className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={uploadingReport}
+              onClick={() => replaceFileRef.current?.click()}
+              className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-[#B5111B]/40 p-8 text-center transition-colors disabled:opacity-60"
+            >
+              <UploadSimpleIcon weight="duotone" className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <div className="text-sm font-bold text-slate-800">
+                {uploadingReport ? 'Uploading PDF…' : 'Select replacement PDF'}
+              </div>
+            </button>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={replacingReport || uploadingReport}
+              onClick={() => {
+                setIsReplaceModalOpen(false)
+                setReplaceReport(null)
+              }}
+              className="h-9 px-4 text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={replacingReport || uploadingReport || !replaceReport?.reportUrl}
+              onClick={executeReplaceReport}
+              className="h-9 px-4 text-xs font-semibold bg-[#B5111B] hover:bg-[#8F0D15] text-white"
+            >
+              {replacingReport ? 'Saving…' : 'Save New Report'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       </div>
     </div>
   )

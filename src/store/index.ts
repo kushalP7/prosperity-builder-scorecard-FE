@@ -7,10 +7,16 @@ export interface User {
   id?: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
+  role: 'super_admin' | 'project_lead' | 'assessment_specialist' | 'customer';
+  /** Paid entitlement — independent of role (role stays customer after pay). */
+  subscriptionStatus?: 'none' | 'active' | 'expired' | 'cancelled';
+  subscriptionPackage?: string | null;
+  subscribedAt?: string | null;
+  subscriptionExpiresAt?: string | null;
   department?: string;
   status?: 'active' | 'pending' | 'suspended';
   avatarBg?: string;
+  avatarUrl?: string | null;
   lastActive?: string;
 }
 
@@ -34,6 +40,7 @@ interface AppState {
   // Auth State & Actions
   isAuthenticated: boolean;
   currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { name: string; email: string; password: string; department?: string }) => Promise<boolean>;
   logout: () => void;
@@ -61,7 +68,6 @@ interface AppState {
   updateProject: (id: string, updates: Partial<Project>) => Promise<boolean>;
   deleteProject: (id: string) => Promise<void>;
   restoreProject: (id: string) => Promise<void>;
-  updateDashboardLayout: (projectId: string, layout: any[]) => void;
 
   // Project Data Actions
   assignSectionToProject: (projectId: string, sectionId: string) => Promise<void>;
@@ -166,6 +172,14 @@ export const useAppStore = create<AppState>((set, get) => {
     // Auth State & Actions
     isAuthenticated: initialAuth,
     currentUser: initialUser,
+
+    setCurrentUser: (user) => {
+      if (typeof window !== 'undefined') {
+        if (user) localStorage.setItem('rose_auth_user', JSON.stringify(user));
+        else localStorage.removeItem('rose_auth_user');
+      }
+      set({ currentUser: user, isAuthenticated: !!user });
+    },
 
     login: async (email: string, password: string) => {
       const res = await apiClient.login(email, password);
@@ -440,19 +454,6 @@ export const useAppStore = create<AppState>((set, get) => {
         return false;
       } finally {
         set({ isSyncing: false });
-      }
-    },
-
-    updateDashboardLayout: (projectId, layout) => {
-      const projects = get().projects;
-      const project = projects.find(p => p.id === projectId);
-      if (project) {
-        project.dashboardLayout = layout;
-        set({ projects: [...projects] });
-        if (get().activeProject?.id === projectId) {
-          set({ activeProject: { ...project } });
-        }
-        apiClient.updateProject(projectId, { dashboardLayout: layout });
       }
     },
 

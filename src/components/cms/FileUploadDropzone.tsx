@@ -49,7 +49,7 @@ export function FileUploadDropzone({
       revokePendingUpload(value)
     }
 
-    // Stage file locally in memory; will upload to Cloudinary upon saving form
+    // Stage file locally in memory; will upload to storage upon saving form
     const previewUrl = createPendingUpload(file, folder, acceptType)
     onChange(previewUrl)
   }

@@ -10,7 +10,6 @@ import {
   CaretRightIcon,
   MapPinIcon,
   EnvelopeSimpleIcon,
-  GlobeIcon,
 } from "@phosphor-icons/react"
 
 export function LandingFooter() {
@@ -319,25 +318,13 @@ export function LandingFooter() {
 
               <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-red-950/80 border border-red-800/60 text-[#E11D48] flex items-center justify-center shrink-0 shadow-xs">
-                  <GlobeIcon weight="duotone" className="w-3.5 h-3.5 text-[#E11D48]" />
+                  <CaretRightIcon weight="bold" className="w-3.5 h-3.5 text-[#E11D48]" />
                 </div>
-                <a
-                  href="https://roseassociates.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors text-slate-200"
-                >
-                  roseassociates.com
-                </a>
-              </div>
-
-              <div className="pt-2">
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white text-[11px] font-extrabold shadow-sm transition-all"
+                  className="hover:text-white transition-colors text-slate-200 underline decoration-slate-700 underline-offset-2"
                 >
-                  <span>Enterprise Inquiry</span>
-                  <CaretRightIcon weight="bold" className="w-3.5 h-3.5" />
+                  Enterprise Inquiry
                 </Link>
               </div>
             </div>

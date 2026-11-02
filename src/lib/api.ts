@@ -4,10 +4,15 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'project_lead' | 'assessment_specialist' | 'client_viewer';
+  role: 'super_admin' | 'project_lead' | 'assessment_specialist' | 'customer';
+  subscriptionStatus?: 'none' | 'active' | 'expired' | 'cancelled';
+  subscriptionPackage?: string | null;
+  subscribedAt?: string | null;
+  subscriptionExpiresAt?: string | null;
   department?: string;
   status: 'active' | 'pending' | 'suspended';
   avatarBg?: string;
+  avatarUrl?: string | null;
   lastActive?: string;
   assignedProjectsCount?: number;
   createdAt?: string;
@@ -89,7 +94,13 @@ async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 60000, retryOn401 = true): Promise<Response> {
+/** Shared fetch: attaches Bearer token and retries once after refresh on 401. */
+export async function apiFetch(
+  url: string,
+  options: RequestInit = {},
+  timeout = 60000,
+  retryOn401 = true,
+): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -120,6 +131,9 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
     throw error;
   }
 }
+
+/** @deprecated Use apiFetch — kept as alias for existing call sites in this file. */
+const fetchWithTimeout = apiFetch;
 
 async function unpackJson(res: Response): Promise<any> {
   const json = await res.json();
@@ -192,16 +206,77 @@ export const apiClient = {
     }
   },
 
-  // Users Management (RBAC)
-  async getUsers(search?: string): Promise<UserProfile[]> {
+  async updateMyProfile(updates: {
+    name?: string;
+    avatarUrl?: string | null;
+  }): Promise<{ success: boolean; user?: UserProfile; message?: string }> {
     try {
-      const q = search ? `?search=${encodeURIComponent(search)}` : '';
-      const res = await fetchWithTimeout(`${API_BASE}/users${q}`);
-      if (!res.ok) return [];
+      const res = await fetchWithTimeout(`${API_BASE}/auth/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
       const json = await res.json();
-      return json.data || [];
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.error?.message || json?.message || 'Failed to update profile',
+        };
+      }
+      return { success: true, user: json.data, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  // Users Management (RBAC)
+  async getUsers(params?: {
+    search?: string;
+    role?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    data: UserProfile[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  } | null> {
+    try {
+      const q = new URLSearchParams();
+      if (params?.search?.trim()) q.set('search', params.search.trim());
+      if (params?.role && params.role !== 'all') q.set('role', params.role);
+      if (params?.status && params.status !== 'all') q.set('status', params.status);
+      if (params?.page) q.set('page', String(params.page));
+      if (params?.limit) q.set('limit', String(params.limit));
+      const qs = q.toString() ? `?${q.toString()}` : '';
+      const res = await fetchWithTimeout(`${API_BASE}/users${qs}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const payload = json.data;
+      if (payload && Array.isArray(payload.data)) {
+        return {
+          data: payload.data,
+          total: typeof payload.total === 'number' ? payload.total : payload.data.length,
+          page: typeof payload.page === 'number' ? payload.page : 1,
+          limit: typeof payload.limit === 'number' ? payload.limit : params?.limit || 10,
+          totalPages: typeof payload.totalPages === 'number' ? payload.totalPages : 1,
+        };
+      }
+      // Legacy: bare array
+      if (Array.isArray(payload)) {
+        return {
+          data: payload,
+          total: payload.length,
+          page: 1,
+          limit: payload.length || 10,
+          totalPages: 1,
+        };
+      }
+      return null;
     } catch {
-      return [];
+      return null;
     }
   },
 
@@ -247,6 +322,103 @@ export const apiClient = {
     }
   },
 
+  async setPasswordFromInvite(token: string, password: string): Promise<{ success: boolean; user?: UserProfile; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/set-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      }, 15000, false);
+      const json = await res.json();
+      if (!res.ok || !json.data) {
+        return { success: false, message: json?.error?.message || json?.message || 'Failed to set password' };
+      }
+      authStorage.setTokens(json.data.accessToken, json.data.refreshToken);
+      return { success: true, user: json.data.user, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network connection failed' };
+    }
+  },
+
+  async getInquiries(params?: {
+    search?: string;
+    leadRole?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortDir?: string;
+  }): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  } | null> {
+    try {
+      const q = new URLSearchParams();
+      if (params?.search?.trim()) q.set('search', params.search.trim());
+      if (params?.leadRole && params.leadRole !== 'all') q.set('leadRole', params.leadRole);
+      if (params?.status && params.status !== 'all') q.set('status', params.status);
+      if (params?.page) q.set('page', String(params.page));
+      if (params?.limit) q.set('limit', String(params.limit));
+      if (params?.sortBy) q.set('sortBy', params.sortBy);
+      if (params?.sortDir) q.set('sortDir', params.sortDir);
+      const qs = q.toString() ? `?${q.toString()}` : '';
+      const res = await fetchWithTimeout(`${API_BASE}/inquiries${qs}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const payload = json.data;
+      if (payload && Array.isArray(payload.data)) {
+        return {
+          data: payload.data,
+          total: typeof payload.total === 'number' ? payload.total : payload.data.length,
+          page: typeof payload.page === 'number' ? payload.page : 1,
+          limit: typeof payload.limit === 'number' ? payload.limit : params?.limit || 10,
+          totalPages: typeof payload.totalPages === 'number' ? payload.totalPages : 1,
+        };
+      }
+      if (Array.isArray(payload)) {
+        return { data: payload, total: payload.length, page: 1, limit: payload.length || 10, totalPages: 1 };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  async sendInquiryPortalAccess(id: string): Promise<{ success: boolean; alreadyRegistered?: boolean; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/inquiries/${id}/send-portal-access`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json?.error?.message || json?.message || 'Failed to send portal access' };
+      }
+      const data = json.data || json;
+      return {
+        success: true,
+        alreadyRegistered: Boolean(data.alreadyRegistered),
+        message: data.message || json.message,
+      };
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async resendInquiryLogin(id: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/inquiries/${id}/resend-login`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json?.error?.message || json?.message || 'Failed to resend login email' };
+      }
+      const data = json.data || json;
+      return { success: true, message: data.message || json.message };
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
   // Check API health
   async checkHealth(): Promise<boolean> {
     try {
@@ -258,10 +430,16 @@ export const apiClient = {
   },
 
   // Projects
-  async getProjects(params?: { search?: string; page?: number; limit?: number }): Promise<any | null> {
+  async getProjects(params?: {
+    search?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<any | null> {
     try {
       const q = new URLSearchParams();
       if (params?.search && params.search.trim()) q.set('search', params.search.trim());
+      if (params?.status && params.status !== 'all') q.set('status', params.status);
       if (params?.page) q.set('page', String(params.page));
       if (params?.limit) q.set('limit', String(params.limit));
       const qs = q.toString() ? `?${q.toString()}` : '';
@@ -357,6 +535,37 @@ export const apiClient = {
     }
   },
 
+  /** Upload PDF/document (used by scorecard publish / replace report). */
+  async uploadFile(
+    file: File,
+    folder: string = 'projects',
+  ): Promise<{ url: string; public_id?: string; format?: string; bytes?: number; originalName?: string } | null> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetchWithTimeout(
+        `${API_BASE}/uploads/file?folder=${encodeURIComponent(folder)}`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+        120000,
+      );
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        const message =
+          json?.error?.message || json?.message || `Upload failed (${res.status})`;
+        throw new Error(message);
+      }
+      return await unpackJson(res);
+    } catch (err) {
+      console.error('apiClient uploadFile error:', err);
+      throw err;
+    }
+  },
+
   async assignSections(projectId: string, sectionIds: string[]): Promise<any> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/sections`, {
@@ -388,6 +597,39 @@ export const apiClient = {
       return res.ok;
     } catch {
       return false;
+    }
+  },
+
+  async getLicensedEmptyMetrics(projectId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/licensed-empty`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async importLicensedData(
+    projectId: string,
+    payload: {
+      provider: 'ESRI' | 'COSTAR' | 'MOODYS_CRE'
+      rows: Array<{ metricLabel?: string; nodeId?: string; value: string; notes?: string }>
+    },
+  ): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/licensed-import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error?.message || err?.message || 'Licensed import failed');
+      }
+      return await unpackJson(res);
+    } catch (e) {
+      throw e;
     }
   },
 
@@ -670,7 +912,389 @@ export const apiClient = {
     }
   },
 
-  // --- Phase 1: Milestone Payments & Bypass ---
+  // --- Orders & Payments (shared Orders API; full upfront package pay) ---
+  async getOrderPackages(): Promise<Array<{
+    id: string;
+    packageType: 'scorecard_only' | 'subscription' | 'combined';
+    name: string;
+    description: string;
+    amount: number;
+    currency: string;
+  }>> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/packages`);
+      if (!res.ok) return [];
+      return (await unpackJson(res)) || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getPaymentConfig(): Promise<{
+    provider: 'stripe' | 'stub';
+    requested: 'stripe' | 'stub';
+    stripeConfigured: boolean;
+    stubAllowed: boolean;
+    message?: string;
+  } | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/payment-config`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async getOrders(params?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    summary?: any;
+  } | null> {
+    try {
+      const qs = new URLSearchParams();
+      if (params?.status && params.status !== 'all') qs.set('status', params.status);
+      if (params?.search?.trim()) qs.set('search', params.search.trim());
+      if (params?.page) qs.set('page', String(params.page));
+      if (params?.limit) qs.set('limit', String(params.limit));
+      const q = qs.toString();
+      const res = await fetchWithTimeout(`${API_BASE}/orders${q ? `?${q}` : ''}`);
+      if (!res.ok) return null;
+      const payload = await unpackJson(res);
+      if (payload && Array.isArray(payload.data)) {
+        return {
+          data: payload.data,
+          total: typeof payload.total === 'number' ? payload.total : payload.data.length,
+          page: typeof payload.page === 'number' ? payload.page : 1,
+          limit: typeof payload.limit === 'number' ? payload.limit : params?.limit || 5,
+          totalPages: typeof payload.totalPages === 'number' ? payload.totalPages : 1,
+          summary: payload.summary,
+        };
+      }
+      if (Array.isArray(payload)) {
+        return {
+          data: payload,
+          total: payload.length,
+          page: 1,
+          limit: payload.length || 5,
+          totalPages: 1,
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getMyOrders(): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/mine`);
+      if (!res.ok) return [];
+      return (await unpackJson(res)) || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getMyPayments(): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/mine/payments`);
+      if (!res.ok) return [];
+      return (await unpackJson(res)) || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async getMyProjectAllowance(): Promise<{
+    maxProjects: number;
+    usedProjects: number;
+    remaining: number;
+    paidPackages: any[];
+  } | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/mine/allowance`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async getOrder(id: string): Promise<any | null> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${id}`);
+      if (!res.ok) return null;
+      return await unpackJson(res);
+    } catch {
+      return null;
+    }
+  },
+
+  async createOrder(payload: {
+    packageType: 'scorecard_only' | 'subscription' | 'combined';
+    customerName: string;
+    organization?: string;
+    checkoutMethod?: 'card' | 'invoice';
+  }): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json?.message || json?.error?.message || 'Failed to create order' };
+      }
+      return { success: true, data: json.data ?? json };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async createPaymentIntent(
+    orderId: string,
+  ): Promise<{ success: boolean; data?: { clientSecret: string; paymentIntentId: string; amount?: number }; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/payment-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.message || json?.error?.message || 'Could not start Stripe payment',
+        };
+      }
+      return { success: true, data: json.data ?? json };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async confirmStripePayment(
+    orderId: string,
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/confirm-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.message || json?.error?.message || 'Could not confirm payment',
+          data: json?.data,
+        };
+      }
+      return { success: true, data: json.data ?? json, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async stubPayOrder(
+    orderId: string,
+    payload: { cardNumber: string; expiry: string; cvc: string; cardholderName?: string; forceFail?: boolean },
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          cardNumber: String(payload.cardNumber || '').replace(/\D/g, ''),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.success === false) {
+        const nested = typeof json?.message === 'object' && json.message ? json.message : null;
+        return {
+          success: false,
+          message: nested?.message || (typeof json?.message === 'string' ? json.message : null) || 'Payment failed',
+          data: nested?.data ?? json?.data,
+        };
+      }
+      return { success: true, data: json.data ?? json, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async downloadPaymentReceipt(
+    orderId: string,
+    attemptId: string,
+  ): Promise<{ success: boolean; blob?: Blob; filename?: string; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(
+        `${API_BASE}/orders/${encodeURIComponent(orderId)}/receipts/${encodeURIComponent(attemptId)}`,
+      );
+      if (!res.ok) {
+        let message = 'Could not download receipt PDF';
+        try {
+          const json = await res.json();
+          message = json?.message || json?.error?.message || message;
+        } catch {
+          /* binary error body */
+        }
+        return { success: false, message };
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = /filename="?([^";]+)"?/i.exec(disposition);
+      return {
+        success: true,
+        blob,
+        filename: match?.[1] || `Receipt-${orderId}.pdf`,
+      };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async markOrderPaid(
+    orderId: string,
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.message || json?.error?.message || 'Could not mark order as paid',
+        };
+      }
+      return { success: true, data: json.data ?? json, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async refundOrder(orderId: string): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json?.message || 'Refund failed' };
+      }
+      return { success: true, data: json.data ?? json, message: json.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async sendOrderProjectReport(
+    orderId: string,
+    projectId: string,
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(
+        `${API_BASE}/orders/${orderId}/projects/${projectId}/send-report`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.message || 'Failed to send scorecard report email',
+        };
+      }
+      return { success: true, data: json?.data ?? json, message: json?.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async sendOrderPaymentReminder(
+    orderId: string,
+  ): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/send-reminder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.message || 'Failed to send payment reminder email',
+        };
+      }
+      return { success: true, data: json?.data ?? json, message: json?.message };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
+    }
+  },
+
+  async getPaymentLedger(params?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    summary?: any;
+  } | null> {
+    try {
+      const qs = new URLSearchParams();
+      if (params?.status && params.status !== 'all') qs.set('status', params.status);
+      if (params?.search?.trim()) qs.set('search', params.search.trim());
+      if (params?.page) qs.set('page', String(params.page));
+      if (params?.limit) qs.set('limit', String(params.limit));
+      const q = qs.toString();
+      const res = await fetchWithTimeout(`${API_BASE}/orders/payments${q ? `?${q}` : ''}`);
+      if (!res.ok) return null;
+      const payload = await unpackJson(res);
+      if (payload && Array.isArray(payload.data)) {
+        return {
+          data: payload.data,
+          total: typeof payload.total === 'number' ? payload.total : payload.data.length,
+          page: typeof payload.page === 'number' ? payload.page : 1,
+          limit: typeof payload.limit === 'number' ? payload.limit : params?.limit || 10,
+          totalPages: typeof payload.totalPages === 'number' ? payload.totalPages : 1,
+          summary: payload.summary,
+        };
+      }
+      if (Array.isArray(payload)) {
+        return {
+          data: payload,
+          total: payload.length,
+          page: 1,
+          limit: payload.length || 10,
+          totalPages: 1,
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  // --- Phase 1: Milestone Payments & Bypass (admin/legacy; customer path uses Orders) ---
   async getProjectMilestones(projectId: string): Promise<any> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/payments/project/${projectId}`);
@@ -818,15 +1442,43 @@ export const apiClient = {
     }
   },
 
-  async publishScorecard(projectId: string): Promise<any> {
+  async publishScorecard(
+    projectId: string,
+    report: { reportUrl: string; reportPublicId?: string; reportFileName?: string },
+  ): Promise<any> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/publish`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report),
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || 'Failed to publish scorecard');
+      }
       return await unpackJson(res);
-    } catch {
-      return null;
+    } catch (e) {
+      throw e;
+    }
+  },
+
+  async replaceProjectReport(
+    projectId: string,
+    report: { reportUrl: string; reportPublicId?: string; reportFileName?: string },
+  ): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.message || 'Failed to update certified report');
+      }
+      return await unpackJson(res);
+    } catch (e) {
+      throw e;
     }
   },
 };

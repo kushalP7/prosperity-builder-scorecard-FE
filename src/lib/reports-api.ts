@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/api';
+
 export type ImageTextLayout = 'wrap' | 'columns' | 'stacked';
 
 export interface ImageTextItem {
@@ -242,7 +244,7 @@ export const reportsApi = {
   // Create new report
   async createReport(reportData: Partial<LandingReportItem>): Promise<LandingReportItem> {
     const url = `${API_BASE}/landing-cms/reports`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reportData),
@@ -254,7 +256,7 @@ export const reportsApi = {
   // Update existing report
   async updateReport(id: string, updates: Partial<LandingReportItem>): Promise<LandingReportItem> {
     const url = `${API_BASE}/landing-cms/reports/${id}`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -266,41 +268,35 @@ export const reportsApi = {
   // Delete report
   async deleteReport(id: string): Promise<{ success: boolean; id: string }> {
     const url = `${API_BASE}/landing-cms/reports/${id}`;
-    const res = await fetch(url, { method: 'DELETE' });
+    const res = await apiFetch(url, { method: 'DELETE' });
     return handleResponse<{ success: boolean; id: string }>(res);
   },
 
-  // Upload image file to Cloudinary with target folder (reports, media, projects)
+  // Upload image file to S3/MinIO with target folder (reports, media, projects)
   async uploadImage(file: File, folder: string = 'reports'): Promise<{ url: string; public_id: string; format: string; bytes: number }> {
     const formData = new FormData();
     formData.append('file', file);
 
     const url = `${API_BASE}/uploads/image?folder=${encodeURIComponent(folder)}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await apiFetch(url, { method: 'POST', body: formData }, 120000);
     const json = await handleResponse<any>(res);
     return (json && json.data) ? json.data : json;
   },
 
-  // Upload document or PDF file to Cloudinary with target folder (reports, media, projects)
+  // Upload document or PDF file to S3/MinIO with target folder (reports, media, projects)
   async uploadDocument(file: File, folder: string = 'reports'): Promise<{ url: string; public_id: string; format: string; bytes: number }> {
     const formData = new FormData();
     formData.append('file', file);
 
     const url = `${API_BASE}/uploads/file?folder=${encodeURIComponent(folder)}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await apiFetch(url, { method: 'POST', body: formData }, 120000);
     const json = await handleResponse<any>(res);
     return (json && json.data) ? json.data : json;
   },
 
-  // Delete file from Cloudinary by url or publicId
+  // Delete file from S3/MinIO by url or publicId
   async deleteUpload(params: { url?: string; publicId?: string; resourceType?: string }): Promise<{ success: boolean; result?: string }> {
-    const res = await fetch(`${API_BASE}/uploads`, {
+    const res = await apiFetch(`${API_BASE}/uploads`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),

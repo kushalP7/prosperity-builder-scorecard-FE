@@ -194,7 +194,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
 
     let finalSourceUrl = formState.sourceUrl || "";
 
-    // If there is a staged media file matching the sourceUrl, upload it to Cloudinary upon save
+    // If there is a staged media file matching the sourceUrl, upload it to storage upon save
     if (stagedMediaFile && formState.sourceUrl === stagedMediaFile.previewUrl) {
       const subfolderName = `Rose/Media/${stagedMediaFile.type.charAt(0).toUpperCase() + stagedMediaFile.type.slice(1)}`;
       setUploadingField(stagedMediaFile.type);

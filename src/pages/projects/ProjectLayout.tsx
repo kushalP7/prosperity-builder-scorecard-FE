@@ -13,12 +13,22 @@ import {
   CheckCircleIcon,
   PlusIcon,
   StackIcon,
-  ArrowsClockwiseIcon
+  ArrowsClockwiseIcon,
+  DownloadSimpleIcon,
+  FilePdfIcon,
 } from "@phosphor-icons/react"
 
 import { apiClient } from "@/lib/api"
 import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
+import { isCustomerRole, hasPermission } from "@/lib/permissions"
+import { Dropdown } from "@/components/ui/dropdown"
+import {
+  getSeStates,
+  getCountiesForState,
+  resolveSeFips,
+} from "@/lib/se-counties"
+import { getPlacesForState, resolveSePlace } from "@/lib/se-places"
 
 type StagedMetric = {
   id?: string
@@ -88,8 +98,18 @@ export default function ProjectLayout({
   const pathname = usePathname()
   const router = useRouter()
 
-  const { projects, templates, assignSectionsToProject, assignSectionToProject, fetchTemplates } = useAppStore()
+  const { projects, templates, assignSectionsToProject, assignSectionToProject, fetchTemplates, currentUser } = useAppStore()
   const project = projects.find(p => p.id === id)
+  const isCustomer = isCustomerRole(currentUser?.role)
+  const canRunIngestion = hasPermission(currentUser?.role, 'run_ingestion')
+  const canRunCalibration = hasPermission(currentUser?.role, 'run_calibration')
+
+  React.useEffect(() => {
+    if (isCustomer && pathname.includes('/calibration') && id) {
+      router.replace(`/projects/${id}/intake`)
+      toast.error('Calibration is available to Rose Associates staff only.')
+    }
+  }, [isCustomer, pathname, id, router])
 
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false)
   const [selectedSectionIds, setSelectedSectionIds] = React.useState<string[]>([])
@@ -99,17 +119,164 @@ export default function ProjectLayout({
   const [syncMessage, setSyncMessage] = React.useState<string | null>(null)
   const [isSyncResultOpen, setIsSyncResultOpen] = React.useState(false)
   const [syncSummary, setSyncSummary] = React.useState<SyncSummary | null>(null)
+  const [isSavingLocation, setIsSavingLocation] = React.useState(false)
+  const seStates = React.useMemo(() => getSeStates(), [])
+  const locationJurisdiction: 'CITY' | 'COUNTY' = React.useMemo(() => {
+    if (String(project?.jurisdictionType || '').toUpperCase() === 'CITY') return 'CITY'
+    if (String((currentUser as any)?.jurisdictionType || '').toUpperCase() === 'CITY') return 'CITY'
+    if (String((currentUser as any)?.leadRole || '').toLowerCase() === 'city') return 'CITY'
+    return 'COUNTY'
+  }, [project?.jurisdictionType, currentUser])
+
+  const [locationDraft, setLocationDraft] = React.useState({
+    state: seStates[0]?.name || 'North Carolina',
+    county: getCountiesForState(seStates[0]?.fips || '37')[0]?.name || 'Alamance County',
+    city: getPlacesForState(seStates[0]?.fips || '37')[0]?.name || 'Aberdeen town',
+  })
+
+  const needsLocationGate = Boolean(
+    project && isCustomer && project.locationConfirmed !== true,
+  )
+
+  React.useEffect(() => {
+    if (!project || project.locationConfirmed === true) return
+    if (locationJurisdiction === 'CITY') {
+      const resolved =
+        resolveSePlace(project.state || '', project.city || '') ||
+        resolveSePlace(
+          seStates[0]?.name || 'North Carolina',
+          getPlacesForState(seStates[0]?.fips || '37')[0]?.name || '',
+        )
+      if (resolved) {
+        setLocationDraft((prev) => ({
+          ...prev,
+          state: resolved.stateName,
+          city: resolved.placeName,
+        }))
+      }
+      return
+    }
+    const resolved =
+      resolveSeFips(project.state || '', project.county || '') ||
+      resolveSeFips(seStates[0]?.name || 'North Carolina', getCountiesForState(seStates[0]?.fips || '37')[0]?.name || '')
+    if (resolved) {
+      setLocationDraft((prev) => ({
+        ...prev,
+        state: resolved.state.name,
+        county: resolved.county.name,
+      }))
+    }
+  }, [project?.id, project?.locationConfirmed, project?.state, project?.county, project?.city, locationJurisdiction, seStates])
+
+  const locationCountyOptions = React.useMemo(
+    () => getCountiesForState(locationDraft.state),
+    [locationDraft.state],
+  )
+  const locationPlaceOptions = React.useMemo(
+    () => getPlacesForState(locationDraft.state),
+    [locationDraft.state],
+  )
+
+  const handleConfirmLocation = async () => {
+    if (!id || isSavingLocation) return
+    const geoPayload =
+      locationJurisdiction === 'CITY'
+        ? (() => {
+            const resolved = resolveSePlace(locationDraft.state, locationDraft.city)
+            if (!resolved) return null
+            return {
+              jurisdictionType: 'CITY' as const,
+              state: resolved.stateName,
+              city: resolved.placeName,
+              stateFips: resolved.stateFips,
+              placeFips: resolved.placeFips,
+              locationConfirmed: true,
+            }
+          })()
+        : (() => {
+            const resolved = resolveSeFips(locationDraft.state, locationDraft.county)
+            if (!resolved) return null
+            return {
+              jurisdictionType: 'COUNTY' as const,
+              state: resolved.state.name,
+              county: resolved.county.name,
+              stateFips: resolved.stateFips,
+              countyFips: resolved.countyFips,
+              locationConfirmed: true,
+            }
+          })()
+    if (!geoPayload) {
+      toast.error(
+        locationJurisdiction === 'CITY'
+          ? 'Select a valid Southeast state and city.'
+          : 'Select a valid Southeast state and county.',
+      )
+      return
+    }
+    setIsSavingLocation(true)
+    try {
+      const ok = await apiClient.updateProject(id, geoPayload)
+      if (!ok) {
+        toast.error('Failed to save location')
+        return
+      }
+      const fresh = await apiClient.getProject(id)
+      const patch = fresh || { ...geoPayload }
+      useAppStore.setState((state) => {
+        const exists = state.projects.some((p) => p.id === id)
+        return {
+          projects: exists
+            ? state.projects.map((p) =>
+                p.id === id ? { ...p, ...patch, data: (fresh as any)?.data || p.data } : p,
+              )
+            : fresh
+              ? [...state.projects, fresh]
+              : state.projects,
+          activeProject:
+            state.activeProject?.id === id
+              ? { ...state.activeProject, ...patch, data: (fresh as any)?.data || state.activeProject.data }
+              : state.activeProject,
+        }
+      })
+      toast.success('Location saved. You can continue with intake and section assignment.')
+    } catch (err: any) {
+      console.error('Failed to save project location:', err)
+      toast.error(err?.message || 'Failed to save location')
+    } finally {
+      setIsSavingLocation(false)
+    }
+  }
 
   const handleSyncLiveApis = async () => {
     if (!id || isSyncing) return
+    if (!canRunIngestion) {
+      toast.error('3rd-party API sync is available to Rose Associates staff only.')
+      return
+    }
     if (!project?.assignedSections || project.assignedSections.length === 0) {
       toast.error('Please assign at least one section before syncing and calculating.')
+      return
+    }
+    if (project?.locationConfirmed !== true) {
+      toast.error('Confirm the project state and county (FIPS) before syncing live APIs.')
       return
     }
     setIsSyncing(true)
     setSyncMessage(null)
     try {
       const res = await apiClient.triggerIngestion(id)
+
+      if (!res) {
+        toast.error('Failed to sync live APIs')
+        return
+      }
+      if (res.success === false) {
+        toast.error(
+          res.message ||
+            'Sync could not run. Assign sections and confirm location, then try again.',
+        )
+        return
+      }
 
       // Single project refresh after trigger (listeners reuse this via project-synced detail)
       const fresh = await apiClient.getProject(id)
@@ -145,7 +312,7 @@ export default function ProjectLayout({
       setTimeout(() => setSyncMessage(null), 4000)
     } catch (err: any) {
       console.error('Failed to sync live APIs:', err)
-      toast.error('Failed to sync live APIs')
+      toast.error(err?.message || 'Failed to sync live APIs')
     } finally {
       setIsSyncing(false)
     }
@@ -244,9 +411,16 @@ export default function ProjectLayout({
   }
 
 
-  // Deduplicate global templates by label / name
+  // Deduplicate global templates by label / name (customers: published/latest catalog only)
+  const catalogTemplates = (templates || []).filter((t) => {
+    if (!isCustomer) return true;
+    const status = String((t as any).status || 'active').toLowerCase();
+    if (status === 'draft' || status === 'archived') return false;
+    if ((t as any).isLatest === false) return false;
+    return true;
+  });
   const uniqueTemplatesMap = new Map<string, typeof templates[0]>();
-  (templates || []).forEach(t => {
+  catalogTemplates.forEach(t => {
     const key = (t.label || t.id || '').trim().toLowerCase();
     if (key && !uniqueTemplatesMap.has(key)) {
       uniqueTemplatesMap.set(key, t);
@@ -299,27 +473,62 @@ export default function ProjectLayout({
                       ? 'bg-blue-50 text-blue-700 border-blue-300'
                       : project.status === 'INTAKE_SUBMITTED'
                         ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
-                        : project.status === 'INGESTION_RUNNING'
-                          ? 'bg-cyan-50 text-cyan-700 border-cyan-300'
-                          : 'bg-amber-50 text-amber-700 border-amber-300'
+                        : 'bg-amber-50 text-amber-700 border-amber-300'
                   }`}>
                   {project.status || 'INTAKE_PENDING'}
                 </span>
               </div>
-              <p className="text-muted-foreground mt-1 text-xs">Client: {project.clientName} &bull; {project.year} &bull; {project.packageType || 'Standard Scorecard'}</p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Client: {project.clientName} &bull; {project.year} &bull; {project.packageType || 'Standard Scorecard'}
+                {String(project.jurisdictionType || '').toUpperCase() === 'CITY' && project.city ? (
+                  <> &bull; {project.city}, {project.state}</>
+                ) : project.state && project.county ? (
+                  <> &bull; {project.county}, {project.state}</>
+                ) : null}
+                {canRunIngestion ? (
+                  <>
+                    {' '}
+                    &bull;{' '}
+                    {String(project.jurisdictionType || '').toUpperCase() === 'CITY'
+                      ? `Place ${project.stateFips || '—'}-${project.placeFips || '—'}`
+                      : `FIPS ${project.stateFips || '—'}-${project.countyFips || '—'}`}
+                    {project.locationConfirmed === true ? (
+                      <span className="text-emerald-700 font-semibold"> · location confirmed</span>
+                    ) : (
+                      <span className="text-amber-700 font-semibold"> · location pending</span>
+                    )}
+                  </>
+                ) : null}
+              </p>
             </div>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedSectionIds([])
-              setIsAssignModalOpen(true)
-            }}
-            size="sm"
-            variant="outline"
-          >
-            <PlusIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
-            Assign Section
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {project.certifiedReportUrl && (
+              <a
+                href={project.certifiedReportUrl}
+                download={project.certifiedReportFileName || 'Certified-Report.pdf'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center h-9 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors"
+                title="Download certified project report"
+              >
+                <DownloadSimpleIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
+                Download Report
+              </a>
+            )}
+            <Button
+              onClick={() => {
+                setSelectedSectionIds([])
+                setIsAssignModalOpen(true)
+                fetchTemplates()
+              }}
+              size="sm"
+              variant="outline"
+            >
+              <PlusIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
+              Assign Section
+            </Button>
+          </div>
         </div>
 
         {/* Phase Navigation Tabs & Sync Action Header */}
@@ -362,27 +571,29 @@ export default function ProjectLayout({
               <span>Executive Scorecard</span>
             </Link>
 
-            <Link
-              href={`/projects/${id}/calibration`}
-              className={cn(
-                "group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition-all duration-150 whitespace-nowrap cursor-pointer select-none",
-                pathname.includes('/calibration')
-                  ? "bg-white text-slate-900 font-bold shadow-xs border border-slate-200/90"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium"
-              )}
-            >
-              <div className={cn(
-                "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black transition-colors shrink-0",
-                pathname.includes('/calibration') ? "bg-[#B5111B] text-white shadow-2xs" : "bg-slate-200 text-slate-600 group-hover:bg-slate-300"
-              )}>
-                3
-              </div>
-              <span>Calibration & Release</span>
-            </Link>
+            {canRunCalibration && (
+              <Link
+                href={`/projects/${id}/calibration`}
+                className={cn(
+                  "group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition-all duration-150 whitespace-nowrap cursor-pointer select-none",
+                  pathname.includes('/calibration')
+                    ? "bg-white text-slate-900 font-bold shadow-xs border border-slate-200/90"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium"
+                )}
+              >
+                <div className={cn(
+                  "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black transition-colors shrink-0",
+                  pathname.includes('/calibration') ? "bg-[#B5111B] text-white shadow-2xs" : "bg-slate-200 text-slate-600 group-hover:bg-slate-300"
+                )}>
+                  3
+                </div>
+                <span>Calibration & Release</span>
+              </Link>
+            )}
           </div>
 
-          {/* Sync Live APIs & Calculate Button (Active on Intake & Executive) */}
-          {!pathname.includes('/calibration') && (
+          {/* Sync Live APIs & Calculate — staff only */}
+          {!pathname.includes('/calibration') && canRunIngestion && (
             <div className="flex items-center gap-2.5 shrink-0">
               {syncMessage && (
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg flex items-center gap-1.5 animate-in fade-in shadow-2xs">
@@ -392,17 +603,25 @@ export default function ProjectLayout({
               )}
               {(() => {
                 const hasAssigned = (project.assignedSections || []).length > 0;
+                const locationOk = project.locationConfirmed === true;
+                const canSync = hasAssigned && locationOk;
                 return (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSyncLiveApis}
-                    disabled={isSyncing || !hasAssigned}
+                    disabled={isSyncing || !canSync}
                     className={cn(
                       "text-xs h-9 rounded-xl px-4 border-red-200/90 bg-red-50/80 text-[#B5111B] hover:bg-red-100 hover:border-red-300 font-bold shadow-xs flex items-center gap-2 transition-all",
-                      !hasAssigned ? "opacity-40 cursor-not-allowed hover:bg-red-50/80" : "cursor-pointer active:scale-98"
+                      !canSync ? "opacity-40 cursor-not-allowed hover:bg-red-50/80" : "cursor-pointer active:scale-98"
                     )}
-                    title={!hasAssigned ? "Assign at least one section before calculating" : "Sync live external APIs and recalculate project scores"}
+                    title={
+                      !hasAssigned
+                        ? "Assign at least one section before calculating"
+                        : !locationOk
+                          ? "Confirm project state and county before syncing"
+                          : "Sync live external APIs and recalculate project scores"
+                    }
                   >
                     <ArrowsClockwiseIcon weight="bold" className={cn("w-3.5 h-3.5 text-[#B5111B]", isSyncing && "animate-spin")} />
                     <span>{isSyncing ? "Syncing & Calculating..." : "Sync Live APIs & Calculate"}</span>
@@ -420,6 +639,98 @@ export default function ProjectLayout({
         {children || <Outlet />}
       </div>
 
+      {/* First-open location gate — customers must confirm SE geo before continuing */}
+      <Modal
+        isOpen={needsLocationGate}
+        onClose={() => {
+          /* Blocking — location required */
+        }}
+        title="Confirm project location"
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {locationJurisdiction === 'CITY'
+              ? 'Choose the Southeast state and city for this scorecard. Census place APIs use these codes when Rose Associates runs Sync (county-only APIs like BLS are skipped).'
+              : 'Choose the Southeast state and county for this scorecard. Census, BLS, and related APIs use these FIPS codes when Rose Associates runs Sync.'}
+          </p>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">
+                State <span className="text-[#B5111B]">*</span>
+              </label>
+              <Dropdown
+                fullWidth
+                size="md"
+                value={locationDraft.state}
+                onChange={(stateName) => {
+                  const counties = getCountiesForState(stateName)
+                  const places = getPlacesForState(stateName)
+                  setLocationDraft({
+                    state: stateName,
+                    county: counties[0]?.name || '',
+                    city: places[0]?.name || '',
+                  })
+                }}
+                options={seStates.map((s) => ({
+                  value: s.name,
+                  label: `${s.name} (${s.abbr})`,
+                }))}
+              />
+            </div>
+            {locationJurisdiction === 'CITY' ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  City <span className="text-[#B5111B]">*</span>
+                </label>
+                <Dropdown
+                  fullWidth
+                  size="md"
+                  value={locationDraft.city}
+                  onChange={(cityName) =>
+                    setLocationDraft((prev) => ({ ...prev, city: cityName }))
+                  }
+                  options={locationPlaceOptions.map((p) => ({
+                    value: p.name,
+                    label: p.name,
+                  }))}
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  County <span className="text-[#B5111B]">*</span>
+                </label>
+                <Dropdown
+                  fullWidth
+                  size="md"
+                  value={locationDraft.county}
+                  onChange={(countyName) =>
+                    setLocationDraft((prev) => ({ ...prev, county: countyName }))
+                  }
+                  options={locationCountyOptions.map((c) => ({
+                    value: c.name,
+                    label: c.name,
+                  }))}
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={handleConfirmLocation}
+              disabled={
+                isSavingLocation ||
+                (locationJurisdiction === 'CITY' ? !locationDraft.city : !locationDraft.county)
+              }
+            >
+              {isSavingLocation && <Spinner className="mr-2 h-4 w-4" />}
+              Save location
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Assign Modal */}
       <Modal
         isOpen={isAssignModalOpen}
@@ -429,12 +740,14 @@ export default function ProjectLayout({
             setSelectedSectionIds([])
           }
         }}
-        title="Assign Global Sections"
+        title={isCustomer ? "Add scorecard sections" : "Assign Global Sections"}
         className="max-w-2xl"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Select global sections to clone into this project. You can select multiple sections and assign them simultaneously without delays.
+            {isCustomer
+              ? "Choose from Rose Associates’ published section catalog to add to your project. Section structure is fixed — you cannot edit formulas or templates."
+              : "Select global sections to clone into this project. You can select multiple sections and assign them simultaneously without delays."}
           </p>
 
           <div className="max-h-[60vh] overflow-y-auto pr-1.5 space-y-5">
@@ -516,8 +829,7 @@ export default function ProjectLayout({
 
                         {/* Color dot */}
                         <div
-                          className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs"
-                          style={{ backgroundColor: template.accentColor || '#B5111B' }}
+                          className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs bg-[#B5111B]"
                         />
 
                         {/* Label & Details */}

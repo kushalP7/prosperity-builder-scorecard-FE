@@ -348,7 +348,7 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        {/* <div className="flex items-center gap-3 shrink-0">
           <Button
             onClick={handleSave}
             disabled={isSaving}
@@ -357,7 +357,7 @@ export default function SettingsPage() {
             {isSaving ? <Spinner className="w-4 h-4" /> : <FloppyDiskIcon weight="duotone" className="w-4 h-4" />}
             <span>{isSaving ? "Saving..." : "Save Settings"}</span>
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* CARD 1: Plan Details & Subscription (RED THEME: 2 PLANS ONLY - STREAMLINED) */}
@@ -373,14 +373,14 @@ export default function SettingsPage() {
                 <CardDescription className="text-xs text-slate-500">Configure company subscription rates and report generation plan pricing.</CardDescription>
               </div>
             </div>
-            <Button
+            {/* <Button
               size="sm"
               onClick={() => setShowEditPricingModal(true)}
               className="bg-red-50 hover:bg-red-100 text-[#B5111B] border border-red-200 font-bold px-3.5 py-1.5 rounded-xl shadow-2xs cursor-pointer transition-all flex items-center gap-1.5 text-xs w-fit"
             >
               <PencilSimpleIcon weight="duotone" className="w-3.5 h-3.5" />
               <span>Edit Plan Prices</span>
-            </Button>
+            </Button> */}
           </div>
         </CardHeader>
 
@@ -561,7 +561,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* CARD 2: Partial Payment & Invoicing Settings (SLATE/GRAY THEME) */}
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl border-t-4 border-t-slate-800 relative z-10">
+      {/* <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl border-t-4 border-t-slate-800 relative z-10">
         <CardHeader className="bg-slate-50/70 border-b border-slate-200/80 pb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -587,7 +587,6 @@ export default function SettingsPage() {
 
         <CardContent className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Partial Payment Deadline Field */}
             <div className="space-y-2.5">
               <label className="text-sm font-bold text-slate-900 block">
                 Partial Payment Deadline
@@ -605,7 +604,6 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Reminder Notice Window */}
             <div className="space-y-2.5">
               <label className="text-sm font-bold text-slate-900 block">
                 Automated Reminder Timing
@@ -624,7 +622,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Auto Send Complete Report Policy Toggle */}
           <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl flex items-center justify-between gap-4">
             <div className="space-y-0.5">
               <div className="text-sm font-bold text-slate-900">
@@ -645,7 +642,7 @@ export default function SettingsPage() {
             </label>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* SETTINGS EMAIL TEMPLATE PREVIEW MODAL */}
       {showEmailPreviewModal && (

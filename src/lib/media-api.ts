@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/api';
+
 export interface LandingMediaItem {
   id: string;
   title: string;
@@ -271,7 +273,7 @@ export const mediaApi = {
   // Create media item
   async createMedia(itemData: Partial<LandingMediaItem>): Promise<LandingMediaItem> {
     const url = `${API_BASE}/landing-cms/media`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(itemData),
@@ -283,7 +285,7 @@ export const mediaApi = {
   // Update media item
   async updateMedia(id: string, updates: Partial<LandingMediaItem>): Promise<LandingMediaItem> {
     const url = `${API_BASE}/landing-cms/media/${id}`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -295,11 +297,11 @@ export const mediaApi = {
   // Delete media item
   async deleteMedia(id: string): Promise<{ success: boolean; message: string }> {
     const url = `${API_BASE}/landing-cms/media/${id}`;
-    const res = await fetch(url, { method: 'DELETE' });
+    const res = await apiFetch(url, { method: 'DELETE' });
     return handleResponse<{ success: boolean; message: string }>(res);
   },
 
-  // Upload media file (video, audio, or pdf) to Cloudinary under Rose/Media/{Audio|Video|PDF}
+  // Upload media file (video, audio, or pdf) to S3/MinIO under Rose/Media/{Audio|Video|PDF}
   async uploadMediaFile(
     file: File,
     type: 'audio' | 'video' | 'pdf' = 'video',
@@ -308,10 +310,7 @@ export const mediaApi = {
     formData.append('file', file);
 
     const url = `${API_BASE}/uploads/media?type=${encodeURIComponent(type)}&folder=${encodeURIComponent(type)}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await apiFetch(url, { method: 'POST', body: formData }, 120000);
     const json = await handleResponse<any>(res);
     return (json && json.data) ? json.data : json;
   },

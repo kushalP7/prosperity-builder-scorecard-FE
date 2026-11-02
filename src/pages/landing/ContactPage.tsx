@@ -3,7 +3,12 @@
 import * as React from "react"
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { LandingFooter } from "@/components/landing/LandingFooter"
-import { submitInquiry, CreateInquiryPayload } from "@/lib/inquiries-api"
+import {
+  submitInquiry,
+  CreateInquiryPayload,
+  InquiryLeadRole,
+  INQUIRY_LEAD_ROLE_OPTIONS,
+} from "@/lib/inquiries-api"
 import {
   EnvelopeSimpleIcon,
   PhoneCallIcon,
@@ -54,6 +59,7 @@ export default function ContactPage() {
     state: "NC",
     country: "United States",
     organizationType: "Municipal / City Government",
+    leadRole: "",
   })
 
   const [errors, setErrors] = React.useState<Record<string, string>>({})
@@ -157,9 +163,10 @@ export default function ContactPage() {
                             businessEmail: "",
                             phoneNumber: "",
                             city: "",
-                            state: "",
+                            state: "NC",
                             country: "United States",
                             organizationType: "Municipal / City Government",
+                            leadRole: "",
                           })
                         }}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B5111B] hover:text-[#8F0D15] transition cursor-pointer"
@@ -305,6 +312,45 @@ export default function ContactPage() {
                     </FormField>
 
                     {/* Submit Button */}
+                    {/* Lead role — exactly one */}
+                    <FormField label="I am submitting as" required error={errors.leadRole}>
+                      <div
+                        className={`space-y-2 rounded-xl border p-3.5 ${
+                          errors.leadRole ? "border-red-500 bg-red-50/20" : "border-slate-200 bg-slate-50/50"
+                        }`}
+                        role="radiogroup"
+                        aria-label="Representative type"
+                      >
+                        {INQUIRY_LEAD_ROLE_OPTIONS.map((opt) => {
+                          const selected = formData.leadRole === opt.value
+                          return (
+                            <label
+                              key={opt.value}
+                              className={`flex items-start gap-2.5 cursor-pointer rounded-lg px-2.5 py-2.5 transition ${
+                                selected
+                                  ? "bg-white border border-red-200 shadow-xs"
+                                  : "border border-transparent hover:bg-white/80"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="leadRole"
+                                value={opt.value}
+                                checked={selected}
+                                onChange={() =>
+                                  handleFieldChange("leadRole", opt.value as InquiryLeadRole)
+                                }
+                                className="mt-0.5 h-3.5 w-3.5 accent-[#B5111B] cursor-pointer"
+                              />
+                              <span className="text-xs sm:text-sm font-medium text-slate-800 leading-snug">
+                                {opt.label}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </FormField>
+
                     <div className="pt-2">
                       <button
                         type="submit"

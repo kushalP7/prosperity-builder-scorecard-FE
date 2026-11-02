@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/api';
+
 export interface LandingProjectItem {
   id: string;
   title: string;
@@ -370,7 +372,7 @@ export const projectsApi = {
   // Create new project
   async createProject(data: Partial<LandingProjectItem>): Promise<LandingProjectItem> {
     const url = `${API_BASE}/landing-cms/projects`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -382,7 +384,7 @@ export const projectsApi = {
   // Update project
   async updateProject(id: string, data: Partial<LandingProjectItem>): Promise<LandingProjectItem> {
     const url = `${API_BASE}/landing-cms/projects/${id}`;
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -394,20 +396,17 @@ export const projectsApi = {
   // Delete project
   async deleteProject(id: string): Promise<{ success: boolean }> {
     const url = `${API_BASE}/landing-cms/projects/${id}`;
-    const res = await fetch(url, { method: 'DELETE' });
+    const res = await apiFetch(url, { method: 'DELETE' });
     return handleResponse<{ success: boolean }>(res);
   },
 
-  // Upload PDF document to Cloudinary
+  // Upload PDF document to S3/MinIO
   async uploadPdf(file: File, folder: string = 'Rose/Projects/PDF'): Promise<{ url: string; public_id: string }> {
     const formData = new FormData();
     formData.append('file', file);
 
     const url = `${API_BASE}/uploads/file?folder=${encodeURIComponent(folder)}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await apiFetch(url, { method: 'POST', body: formData }, 120000);
     const json = await handleResponse<any>(res);
     return json && json.data ? json.data : json;
   },

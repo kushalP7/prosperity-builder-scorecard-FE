@@ -12,7 +12,7 @@ export interface PendingUpload {
 const pendingUploadsMap = new Map<string, PendingUpload>();
 
 /**
- * Creates a local blob URL for instant preview without uploading to Cloudinary.
+ * Creates a local blob URL for instant preview without uploading to storage.
  * The file will be deferred until the user saves the form.
  */
 export function createPendingUpload(
@@ -50,7 +50,7 @@ export function getPendingUpload(url?: string): PendingUpload | undefined {
 }
 
 /**
- * Revokes a local blob preview and cleans up the memory without touching Cloudinary.
+ * Revokes a local blob preview and cleans up the memory without uploading.
  */
 export function revokePendingUpload(url?: string): void {
   if (!url || !isPendingUpload(url)) return;
@@ -77,8 +77,8 @@ export function formatBytes(bytes?: number): string {
 
 /**
  * Scans a form payload (including nested blocks) for any `blob:` URLs,
- * uploads each one to Cloudinary in sequence, and replaces the blob URLs
- * with the resulting permanent Cloudinary URLs.
+ * uploads each one to storage in sequence, and replaces the blob URLs
+ * with the resulting permanent storage URLs.
  */
 export async function uploadAllPendingInPayload(
   payload: any,
@@ -144,7 +144,7 @@ export async function uploadAllPendingInPayload(
     }
   }
 
-  // Replace all blob URLs in clone with the permanent Cloudinary URLs
+  // Replace all blob URLs in clone with the permanent storage URLs
   function replaceBlobs(obj: any): any {
     if (!obj) return obj;
     if (typeof obj === "string") {

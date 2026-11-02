@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  Column,
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -18,6 +19,34 @@ import {
   FileDottedIcon,
 } from "@phosphor-icons/react"
 import { Dropdown } from "@/components/ui/dropdown"
+import { cn } from "@/lib/utils"
+
+export type DataTableColumnAlign = "left" | "center" | "right"
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData, TValue> {
+    align?: DataTableColumnAlign
+    /** Extra classes applied to both <th> and <td>. */
+    cellClassName?: string
+  }
+}
+
+function getColumnAlign<TData>(column: Column<TData, unknown>): DataTableColumnAlign {
+  return column.columnDef.meta?.align ?? "left"
+}
+
+function alignTextClass(align: DataTableColumnAlign) {
+  if (align === "center") return "text-center"
+  if (align === "right") return "text-right"
+  return "text-left"
+}
+
+function alignFlexClass(align: DataTableColumnAlign) {
+  if (align === "center") return "justify-center"
+  if (align === "right") return "justify-end"
+  return "justify-start"
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -38,6 +67,12 @@ interface DataTableProps<TData, TValue> {
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
   className?: string
+  /** Stable row id for expansion (defaults to index). */
+  getRowId?: (row: TData, index: number) => string
+  /** Controlled set of expanded row ids. */
+  expandedRowIds?: Set<string>
+  /** Render a full-width child row when the parent is expanded. */
+  renderExpandedRow?: (row: TData) => React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
@@ -58,11 +93,15 @@ export function DataTable<TData, TValue>({
   sorting,
   onSortingChange,
   className = "",
+  getRowId,
+  expandedRowIds,
+  renderExpandedRow,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: getRowId ? (row, index) => getRowId(row, index) : undefined,
     manualPagination: true,
     manualSorting: true,
     enableSortingRemoval: false,
@@ -92,7 +131,7 @@ export function DataTable<TData, TValue>({
         {isLoading && (
           <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center gap-2 animate-in fade-in duration-150">
             <SpinnerGapIcon weight="bold" className="w-7 h-7 text-[#B5111B] animate-spin" />
-            <span className="text-xs font-bold text-slate-700">Updating records...</span>
+            <span className="text-xs font-bold text-slate-700">Loading...</span>
           </div>
         )}
 
@@ -116,18 +155,26 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort()
                     const sortDirection = header.column.getIsSorted()
+                    const align = getColumnAlign(header.column)
+                    const metaClass = header.column.columnDef.meta?.cellClassName
 
                     return (
                       <th
                         key={header.id}
-                        className={`py-3 px-4 select-none bg-slate-50/95 ${canSort ? "cursor-pointer hover:bg-slate-100/70 transition-colors" : ""
-                          }`}
+                        className={cn(
+                          "py-3 px-4 select-none bg-slate-50/95 align-middle",
+                          alignTextClass(align),
+                          metaClass,
+                          canSort && "cursor-pointer hover:bg-slate-100/70 transition-colors",
+                        )}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                       >
-                        <div className="flex items-center gap-1.5">
-                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        <div className={cn("flex items-center gap-1.5 min-w-0", alignFlexClass(align))}>
+                          <span className="truncate">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </span>
                           {canSort && (
-                            <span className="text-slate-400">
+                            <span className="text-slate-400 shrink-0">
                               {sortDirection === "asc" ? (
                                 <ArrowUpIcon weight="bold" className="w-3.5 h-3.5 text-[#B5111B]" />
                               ) : sortDirection === "desc" ? (
@@ -158,18 +205,38 @@ export function DataTable<TData, TValue>({
                   </td>
                 </tr>
               ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-slate-50/70 transition-colors group"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="py-3 px-4">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
+                table.getRowModel().rows.map((row) => {
+                  const isExpanded = Boolean(expandedRowIds?.has(row.id) && renderExpandedRow)
+                  return (
+                    <React.Fragment key={row.id}>
+                      <tr className="hover:bg-slate-50/70 transition-colors group">
+                        {row.getVisibleCells().map((cell) => {
+                          const align = getColumnAlign(cell.column)
+                          const metaClass = cell.column.columnDef.meta?.cellClassName
+                          return (
+                            <td
+                              key={cell.id}
+                              className={cn(
+                                "py-3 px-4 align-middle",
+                                alignTextClass(align),
+                                metaClass,
+                              )}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-slate-50/80 border-b border-slate-200">
+                          <td colSpan={columns.length} className="p-0">
+                            {renderExpandedRow?.(row.original)}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  )
+                })
               )}
             </tbody>
           </table>

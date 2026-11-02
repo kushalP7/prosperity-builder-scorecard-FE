@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Link, useRouter } from "@/lib/router-compat"
+import { Link, useRouter, useSearchParams } from "@/lib/router-compat"
 import { useAppStore } from "@/store"
 import { CommunityWedgeWheel } from "@/components/landing/CommunityWedgeWheel"
 import {
@@ -19,12 +19,29 @@ import {
   QuestionIcon,
   XIcon,
 } from "@phosphor-icons/react"
+import { getPostLoginPath, hasActiveSubscription, isCustomerRole } from "@/lib/permissions"
+import { apiClient } from "@/lib/api"
+
+function safeRedirectPath(raw: string | null): string | null {
+  if (!raw) return null
+  let decoded = raw
+  try {
+    decoded = decodeURIComponent(raw)
+  } catch {
+    decoded = raw
+  }
+  // Only allow same-origin relative paths (block open redirects)
+  if (!decoded.startsWith("/") || decoded.startsWith("//")) return null
+  return decoded
+}
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login, register, isAuthenticated } = useAppStore()
+  const searchParams = useSearchParams()
+  const { login, register, isAuthenticated, currentUser, setCurrentUser } = useAppStore()
 
   const [authMode, setAuthMode] = React.useState<'login' | 'register'>('login')
+  const [sessionChecked, setSessionChecked] = React.useState(false)
 
   // Clean production state - no prefilled passwords or credentials
   const [email, setEmail] = React.useState("")
@@ -42,11 +59,47 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [showForgotModal, setShowForgotModal] = React.useState(false)
 
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/landing-cms")
+  const redirectAfterAuth = React.useCallback(() => {
+    const user = useAppStore.getState().currentUser
+    const redirect = safeRedirectPath(searchParams.get("redirect"))
+    // Don't send a newly-paid customer back to checkout from a stale redirect=
+    if (
+      redirect &&
+      !(redirect.startsWith("/checkout") && isCustomerRole(user?.role) && hasActiveSubscription(user?.subscriptionStatus))
+    ) {
+      router.push(redirect)
+      return
     }
-  }, [isAuthenticated, router])
+    router.push(getPostLoginPath(user?.role, user?.subscriptionStatus))
+  }, [router, searchParams])
+
+  // Refresh entitlement before auto-redirecting an existing session
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      setSessionChecked(true)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const me = await apiClient.getMe()
+        if (!cancelled && me) setCurrentUser(me as any)
+      } catch {
+        /* keep stored user */
+      } finally {
+        if (!cancelled) setSessionChecked(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, setCurrentUser])
+
+  React.useEffect(() => {
+    if (sessionChecked && isAuthenticated && currentUser) {
+      redirectAfterAuth()
+    }
+  }, [sessionChecked, isAuthenticated, currentUser, redirectAfterAuth])
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,7 +115,7 @@ export default function LoginPage() {
     try {
       const success = await login(email.trim(), password)
       if (success) {
-        router.push("/landing-cms")
+        redirectAfterAuth()
       } else {
         setErrorMsg("Invalid email or password. Please verify your credentials.")
       }
@@ -101,7 +154,7 @@ export default function LoginPage() {
       })
 
       if (success) {
-        router.push("/landing-cms")
+        redirectAfterAuth()
       } else {
         setErrorMsg("Registration failed. Please check the information provided.")
       }
@@ -217,7 +270,7 @@ export default function LoginPage() {
           <div className="space-y-4">
 
             {/* Mode Switcher */}
-            <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-xs">
+            {/* <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-xs">
               <button
                 type="button"
                 onClick={() => { setAuthMode('login'); setErrorMsg(''); }}
@@ -240,7 +293,7 @@ export default function LoginPage() {
                 <UserPlusIcon weight="duotone" className="w-3.5 h-3.5" />
                 <span>Create Account</span>
               </button>
-            </div>
+            </div> */}
 
             {/* Title & Description */}
             <div className="space-y-1">

@@ -99,7 +99,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
     }
 
     try {
-      // Defer-upload all staged pending files (cover image, PDF, block media) to Cloudinary
+      // Defer-upload all staged pending files (cover image, PDF, block media) to storage
       const cleanPayload = await uploadAllPendingInPayload(rawPayload, (msg) => {
         setUploadStatusText(msg)
       })

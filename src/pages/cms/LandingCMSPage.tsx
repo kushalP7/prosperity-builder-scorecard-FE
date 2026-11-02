@@ -639,7 +639,7 @@ export default function LandingCMSPage() {
       } catch { }
     }
 
-    // Stage file locally via blob URL for instant preview without touching Cloudinary
+    // Stage file locally via blob URL for instant preview without uploading yet
     const previewUrl = URL.createObjectURL(file)
     setStagedPdfFile(file)
     setStagedPdfPreviewUrl(previewUrl)

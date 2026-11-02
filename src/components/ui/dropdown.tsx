@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { CaretDownIcon, CheckIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -49,13 +50,60 @@ export function Dropdown({
   size = "sm",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updateMenuPosition = React.useCallback(() => {
+    const trigger = dropdownRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const gap = 6;
+    const style: React.CSSProperties = {
+      position: "fixed",
+      zIndex: 100,
+      minWidth: rect.width,
+      maxWidth: Math.max(rect.width, 420),
+    };
+
+    if (fullWidth) {
+      style.width = rect.width;
+      style.maxWidth = rect.width;
+    }
+
+    if (direction === "up") {
+      style.bottom = window.innerHeight - rect.top + gap;
+    } else {
+      style.top = rect.bottom + gap;
+    }
+
+    if (align === "right") {
+      style.right = window.innerWidth - rect.right;
+      style.left = "auto";
+    } else {
+      style.left = rect.left;
+      style.right = "auto";
+    }
+
+    setMenuStyle(style);
+  }, [align, direction, fullWidth]);
 
   React.useEffect(() => {
     if (!isOpen) return;
 
+    updateMenuPosition();
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const inTrigger = dropdownRef.current?.contains(target);
+      const inMenu = menuRef.current?.contains(target);
+      if (!inTrigger && !inMenu) {
         setIsOpen(false);
       }
     };
@@ -66,13 +114,19 @@ export function Dropdown({
       }
     };
 
+    const handleReposition = () => updateMenuPosition();
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
     };
-  }, [isOpen]);
+  }, [isOpen, updateMenuPosition]);
 
   const selectedOption = options.find((opt) => opt.value === value);
   const displayLabel = selectedOption ? selectedOption.label : (placeholder || value);
@@ -84,55 +138,14 @@ export function Dropdown({
     lg: "px-4 py-2.5 text-sm rounded-xl",
   };
 
-  return (
-    <div
-      ref={dropdownRef}
-      className={cn(
-        "relative text-left",
-        fullWidth ? "w-full block" : "inline-block",
-        className
-      )}
-    >
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "border transition-all cursor-pointer flex items-center justify-between gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50/80 select-none whitespace-nowrap",
-          sizeStyles[size],
-          fullWidth ? "w-full" : "",
-          isOpen
-            ? "border-[#B5111B] ring-2 ring-[#B5111B]/15 text-slate-900 font-medium"
-            : isActive
-            ? "border-[#B5111B] text-[#B5111B] ring-1 ring-[#B5111B]/20 bg-red-50/20 font-bold"
-            : "border-slate-200 text-slate-800 hover:border-slate-300 font-medium",
-          disabled && "opacity-50 cursor-not-allowed",
-          buttonClassName
-        )}
-      >
-        <div className="flex items-center gap-1.5 truncate">
-          {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
-          <span className="truncate">{displayLabel}</span>
-        </div>
-        <CaretDownIcon
-          weight="bold"
-          className={cn(
-            "w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5",
-            isOpen && "rotate-180 text-slate-600"
-          )}
-        />
-      </button>
-
-      {isOpen && (
+  const menu = isOpen && mounted
+    ? createPortal(
         <div
+          ref={menuRef}
+          style={menuStyle}
           className={cn(
-            "absolute bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1 max-h-72 overflow-y-auto",
-            direction === "up" ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            fullWidth
-              ? "w-full left-0 right-0 min-w-full"
-              : align === "right"
-              ? "right-0 min-w-full w-max max-w-[420px]"
-              : "left-0 min-w-full w-max max-w-[420px]",
+            "bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 animate-in fade-in zoom-in-95 duration-150 space-y-1 max-h-72 overflow-y-auto",
+            !fullWidth && "w-max",
             menuClassName
           )}
         >
@@ -173,8 +186,51 @@ export function Dropdown({
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <div
+      ref={dropdownRef}
+      className={cn(
+        "relative text-left",
+        fullWidth ? "w-full block" : "inline-block",
+        className
       )}
+    >
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "border transition-all cursor-pointer flex items-center justify-between gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50/80 select-none whitespace-nowrap",
+          sizeStyles[size],
+          fullWidth ? "w-full" : "",
+          isOpen
+            ? "border-[#B5111B] ring-2 ring-[#B5111B]/15 text-slate-900 font-medium"
+            : isActive
+            ? "border-[#B5111B] text-[#B5111B] ring-1 ring-[#B5111B]/20 bg-red-50/20 font-bold"
+            : "border-slate-200 text-slate-800 hover:border-slate-300 font-medium",
+          disabled && "opacity-50 cursor-not-allowed",
+          buttonClassName
+        )}
+      >
+        <div className="flex items-center gap-1.5 truncate">
+          {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
+          <span className="truncate">{displayLabel}</span>
+        </div>
+        <CaretDownIcon
+          weight="bold"
+          className={cn(
+            "w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-1.5",
+            isOpen && "rotate-180 text-slate-600"
+          )}
+        />
+      </button>
+
+      {menu}
     </div>
   );
 }

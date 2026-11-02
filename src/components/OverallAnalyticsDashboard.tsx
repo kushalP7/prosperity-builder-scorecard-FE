@@ -157,12 +157,34 @@ export function OverallAnalyticsDashboard() {
   const [searchQuery, setSearchQuery] = React.useState<string>("")
   const [expandedProjectIds, setExpandedProjectIds] = React.useState<string[]>([])
 
-  // Initialize selected projects with all project IDs when projects load
+  // Overall Dashboard only includes published scorecards
+  const publishedProjects = React.useMemo(
+    () =>
+      projects.filter(
+        (p) => String((p as any).status || "").toUpperCase() === "PUBLISHED",
+      ),
+    [projects],
+  )
+
+  // Initialize selected projects with published project IDs when they load
   React.useEffect(() => {
-    if (projects.length > 0 && selectedProjectIds.length === 0) {
-      setSelectedProjectIds(projects.map(p => p.id))
+    if (publishedProjects.length > 0 && selectedProjectIds.length === 0) {
+      setSelectedProjectIds(publishedProjects.map(p => p.id))
     }
-  }, [projects, selectedProjectIds.length])
+  }, [publishedProjects, selectedProjectIds.length])
+
+  // Drop any unpublished IDs that may linger after status changes
+  React.useEffect(() => {
+    const publishedIds = new Set(publishedProjects.map((p) => p.id))
+    setSelectedProjectIds((prev) => {
+      const next = prev.filter((id) => publishedIds.has(id))
+      if (next.length === prev.length) return prev
+      if (next.length === 0 && publishedProjects.length > 0) {
+        return publishedProjects.map((p) => p.id)
+      }
+      return next
+    })
+  }, [publishedProjects])
 
   // Toggle single project selection
   const toggleProjectSelection = (id: string) => {
@@ -177,12 +199,12 @@ export function OverallAnalyticsDashboard() {
   }
 
   const selectAllProjects = () => {
-    setSelectedProjectIds(projects.map(p => p.id))
+    setSelectedProjectIds(publishedProjects.map(p => p.id))
   }
 
   const deselectAllProjects = () => {
-    if (projects.length > 0) {
-      setSelectedProjectIds([projects[0].id])
+    if (publishedProjects.length > 0) {
+      setSelectedProjectIds([publishedProjects[0].id])
     }
   }
 
@@ -192,7 +214,7 @@ export function OverallAnalyticsDashboard() {
       prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
     )
 
-    const proj = projects.find(p => p.id === id)
+    const proj = publishedProjects.find(p => p.id === id) || projects.find(p => p.id === id)
     if (proj && (!proj.rollup || !proj.data || Object.keys(proj.data).length === 0)) {
       apiClient.getProject(id).then((fresh: any) => {
         if (fresh) {
@@ -204,19 +226,19 @@ export function OverallAnalyticsDashboard() {
     }
   }
 
-  const allExpanded = projects.length > 0 && expandedProjectIds.length === projects.length
+  const allExpanded = publishedProjects.length > 0 && expandedProjectIds.length === publishedProjects.length
   const toggleAllAccordions = () => {
     if (allExpanded) {
       setExpandedProjectIds([])
     } else {
-      setExpandedProjectIds(projects.map(p => p.id))
+      setExpandedProjectIds(publishedProjects.map(p => p.id))
     }
   }
 
-  // Active projects included in the analytics
+  // Active projects included in the analytics (published + selected)
   const activeProjects = React.useMemo(() => {
-    return projects.filter(p => selectedProjectIds.includes(p.id))
-  }, [projects, selectedProjectIds])
+    return publishedProjects.filter(p => selectedProjectIds.includes(p.id))
+  }, [publishedProjects, selectedProjectIds])
 
   // Helper for category themes
   const getCategoryTheme = (title: string) => {

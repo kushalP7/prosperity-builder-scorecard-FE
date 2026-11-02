@@ -21,6 +21,7 @@ import { sortSections, sortCategories, sortGroups } from "@/lib/scorecardOrder"
 import { apiClient } from "@/lib/api"
 import { toast } from "@/components/ui/toast"
 import { FormulaChipEditor, normalizeFormulaSpacing } from "@/components/ui/FormulaChipEditor"
+import { Dropdown } from "@/components/ui/dropdown"
 
 export default function SectionMakerPage() {
   const {
@@ -61,7 +62,7 @@ export default function SectionMakerPage() {
   const [editingGroupId, setEditingGroupId] = React.useState<{ sectionId: string, categoryId: string, groupId: string } | null>(null)
   const [targetCategoryForGroup, setTargetCategoryForGroup] = React.useState<{ sectionId: string, categoryId: string } | null>(null)
 
-  const [newSection, setNewSection] = React.useState({ label: "", description: "", accentColor: "#B5111B", icon: "Layers" })
+  const [newSection, setNewSection] = React.useState({ label: "", description: "" })
   const [newCategory, setNewCategory] = React.useState({ sectionId: "", label: "", description: "" })
   const [newGroup, setNewGroup] = React.useState({
     label: "",
@@ -303,20 +304,16 @@ export default function SectionMakerPage() {
       updateTemplateSection(editingSectionId, {
         label: newSection.label,
         description: newSection.description,
-        accentColor: newSection.accentColor,
-        icon: newSection.icon
       })
     } else {
       createTemplateSection({
         label: newSection.label,
         description: newSection.description,
-        accentColor: newSection.accentColor,
-        icon: newSection.icon
       })
     }
     setIsSectionModalOpen(false)
     setEditingSectionId(null)
-    setNewSection({ label: "", description: "", accentColor: "#B5111B", icon: "Layers" })
+    setNewSection({ label: "", description: "" })
   }
 
   const handleOpenVersionHistory = async () => {
@@ -344,7 +341,7 @@ export default function SectionMakerPage() {
   }
 
   const openEditSection = (section: any) => {
-    setNewSection({ label: section.label, description: section.description || "", accentColor: section.accentColor || "#B5111B", icon: section.icon || "Layers" })
+    setNewSection({ label: section.label, description: section.description || "" })
     setEditingSectionId(section.id)
     setIsSectionModalOpen(true)
   }
@@ -480,22 +477,8 @@ export default function SectionMakerPage() {
         document.getElementById('app-header-title')!
       )}
 
-      {mounted && document.getElementById('app-header-actions') && createPortal(
-        <Button onClick={() => {
-          setNewSection({ label: "", description: "", accentColor: "#B5111B", icon: "Layers" })
-          setEditingSectionId(null)
-          setIsSectionModalOpen(true)
-        }}
-          className="bg-[#B5111B] text-white hover:bg-[#9B0F17] font-semibold px-4 py-2 rounded-lg shadow-sm cursor-pointer"
-        >
-          <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
-          Add Section Template
-        </Button>,
-        document.getElementById('app-header-actions')!
-      )}
-
       <div className="space-y-4">
-        {/* High-Contrast Segmented Capsule Section Tabs Track (Matching Project Data Page) */}
+        {/* High-Contrast Segmented Capsule Section Tabs Track */}
         {uniqueTemplates.length > 0 && (
           <div className="bg-slate-200/90 p-2 rounded-2xl border border-slate-300/80 shadow-inner flex flex-wrap items-center gap-1.5 max-w-full">
             {uniqueTemplates.map((section) => {
@@ -513,8 +496,8 @@ export default function SectionMakerPage() {
                       : "bg-slate-100 text-slate-800 hover:bg-white hover:text-slate-950 border border-slate-300/90 shadow-xs hover:shadow-sm active:scale-95"
                   )}
                   style={{
-                    backgroundColor: isSelected ? (section.accentColor || '#B5111B') : undefined,
-                    borderColor: isSelected ? (section.accentColor || '#B5111B') : undefined,
+                    backgroundColor: isSelected ? '#B5111B' : undefined,
+                    borderColor: isSelected ? '#B5111B' : undefined,
                     color: isSelected ? '#FFFFFF' : undefined
                   }}
                 >
@@ -537,9 +520,24 @@ export default function SectionMakerPage() {
           </div>
         )}
 
+        {/* Add Section Template — above the section detailed view */}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => {
+              setNewSection({ label: "", description: "" })
+              setEditingSectionId(null)
+              setIsSectionModalOpen(true)
+            }}
+            className="bg-[#B5111B] text-white hover:bg-[#9B0F17] font-semibold px-4 py-2 rounded-xl shadow-sm cursor-pointer"
+          >
+            <PlusIcon weight="bold" className="h-4 w-4 mr-2" />
+            Add Section Template
+          </Button>
+        </div>
+
         {uniqueTemplates.length === 0 ? (
-          <div className="p-8 text-center border border-dashed rounded-lg text-muted-foreground">
-            No sections created yet. Create one to get started.
+          <div className="p-8 text-center border border-dashed rounded-lg text-muted-foreground space-y-2">
+            <p>No sections created yet. Use <strong className="text-slate-700">Add Section Template</strong> above to get started.</p>
           </div>
         ) : activeSection ? (
           /* ACTIVE SECTION CONTENT CARD */
@@ -548,8 +546,7 @@ export default function SectionMakerPage() {
               <div className="space-y-1.5 min-w-0">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <div
-                    className="w-4 h-4 rounded-full shadow-xs shrink-0"
-                    style={{ backgroundColor: activeSection.accentColor || '#B5111B' }}
+                    className="w-4 h-4 rounded-full shadow-xs shrink-0 bg-[#B5111B]"
                   />
                   <h3 className="text-2xl font-bold text-foreground tracking-tight">
                     {activeSection.label}
@@ -749,23 +746,6 @@ export default function SectionMakerPage() {
               onChange={e => setNewSection({ ...newSection, description: e.target.value })}
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Accent Color</label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                className="w-12 h-9 rounded-md border border-input cursor-pointer"
-                value={newSection.accentColor}
-                onChange={e => setNewSection({ ...newSection, accentColor: e.target.value })}
-              />
-              <input
-                type="text"
-                className="flex-1 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                value={newSection.accentColor}
-                onChange={e => setNewSection({ ...newSection, accentColor: e.target.value })}
-              />
-            </div>
-          </div>
           <div className="pt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsSectionModalOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveSection} className="bg-[#B5111B] text-white hover:bg-[#9B0F17]">{editingSectionId ? "Save Changes" : "Create Section"}</Button>
@@ -912,11 +892,12 @@ export default function SectionMakerPage() {
                 return (
                   <div key={idx} className="flex items-center gap-3 bg-background p-2 rounded-md border border-slate-400 hover:border-slate-500 transition-all">
                     <div className="flex-1 min-w-[140px]">
-                      <select
-                        className="w-full rounded border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer truncate"
+                      <Dropdown
+                        fullWidth
+                        size="sm"
+                        direction="down"
                         value={entry.columnId}
-                        onChange={e => {
-                          const newColId = e.target.value;
+                        onChange={(newColId) => {
                           const updated = [...newGroup.configuredColumns];
                           const targetCol = selectableIndicatorColumns.find(c => c.id === newColId);
                           const newRange = getColumnRange(targetCol);
@@ -933,13 +914,14 @@ export default function SectionMakerPage() {
 
                           setNewGroup({ ...newGroup, configuredColumns: updated, weight: w, highestScore: h });
                         }}
-                      >
-                        {selectableIndicatorColumns.map(col => (
-                          <option key={col.id} value={col.id}>
-                            {col.name}
-                          </option>
-                        ))}
-                      </select>
+                        options={selectableIndicatorColumns.map(col => ({
+                          value: col.id,
+                          label: col.name,
+                          disabled: newGroup.configuredColumns.some(
+                            (e, i) => i !== idx && e.columnId === col.id
+                          ),
+                        }))}
+                      />
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
@@ -1174,42 +1156,46 @@ export default function SectionMakerPage() {
                     {/* IF Condition Expression */}
                     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-1 min-w-0">
                       <span className="text-xs font-bold text-slate-500 shrink-0">If</span>
-                      <select
-                        className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer w-32 md:w-36 shrink-0 truncate shadow-2xs"
-                        title={availableColumnsForGroup.find(c => c.id === (rule.ifColumnId || '__base__'))?.name || 'Data Column'}
+                      <Dropdown
+                        size="sm"
+                        direction="down"
+                        className="w-32 md:w-36 shrink-0"
+                        fullWidth
+                        title="If column"
                         value={availableColumnsForGroup.some(c => c.id === (rule.ifColumnId || '__base__')) ? (rule.ifColumnId || '__base__') : '__base__'}
-                        onChange={e => {
+                        onChange={(next) => {
                           const r = [...newGroup.scoringRules];
-                          r[idx].ifColumnId = e.target.value;
+                          r[idx].ifColumnId = next;
                           setNewGroup({ ...newGroup, scoringRules: r });
                         }}
-                      >
-                        {availableColumnsForGroup.map(col => (
-                          <option key={col.id} value={col.id} title={col.name}>
-                            {col.name}
-                          </option>
-                        ))}
-                      </select>
+                        options={availableColumnsForGroup.map(col => ({
+                          value: col.id,
+                          label: col.name,
+                        }))}
+                      />
 
-                      <select
-                        className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs shrink-0 cursor-pointer font-semibold shadow-2xs min-w-[84px]"
+                      <Dropdown
+                        size="sm"
+                        direction="down"
+                        className="min-w-[100px] shrink-0"
                         value={rule.operator}
-                        onChange={e => {
+                        onChange={(next) => {
                           const r = [...newGroup.scoringRules];
-                          r[idx].operator = e.target.value;
-                          if (e.target.value === 'between' && !Array.isArray(r[idx].conditionValue)) {
+                          r[idx].operator = next;
+                          if (next === 'between' && !Array.isArray(r[idx].conditionValue)) {
                             r[idx].conditionValue = [0, 1];
                           }
                           setNewGroup({ ...newGroup, scoringRules: r });
                         }}
-                      >
-                        <option value="between">Between</option>
-                        <option value="equals">=</option>
-                        <option value="greater_than">&gt;</option>
-                        <option value="greater_than_or_equals">&ge;</option>
-                        <option value="less_than">&lt;</option>
-                        <option value="less_than_or_equals">&le;</option>
-                      </select>
+                        options={[
+                          { value: "between", label: "Between" },
+                          { value: "equals", label: "=" },
+                          { value: "greater_than", label: ">" },
+                          { value: "greater_than_or_equals", label: "≥" },
+                          { value: "less_than", label: "<" },
+                          { value: "less_than_or_equals", label: "≤" },
+                        ]}
+                      />
 
                       {rule.operator === 'between' ? (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -1261,22 +1247,23 @@ export default function SectionMakerPage() {
                     {/* SET Result & Delete Action */}
                     <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
                       <span className="text-xs font-bold text-slate-500 shrink-0">&rarr; Set</span>
-                      <select
-                        className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer w-28 sm:w-32 shrink-0 truncate shadow-2xs"
-                        title={targetColumnsForGroup.find(c => c.id === rule.targetColumnId)?.name || 'Target Column'}
+                      <Dropdown
+                        size="sm"
+                        direction="down"
+                        className="w-28 sm:w-32 shrink-0"
+                        fullWidth
+                        title="Set column"
                         value={targetColumnsForGroup.some(c => c.id === rule.targetColumnId) ? rule.targetColumnId : defaultValueColId}
-                        onChange={e => {
+                        onChange={(next) => {
                           const r = [...newGroup.scoringRules];
-                          r[idx].targetColumnId = e.target.value;
+                          r[idx].targetColumnId = next;
                           setNewGroup({ ...newGroup, scoringRules: r });
                         }}
-                      >
-                        {targetColumnsForGroup.map(col => (
-                          <option key={col.id} value={col.id} title={col.name}>
-                            {col.name}
-                          </option>
-                        ))}
-                      </select>
+                        options={targetColumnsForGroup.map(col => ({
+                          value: col.id,
+                          label: col.name,
+                        }))}
+                      />
                       <span className="text-xs font-bold text-slate-500 shrink-0">to:</span>
                       <input
                         type="number"

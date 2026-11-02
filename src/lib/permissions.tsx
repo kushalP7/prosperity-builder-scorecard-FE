@@ -5,7 +5,9 @@ export type UserRole =
   | 'super_admin'
   | 'project_lead'
   | 'assessment_specialist'
-  | 'client_viewer';
+  | 'customer';
+
+export type SubscriptionStatus = 'none' | 'active' | 'expired' | 'cancelled';
 
 export type AppModule =
   | 'overall-analytics'
@@ -15,8 +17,10 @@ export type AppModule =
   | 'orders'
   | 'payments'
   | 'users'
+  | 'inquiries'
   | 'settings'
-  | 'landing-cms';
+  | 'landing-cms'
+  | 'profile';
 
 export type AppPermission =
   | 'manage_users'
@@ -30,14 +34,14 @@ export type AppPermission =
   | 'export_reports'
   | 'manage_cms'
   | 'manage_orders'
-  | 'manage_payments';
+  | 'manage_payments'
+  | 'run_ingestion'
+  | 'run_calibration'
+  | 'assign_sections';
 
 /**
- * Static Role-Based Module Access Matrix:
- * • super_admin: Complete access to all 9 modules
- * • project_lead: Projects, Dashboard, Overall Analytics, Orders, and Landing CMS
- * • assessment_specialist: Projects, Dashboard, and Overall Analytics
- * • client_viewer: Projects, Dashboard, and Overall Analytics (read-only)
+ * Static Role-Based Module Access Matrix.
+ * Customer paid access also requires subscriptionStatus === 'active' for Projects.
  */
 export const ROLE_MODULE_ACCESS: Record<UserRole, AppModule[]> = {
   super_admin: [
@@ -48,8 +52,10 @@ export const ROLE_MODULE_ACCESS: Record<UserRole, AppModule[]> = {
     'orders',
     'payments',
     'users',
+    'inquiries',
     'settings',
     'landing-cms',
+    // no 'profile' — customer-only
   ],
   project_lead: [
     'overall-analytics',
@@ -63,10 +69,10 @@ export const ROLE_MODULE_ACCESS: Record<UserRole, AppModule[]> = {
     'analytics',
     'projects',
   ],
-  client_viewer: [
-    'overall-analytics',
-    'analytics',
+  customer: [
+    'profile',
     'projects',
+    'analytics', // Dashboard — scoped to their projects only via GET /projects
   ],
 };
 
@@ -84,6 +90,9 @@ const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'manage_cms',
     'manage_orders',
     'manage_payments',
+    'run_ingestion',
+    'run_calibration',
+    'assign_sections',
   ],
   project_lead: [
     'create_project',
@@ -93,88 +102,135 @@ const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'export_reports',
     'manage_cms',
     'manage_orders',
+    'run_ingestion',
+    'run_calibration',
+    'assign_sections',
   ],
   assessment_specialist: [
     'edit_project_data',
     'view_dashboard',
     'export_reports',
+    'run_ingestion',
+    'run_calibration',
+    'assign_sections',
   ],
-  client_viewer: [
+  customer: [
+    'create_project', // Within paid package slot allowance (enforced by API)
+    'edit_project_metadata', // Own projects only (ownership enforced by API)
     'view_dashboard',
     'export_reports',
+    'assign_sections', // Option B: assign published catalog sections to own projects only
   ],
 };
 
-/**
- * Checks if a user role can access a specific module.
- */
-export function canAccessModule(role: string | undefined | null, moduleKey: AppModule): boolean {
-  if (!role) return false;
-  const r = role.toLowerCase().trim() as UserRole;
-  if (r === 'super_admin') return true;
-  return (ROLE_MODULE_ACCESS[r] || []).includes(moduleKey);
+/** Map legacy role strings (JWT / DB) to current roles. */
+function normalizeRole(role: string | undefined | null): UserRole | null {
+  if (!role) return null;
+  const r = role.toLowerCase().trim();
+  if (r === 'client_viewer' || r === 'viewer' || r === 'subscriber') return 'customer';
+  return r as UserRole;
+}
+
+export function hasActiveSubscription(subscriptionStatus?: string | null): boolean {
+  return String(subscriptionStatus || '').toLowerCase() === 'active';
+}
+
+export function isCustomerRole(role: string | undefined | null): boolean {
+  return normalizeRole(role) === 'customer';
+}
+
+/** Customer home: Buy package if unpaid, Projects if subscribed. */
+export function getCustomerHomePath(subscriptionStatus?: string | null): string {
+  return hasActiveSubscription(subscriptionStatus) ? '/projects' : '/checkout';
+}
+
+/** Post-login / fallback landing by role. */
+export function getPostLoginPath(
+  role?: string | null,
+  subscriptionStatus?: string | null,
+): string {
+  if (isCustomerRole(role)) return getCustomerHomePath(subscriptionStatus);
+  return '/projects';
 }
 
 /**
- * Checks if a user role has permission to execute an action.
+ * Checks if a user role can access a specific module.
+ * For customers: Projects requires active subscription; Profile always.
  */
+export function canAccessModule(
+  role: string | undefined | null,
+  moduleKey: AppModule,
+  subscriptionStatus?: string | null,
+): boolean {
+  const r = normalizeRole(role);
+  if (!r) return false;
+  // Profile is never an admin module (even super_admin)
+  if (moduleKey === 'profile') return r === 'customer';
+  if (r === 'super_admin') return true;
+  if (!(ROLE_MODULE_ACCESS[r] || []).includes(moduleKey)) return false;
+  if (r === 'customer' && (moduleKey === 'projects' || moduleKey === 'analytics')) {
+    return hasActiveSubscription(subscriptionStatus);
+  }
+  return true;
+}
+
 export function hasPermission(role: string | undefined | null, permission: AppPermission): boolean {
-  if (!role) return false;
-  const r = role.toLowerCase().trim() as UserRole;
+  const r = normalizeRole(role);
+  if (!r) return false;
   if (r === 'super_admin') return true;
   return (ROLE_PERMISSIONS[r] || []).includes(permission);
 }
 
-/**
- * Route guard based strictly on role module authorization.
- */
-export function canAccessRoute(role: string | undefined | null, pathname: string): boolean {
-  if (!role) return false;
-  const r = role.toLowerCase().trim() as UserRole;
+export function canAccessRoute(
+  role: string | undefined | null,
+  pathname: string,
+  subscriptionStatus?: string | null,
+): boolean {
+  const r = normalizeRole(role);
+  if (!r) return false;
 
   if (r === 'super_admin') return true;
 
-  if (pathname.startsWith('/users')) return canAccessModule(r, 'users');
-  if (pathname.startsWith('/settings')) return canAccessModule(r, 'settings');
-  if (pathname.startsWith('/section-maker')) return canAccessModule(r, 'section-maker');
-  if (pathname.startsWith('/payments')) return canAccessModule(r, 'payments');
-  if (pathname.startsWith('/orders')) return canAccessModule(r, 'orders');
-  if (pathname.startsWith('/landing-cms')) return canAccessModule(r, 'landing-cms');
+  // Profile is customer-only — staff/admin must not use this surface
+  if (pathname.startsWith('/profile')) {
+    return r === 'customer';
+  }
+  if (pathname.startsWith('/checkout')) return true;
+  if (pathname.startsWith('/users')) return canAccessModule(r, 'users', subscriptionStatus);
+  if (pathname.startsWith('/inquiries')) return canAccessModule(r, 'inquiries', subscriptionStatus);
+  if (pathname.startsWith('/settings')) return canAccessModule(r, 'settings', subscriptionStatus);
+  if (pathname.startsWith('/section-maker')) return canAccessModule(r, 'section-maker', subscriptionStatus);
+  if (pathname.startsWith('/payments')) return canAccessModule(r, 'payments', subscriptionStatus);
+  if (pathname.startsWith('/orders')) return canAccessModule(r, 'orders', subscriptionStatus);
+  if (pathname.startsWith('/landing-cms')) return canAccessModule(r, 'landing-cms', subscriptionStatus);
+  if (pathname.startsWith('/projects')) return canAccessModule(r, 'projects', subscriptionStatus);
+  if (pathname.startsWith('/overall-analytics')) return canAccessModule(r, 'overall-analytics', subscriptionStatus);
+  if (pathname.startsWith('/analytics')) return canAccessModule(r, 'analytics', subscriptionStatus);
 
   return true;
 }
 
-/**
- * React hook to check permissions of the current logged-in user.
- */
+export function useCanAccessModule(moduleKey: AppModule): boolean {
+  const currentUser = useAppStore((s) => s.currentUser);
+  return canAccessModule(currentUser?.role, moduleKey, currentUser?.subscriptionStatus);
+}
+
+export function useHasPermission(permission: AppPermission): boolean {
+  const currentUser = useAppStore((s) => s.currentUser);
+  return hasPermission(currentUser?.role, permission);
+}
+
+/** Alias used by ProjectsPage and other modules */
 export function usePermission(permission: AppPermission): boolean {
-  const { currentUser } = useAppStore();
-  return React.useMemo(() => {
-    return hasPermission(currentUser?.role, permission);
-  }, [currentUser?.role, permission]);
+  return useHasPermission(permission);
 }
 
-/**
- * React hook to check module access of the current logged-in user.
- */
-export function useModuleAccess(moduleKey: AppModule): boolean {
-  const { currentUser } = useAppStore();
-  return React.useMemo(() => {
-    return canAccessModule(currentUser?.role, moduleKey);
-  }, [currentUser?.role, moduleKey]);
+export function useHasActiveSubscription(): boolean {
+  const currentUser = useAppStore((s) => s.currentUser);
+  return hasActiveSubscription(currentUser?.subscriptionStatus);
 }
 
-/**
- * Declarative component for conditional rendering.
- */
-interface CanProps {
-  do: AppPermission;
-  fallback?: React.ReactNode;
-  children: React.ReactNode;
-}
-
-export function Can({ do: permission, fallback = null, children }: CanProps) {
-  const allowed = usePermission(permission);
-  if (!allowed) return <>{fallback}</>;
-  return <>{children}</>;
+export function useIsCustomer(): boolean {
+  const currentUser = useAppStore((s) => s.currentUser);
+  return isCustomerRole(currentUser?.role);
 }
