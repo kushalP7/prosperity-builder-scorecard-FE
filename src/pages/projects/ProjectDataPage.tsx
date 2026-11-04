@@ -51,6 +51,26 @@ const SOURCE_PRESETS = [
 const SOURCE_CLEAR = '__clear__'
 const SOURCE_OTHER = '__other__'
 
+/** Map Sync / staging labels onto a preset so the dropdown opens on a real option, not Other… */
+function resolveSourcePreset(raw: string): string | null {
+  const s = raw.trim().toLowerCase()
+  if (!s) return null
+  if ((SOURCE_PRESETS as readonly string[]).includes(raw.trim())) return raw.trim()
+  if (s.includes('quickfacts')) return 'US Census QuickFacts'
+  if (s.includes('census') || s.includes('acs') || s === 'us_census') return 'US Census ACS'
+  if (s.includes('ncdot') || s.includes('stip') || s.includes('highway')) return 'NCDOT GIS Route Network'
+  if (s.includes('bls') || s === 'bureau of labor') return 'BLS'
+  if (s.includes('epa')) return 'EPA'
+  if (s.includes('cdc') || s.includes('places')) return 'CDC'
+  if (s.includes('esri') || s.includes('arcgis') || s.includes('fema')) return 'ESRI/ArcGIS'
+  if (s.includes('costar')) return 'CoStar'
+  if (s.includes('moody')) return "Moody's CRE"
+  if (s.includes('questionnaire') || s.includes('phase 2') || s.includes('client intake')) {
+    return 'Client / Questionnaire'
+  }
+  return null
+}
+
 /** Color + category chip styling for Data Source values */
 function getSourceChipClass(source: string): string {
   const s = source.toLowerCase()
@@ -89,7 +109,7 @@ const NOTES_CHIP_CLASS =
 function NotesChip({ value }: { value: string }) {
   const trimmed = (value || '').trim()
   if (!trimmed || trimmed === '-') {
-    return <span className="text-xs text-muted-foreground">—</span>
+    return <span className="text-xs text-muted-foreground">-</span>
   }
   return (
     <span title={trimmed} className={NOTES_CHIP_CLASS}>
@@ -177,11 +197,13 @@ function DataSourceCell({
   const [otherMode, setOtherMode] = React.useState(false)
   const [otherDraft, setOtherDraft] = React.useState('')
   const otherRef = React.useRef<HTMLInputElement>(null)
+  const editorRef = React.useRef<HTMLDivElement>(null)
   const trimmed = (value || '').trim()
-  const isPreset = (SOURCE_PRESETS as readonly string[]).includes(trimmed)
+  const displayPreset = resolveSourcePreset(trimmed)
 
   const openEditor = () => {
-    const custom = Boolean(trimmed && !isPreset)
+    // Open on a mapped preset when possible so the list works; only use Other for true customs.
+    const custom = Boolean(trimmed && !displayPreset)
     setOtherMode(custom)
     setOtherDraft(custom ? trimmed : '')
     setEditing(true)
@@ -193,17 +215,16 @@ function DataSourceCell({
     setEditing(false)
   }
 
-  React.useEffect(() => {
-    if (editing && otherMode) {
-      otherRef.current?.focus()
-      otherRef.current?.select()
-    }
-  }, [editing, otherMode])
-
   if (editing) {
-    const dropdownValue = otherMode ? SOURCE_OTHER : isPreset ? trimmed : trimmed ? SOURCE_OTHER : ''
+    const dropdownValue = otherMode
+      ? SOURCE_OTHER
+      : displayPreset
+        ? displayPreset
+        : trimmed
+          ? SOURCE_OTHER
+          : ''
     return (
-      <div className="flex w-full min-w-[200px] flex-col gap-1.5">
+      <div ref={editorRef} className="flex w-full min-w-[200px] flex-col gap-1.5">
         <Dropdown
           value={dropdownValue}
           onChange={(next) => {
@@ -216,7 +237,9 @@ function DataSourceCell({
             }
             if (next === SOURCE_OTHER) {
               setOtherMode(true)
-              setOtherDraft(isPreset ? '' : trimmed)
+              setOtherDraft(displayPreset ? '' : trimmed)
+              // Focus custom field after selecting Other… from the list
+              window.setTimeout(() => otherRef.current?.focus(), 0)
               return
             }
             onChange(next)
@@ -239,7 +262,16 @@ function DataSourceCell({
             className="w-full min-h-[32px] rounded-md border border-sky-300 bg-white px-2 py-1 text-xs text-slate-800 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40"
             value={otherDraft}
             onChange={(e) => setOtherDraft(e.target.value)}
-            onBlur={commitOther}
+            onBlur={(e) => {
+              const next = e.relatedTarget as Node | null
+              if (next && editorRef.current?.contains(next)) return
+              // Dropdown options use mousedown preventDefault; short delay covers portal focus quirks.
+              window.setTimeout(() => {
+                if (!editorRef.current) return
+                if (editorRef.current.contains(document.activeElement)) return
+                commitOther()
+              }, 120)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()

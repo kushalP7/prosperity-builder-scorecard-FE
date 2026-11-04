@@ -265,6 +265,10 @@ export const ProjectSchema = z.object({
   paymentMilestones: z.array(z.any()).optional(),
   questionnaireSubmission: z.any().optional(),
   rollup: z.any().optional(),
+  initialReportUrl: z.string().nullable().optional(),
+  initialReportPublicId: z.string().nullable().optional(),
+  initialReportFileName: z.string().nullable().optional(),
+  initialReportGeneratedAt: z.string().nullable().optional(),
   certifiedReportUrl: z.string().nullable().optional(),
   certifiedReportPublicId: z.string().nullable().optional(),
   certifiedReportFileName: z.string().nullable().optional(),
@@ -297,6 +301,10 @@ export type Project = {
   rollup?: any;
   deleted?: boolean;
   deletedAt?: string | null;
+  initialReportUrl?: string | null;
+  initialReportPublicId?: string | null;
+  initialReportFileName?: string | null;
+  initialReportGeneratedAt?: string | null;
   certifiedReportUrl?: string | null;
   certifiedReportPublicId?: string | null;
   certifiedReportFileName?: string | null;

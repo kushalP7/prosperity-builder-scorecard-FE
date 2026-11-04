@@ -17,10 +17,12 @@ import {
   DownloadSimpleIcon,
   ArrowSquareOutIcon,
   XIcon,
+  ChartPieIcon,
 } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/loader"
 import { Modal } from "@/components/ui/modal"
+import { CategoryChartsModal } from "@/components/calibration/CategoryChartsModal"
 
 type PendingReport = {
   reportUrl: string
@@ -31,8 +33,9 @@ type PendingReport = {
 export default function ProjectCalibrationPage() {
   const routeParams = useParams<{ id: string }>()
   const id = routeParams.id || ""
-  const { projects } = useAppStore()
+  const { projects, templates, widgets, fetchTemplates, fetchWidgets, currentUser } = useAppStore()
   const project = projects.find((p) => p.id === id)
+  const isSuperAdmin = String(currentUser?.role || "").toLowerCase() === "super_admin"
 
   const [loading, setLoading] = React.useState(true)
   const [recalculating, setRecalculating] = React.useState(false)
@@ -41,15 +44,15 @@ export default function ProjectCalibrationPage() {
   const [isReplaceModalOpen, setIsReplaceModalOpen] = React.useState(false)
   const [uploadingReport, setUploadingReport] = React.useState(false)
   const [replacingReport, setReplacingReport] = React.useState(false)
-  const [pendingReport, setPendingReport] = React.useState<PendingReport | null>(null)
   const [replaceReport, setReplaceReport] = React.useState<PendingReport | null>(null)
-  const publishFileRef = React.useRef<HTMLInputElement>(null)
   const replaceFileRef = React.useRef<HTMLInputElement>(null)
   const [ingesting, setIngesting] = React.useState(false)
   const [rollup, setRollup] = React.useState<any>(null)
   const [stagedData, setStagedData] = React.useState<any[]>([])
   const [overrides, setOverrides] = React.useState<Record<string, number>>({})
   const [notes, setNotes] = React.useState<string>('')
+  const [chartsCategory, setChartsCategory] = React.useState<string | null>(null)
+  const [downloadingTopLow, setDownloadingTopLow] = React.useState(false)
 
   const loadAll = React.useCallback(async () => {
     if (!id) return
@@ -92,6 +95,8 @@ export default function ProjectCalibrationPage() {
 
   React.useEffect(() => {
     loadAll()
+    void fetchTemplates()
+    void fetchWidgets()
     const handleSync = (e: Event) => {
       const detail = (e as CustomEvent)?.detail
       // When layout already refreshed the project, still reload rollup/staged but skip duplicate getProject
@@ -204,19 +209,10 @@ export default function ProjectCalibrationPage() {
   }
 
   const handlePublish = () => {
-    setPendingReport(null)
     setIsPublishModalOpen(true)
   }
 
-  const handlePublishFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    const uploaded = await uploadPdfFile(file)
-    if (uploaded) setPendingReport(uploaded)
-  }
-
-  const handleReplaceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDetailedFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
@@ -237,18 +233,13 @@ export default function ProjectCalibrationPage() {
   }
 
   const executePublish = async () => {
-    if (!pendingReport?.reportUrl) {
-      toast.error('Upload the certified project report PDF before publishing')
-      return
-    }
     setPublishing(true)
     try {
-      await apiClient.publishScorecard(id, pendingReport)
-      toast.success('Scorecard officially calibrated and published!')
+      await apiClient.publishScorecard(id)
+      toast.success('Published - initial scorecard PDF generated and emailed to the customer.')
       await loadAll()
       await refreshProjectInStore()
       setIsPublishModalOpen(false)
-      setPendingReport(null)
     } catch (err: any) {
       toast.error(err?.message || 'Failed to publish scorecard')
     } finally {
@@ -258,20 +249,47 @@ export default function ProjectCalibrationPage() {
 
   const executeReplaceReport = async () => {
     if (!replaceReport?.reportUrl) {
-      toast.error('Upload a new PDF to replace the certified report')
+      toast.error('Upload a PDF for the detailed report')
       return
     }
     setReplacingReport(true)
     try {
       await apiClient.replaceProjectReport(id, replaceReport)
-      toast.success('Certified report updated')
+      toast.success(
+        project?.certifiedReportUrl
+          ? 'Detailed report replaced and emailed to the customer.'
+          : 'Detailed report uploaded and emailed to the customer.',
+      )
       await refreshProjectInStore()
       setIsReplaceModalOpen(false)
       setReplaceReport(null)
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to update certified report')
+      toast.error(err?.message || 'Failed to update detailed report')
     } finally {
       setReplacingReport(false)
+    }
+  }
+
+  const handleDownloadTopLow = async () => {
+    if (!id) return
+    setDownloadingTopLow(true)
+    try {
+      const result = await apiClient.downloadTopLowPerformingPdf(id)
+      if (!result.success || !result.blob) {
+        toast.error(result.message || 'Could not download Top & Lowest PDF')
+        return
+      }
+      const url = URL.createObjectURL(result.blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = result.filename || 'Top-Low-Performing.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Top & Lowest Performing PDF downloaded')
+    } catch (err: any) {
+      toast.error(err?.message || 'Could not download Top & Lowest PDF')
+    } finally {
+      setDownloadingTopLow(false)
     }
   }
 
@@ -286,8 +304,10 @@ export default function ProjectCalibrationPage() {
 
   const categoryScores = rollup?.categoryScores || []
   const isPublished = project?.status === 'PUBLISHED'
+  const initialReportUrl = project?.initialReportUrl || null
+  const initialReportFileName = project?.initialReportFileName || 'Initial Scorecard Report.pdf'
   const certifiedReportUrl = project?.certifiedReportUrl || null
-  const certifiedReportFileName = project?.certifiedReportFileName || 'Certified Report.pdf'
+  const certifiedReportFileName = project?.certifiedReportFileName || 'Detailed Scorecard Report.pdf'
 
   return (
     <div className="space-y-6 pb-16">
@@ -367,58 +387,164 @@ export default function ProjectCalibrationPage() {
         </Button>
       </div>
 
-      {certifiedReportUrl && (
-        <Card className="border-emerald-200/80 shadow-xs overflow-hidden bg-emerald-50/40">
-          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shrink-0">
-                <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-900">Certified project report</div>
-                <div className="text-xs text-slate-500 truncate mt-0.5">{certifiedReportFileName}</div>
-                {project?.certifiedReportUploadedAt && (
-                  <div className="text-[11px] text-slate-400 mt-1">
-                    Uploaded {new Date(project.certifiedReportUploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      {isPublished && (
+        <div className={cn("grid grid-cols-1 gap-4", isSuperAdmin ? "lg:grid-cols-3" : "lg:grid-cols-2")}>
+          <Card className="border-sky-200/80 shadow-xs overflow-hidden bg-sky-50/40">
+            <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-white border border-sky-200 flex items-center justify-center shrink-0">
+                  <FilePdfIcon weight="duotone" className="w-5 h-5 text-sky-700" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-slate-900">Initial scorecard report</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Auto-generated on publish and emailed to the customer.
                   </div>
-                )}
+                  {initialReportUrl ? (
+                    <>
+                      <div className="text-xs text-slate-600 truncate mt-1.5 font-medium">{initialReportFileName}</div>
+                      {project?.initialReportGeneratedAt && (
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          Generated{' '}
+                          {new Date(project.initialReportGeneratedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-xs text-amber-700 mt-1.5 font-medium">PDF not found - re-publish to regenerate.</div>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <a
-                href={certifiedReportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                <ArrowSquareOutIcon weight="bold" className="w-3.5 h-3.5" />
-                View
-              </a>
-              <a
-                href={certifiedReportUrl}
-                download={certifiedReportFileName}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                <DownloadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
-                Download
-              </a>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setReplaceReport(null)
-                  setIsReplaceModalOpen(true)
-                }}
-                className="h-9 px-3 text-xs font-semibold border-emerald-300 text-emerald-800 hover:bg-emerald-50"
-              >
-                <UploadSimpleIcon weight="bold" className="w-3.5 h-3.5 mr-1.5" />
-                Replace PDF
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              {initialReportUrl && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={initialReportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <ArrowSquareOutIcon weight="bold" className="w-3.5 h-3.5" />
+                    View
+                  </a>
+                  <a
+                    href={initialReportUrl}
+                    download={initialReportFileName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <DownloadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
+                    Download
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-200/80 shadow-xs overflow-hidden bg-emerald-50/40">
+            <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shrink-0">
+                  <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-slate-900">Detailed report (15–30 days)</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Admin upload - customer is emailed automatically on upload.
+                  </div>
+                  {certifiedReportUrl ? (
+                    <>
+                      <div className="text-xs text-slate-600 truncate mt-1.5 font-medium">{certifiedReportFileName}</div>
+                      {project?.certifiedReportUploadedAt && (
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          Uploaded{' '}
+                          {new Date(project.certifiedReportUploadedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-xs text-slate-500 mt-1.5">Not uploaded yet.</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {certifiedReportUrl && (
+                  <>
+                    <a
+                      href={certifiedReportUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <ArrowSquareOutIcon weight="bold" className="w-3.5 h-3.5" />
+                      View
+                    </a>
+                    <a
+                      href={certifiedReportUrl}
+                      download={certifiedReportFileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <DownloadSimpleIcon weight="bold" className="w-3.5 h-3.5" />
+                      Download
+                    </a>
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setReplaceReport(null)
+                    setIsReplaceModalOpen(true)
+                  }}
+                  className="h-9 px-3 text-xs font-semibold border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                >
+                  <UploadSimpleIcon weight="bold" className="w-3.5 h-3.5 mr-1.5" />
+                  {certifiedReportUrl ? 'Replace detailed PDF' : 'Upload detailed PDF'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {isSuperAdmin && (
+            <Card className="border-violet-200/80 shadow-xs overflow-hidden bg-violet-50/40">
+              <CardContent className="p-4 sm:p-5 flex flex-col gap-4 h-full">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-violet-200 flex items-center justify-center shrink-0">
+                    <ChartPieIcon weight="duotone" className="w-5 h-5 text-violet-700" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-slate-900">Top &amp; Lowest Performing</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      Combined polar chart PDF for top 5 and lowest 5 assigned categories. Super admin only.
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-auto">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={downloadingTopLow || categoryScores.length === 0}
+                    onClick={handleDownloadTopLow}
+                    className="h-9 px-3 text-xs font-semibold border-violet-300 text-violet-900 hover:bg-violet-50"
+                  >
+                    <DownloadSimpleIcon weight="bold" className={cn("w-3.5 h-3.5 mr-1.5", downloadingTopLow && "animate-pulse")} />
+                    {downloadingTopLow ? 'Preparing…' : 'Download PDF'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Category Score Breakdown Grid */}
@@ -428,8 +554,8 @@ export default function ProjectCalibrationPage() {
             <div>
               <CardTitle className="text-base font-bold text-slate-900">
                 {categoryScores.length === 12
-                  ? '12 Quality of Life Categories — Normalized Scores & Calibration'
-                  : 'Assigned Categories — Normalized Scores & Calibration'}
+                  ? '12 Quality of Life Categories - Normalized Scores & Calibration'
+                  : 'Assigned Categories - Normalized Scores & Calibration'}
               </CardTitle>
               <p className="text-xs text-slate-500 font-normal mt-0.5">
                 Formula: (Client Metric Points / Max Possible Points) × 10. You can override points directly in the right column.
@@ -452,12 +578,15 @@ export default function ProjectCalibrationPage() {
                   <th className="px-4 py-3">Percentage</th>
                   <th className="px-4 py-3">10-Scale Score</th>
                   <th className="px-4 py-3 text-right">Analyst Override</th>
+                  {isSuperAdmin && isPublished && (
+                    <th className="px-4 py-3 text-right">Charts</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {categoryScores.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-slate-400 text-xs">
+                    <td colSpan={isSuperAdmin && isPublished ? 8 : 7} className="px-4 py-10 text-center text-slate-400 text-xs">
                       No sections assigned to this project yet. Return to Executive Scorecard (step 2) and assign a section first.
                     </td>
                   </tr>
@@ -502,6 +631,19 @@ export default function ProjectCalibrationPage() {
                           className="w-20 text-xs p-1.5 text-right rounded-md border border-slate-300 font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors"
                         />
                       </td>
+                      {isSuperAdmin && isPublished && (
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setChartsCategory(String(cat.categoryLabel || cat.categoryKey))}
+                            className="h-8 px-2.5 text-[11px] font-semibold border-slate-300 text-slate-700 hover:bg-slate-50"
+                          >
+                            <ChartPieIcon weight="bold" className="w-3.5 h-3.5 mr-1" />
+                            View charts
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   )
                 }))}
@@ -600,80 +742,41 @@ export default function ProjectCalibrationPage() {
       <Modal
         isOpen={isPublishModalOpen}
         onClose={() => {
-          if (publishing || uploadingReport) return
+          if (publishing) return
           setIsPublishModalOpen(false)
-          setPendingReport(null)
         }}
-        title="Approve & Publish Final Scorecard"
+        title="Approve & Publish Scorecard"
         className="max-w-lg"
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600 leading-relaxed">
-            Upload the certified project report PDF to release this scorecard. Customers will be able to view and download it from their profile and project page.
+            Publishing generates the <strong>initial scorecard PDF</strong> from current category scores,
+            emails it to the customer, and unlocks portal download. You can upload the{' '}
+            <strong>detailed report</strong> later (typically 15–30 days).
           </p>
 
-          <input
-            ref={publishFileRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={handlePublishFileChange}
-          />
-
-          {pendingReport ? (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700 shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-900 truncate">{pendingReport.reportFileName}</div>
-                  <div className="text-[11px] text-emerald-700 font-medium">Ready to publish</div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPendingReport(null)}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-white"
-                aria-label="Remove PDF"
-              >
-                <XIcon weight="bold" className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={uploadingReport}
-              onClick={() => publishFileRef.current?.click()}
-              className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-[#B5111B]/40 p-8 text-center transition-colors disabled:opacity-60"
-            >
-              <UploadSimpleIcon weight="duotone" className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <div className="text-sm font-bold text-slate-800">
-                {uploadingReport ? 'Uploading PDF…' : 'Upload project report PDF'}
-              </div>
-              <div className="text-xs text-slate-500 mt-1">Required before publishing</div>
-            </button>
-          )}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs text-slate-600 leading-relaxed">
+            No PDF upload is required at publish time.
+          </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={publishing || uploadingReport}
-              onClick={() => {
-                setIsPublishModalOpen(false)
-                setPendingReport(null)
-              }}
+              disabled={publishing}
+              onClick={() => setIsPublishModalOpen(false)}
               className="h-9 px-4 text-xs font-semibold"
             >
               Cancel
             </Button>
             <Button
               size="sm"
-              disabled={publishing || uploadingReport || !pendingReport?.reportUrl}
+              disabled={publishing || categoryScores.length === 0}
               onClick={executePublish}
               className="h-9 px-4 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white"
             >
               <ShieldCheckIcon weight="duotone" className="w-4 h-4 mr-1.5" />
-              {publishing ? 'Publishing…' : 'Publish Scorecard'}
+              {publishing ? 'Publishing…' : 'Publish & email initial PDF'}
             </Button>
           </div>
         </div>
@@ -686,12 +789,13 @@ export default function ProjectCalibrationPage() {
           setIsReplaceModalOpen(false)
           setReplaceReport(null)
         }}
-        title="Replace Certified Report"
+        title={certifiedReportUrl ? 'Replace Detailed Report' : 'Upload Detailed Report'}
         className="max-w-lg"
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-600 leading-relaxed">
-            Upload a new PDF to replace the current certified report. The project stays published.
+            Upload the detailed / certified scorecard PDF. The customer is emailed automatically when
+            you save. The project stays published; the initial report is unchanged.
           </p>
 
           <input
@@ -699,7 +803,7 @@ export default function ProjectCalibrationPage() {
             type="file"
             accept="application/pdf,.pdf"
             className="hidden"
-            onChange={handleReplaceFileChange}
+            onChange={handleDetailedFileChange}
           />
 
           {replaceReport ? (
@@ -708,7 +812,7 @@ export default function ProjectCalibrationPage() {
                 <FilePdfIcon weight="duotone" className="w-5 h-5 text-emerald-700 shrink-0" />
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-slate-900 truncate">{replaceReport.reportFileName}</div>
-                  <div className="text-[11px] text-emerald-700 font-medium">Ready to replace</div>
+                  <div className="text-[11px] text-emerald-700 font-medium">Ready to save</div>
                 </div>
               </div>
               <button
@@ -729,7 +833,7 @@ export default function ProjectCalibrationPage() {
             >
               <UploadSimpleIcon weight="duotone" className="w-8 h-8 text-slate-400 mx-auto mb-2" />
               <div className="text-sm font-bold text-slate-800">
-                {uploadingReport ? 'Uploading PDF…' : 'Select replacement PDF'}
+                {uploadingReport ? 'Uploading PDF…' : 'Select detailed report PDF'}
               </div>
             </button>
           )}
@@ -753,11 +857,20 @@ export default function ProjectCalibrationPage() {
               onClick={executeReplaceReport}
               className="h-9 px-4 text-xs font-semibold bg-[#B5111B] hover:bg-[#8F0D15] text-white"
             >
-              {replacingReport ? 'Saving…' : 'Save New Report'}
+              {replacingReport ? 'Saving…' : 'Save & email customer'}
             </Button>
           </div>
         </div>
       </Modal>
+
+      <CategoryChartsModal
+        open={Boolean(chartsCategory)}
+        onClose={() => setChartsCategory(null)}
+        categoryLabel={chartsCategory || ''}
+        project={project as any}
+        templates={templates || []}
+        widgets={widgets || []}
+      />
       </div>
     </div>
   )

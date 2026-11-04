@@ -162,6 +162,8 @@ export function Dropdown({
                 key={option.value}
                 type="button"
                 disabled={option.disabled}
+                // Prevent input blur (e.g. Source "Other…" field) from firing before this click.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);
@@ -203,6 +205,8 @@ export function Dropdown({
       <button
         type="button"
         disabled={disabled}
+        // Keep sibling inputs focused long enough for Source "Other…" not to commit on open.
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "border transition-all cursor-pointer flex items-center justify-between gap-1.5 shadow-2xs bg-white text-slate-800 hover:bg-slate-50/80 select-none whitespace-nowrap",

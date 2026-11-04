@@ -167,7 +167,7 @@ export function FormulaChipEditor({
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground">Custom Expression:</span>
           <span className="text-[10px] text-muted-foreground/75 font-normal">
-            {viewMode === 'chips' ? '(Interactive Chip View — Click to type)' : '(Raw Text View)'}
+            {viewMode === 'chips' ? '(Interactive Chip View - Click to type)' : '(Raw Text View)'}
           </span>
         </div>
         <div className="flex items-center gap-1.5">

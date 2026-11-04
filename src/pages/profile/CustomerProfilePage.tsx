@@ -30,9 +30,9 @@ function formatMoney(n: number) {
 }
 
 function formatDate(v?: string | Date | null) {
-  if (!v) return "—"
+  if (!v) return "-"
   const d = new Date(v)
-  if (Number.isNaN(d.getTime())) return "—"
+  if (Number.isNaN(d.getTime())) return "-"
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
 
@@ -325,17 +325,18 @@ export default function CustomerProfilePage() {
             <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 sm:p-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-amber-950">Payment required</p>
+                  <p className="text-sm font-bold text-amber-950">Invoice pending</p>
                   <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
-                    You have {unpaidOrders.length} unpaid checkout
-                    {unpaidOrders.length === 1 ? "" : "s"}. Packages unlock only after payment succeeds.
+                    You have {unpaidOrders.length} unpaid invoice
+                    {unpaidOrders.length === 1 ? "" : "s"}. Access unlocks after Rose Associates
+                    records payment.
                   </p>
                 </div>
                 <Link
                   href={`/checkout?orderId=${unpaidOrders[0].id}`}
                   className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#B5111B] hover:bg-[#8F0D15] text-white font-bold text-sm h-9 px-4"
                 >
-                  Complete payment
+                  View invoice status
                 </Link>
               </div>
               {unpaidOrders.length > 1 && (
@@ -351,7 +352,7 @@ export default function CustomerProfilePage() {
                         href={`/checkout?orderId=${o.id}`}
                         className="font-bold text-[#B5111B] hover:underline"
                       >
-                        Pay now →
+                        View status →
                       </Link>
                     </li>
                   ))}
@@ -473,7 +474,7 @@ export default function CustomerProfilePage() {
                     ) : (
                       <div className="flex items-center gap-2 sm:justify-end min-w-0">
                         <span className="text-sm font-semibold text-slate-900 truncate">
-                          {currentUser?.name || "—"}
+                          {currentUser?.name || "-"}
                         </span>
                         <button
                           type="button"
@@ -486,7 +487,7 @@ export default function CustomerProfilePage() {
                       </div>
                     )}
                   </div>
-                  <InfoRow label="Email" value={currentUser?.email || "—"} />
+                  <InfoRow label="Email" value={currentUser?.email || "-"} />
                   <InfoRow label="Role" value={formatRole(currentUser?.role)} />
                   <InfoRow
                     label="Subscription Status"
@@ -539,7 +540,7 @@ export default function CustomerProfilePage() {
                       primaryPackage?.packageName ||
                       primaryPackage?.packageType ||
                       currentUser?.subscriptionPackage ||
-                      "—"
+                      "-"
                     }
                   />
                   <div className="py-2 border-b border-slate-100">
@@ -548,7 +549,7 @@ export default function CustomerProfilePage() {
                       <span className="text-sm font-semibold text-slate-900">
                         {allowance
                           ? `${slotUsed} used / ${slotMax} allowed`
-                          : "—"}
+                          : "-"}
                       </span>
                     </div>
                     {allowance && slotMax > 0 && (
@@ -606,8 +607,9 @@ export default function CustomerProfilePage() {
                     </thead>
                     <tbody>
                       {projects.slice(0, 8).map((p: any) => {
-                        const hasReport = Boolean(p.certifiedReportUrl)
-                        const location = [p.county, p.state].filter(Boolean).join(", ") || "—"
+                        const hasInitial = Boolean(p.initialReportUrl)
+                        const hasDetailed = Boolean(p.certifiedReportUrl)
+                        const location = [p.county, p.state].filter(Boolean).join(", ") || "-"
                         return (
                           <tr key={p.id} className="border-b border-slate-100 last:border-0">
                             <td className="py-3.5 pr-3 font-bold text-slate-900">{p.name}</td>
@@ -631,22 +633,33 @@ export default function CustomerProfilePage() {
                               {formatDate(p.updatedAt || p.createdAt)}
                             </td>
                             <td className="py-3.5 text-right whitespace-nowrap">
-                              <div className="inline-flex items-center gap-3 justify-end">
+                              <div className="inline-flex items-center gap-3 justify-end flex-wrap">
                                 <Link
                                   href={`/projects/${p.id}/intake`}
                                   className="text-sm font-bold text-[#B5111B] hover:underline"
                                 >
                                   Open
                                 </Link>
-                                {hasReport && (
+                                {hasInitial && (
                                   <a
-                                    href={p.certifiedReportUrl}
-                                    download={p.certifiedReportFileName || "Certified-Report.pdf"}
+                                    href={p.initialReportUrl}
+                                    download={p.initialReportFileName || "Initial-Scorecard-Report.pdf"}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm font-bold text-[#B5111B] hover:underline"
+                                    className="text-sm font-bold text-sky-700 hover:underline"
                                   >
-                                    View PDF
+                                    Initial PDF
+                                  </a>
+                                )}
+                                {hasDetailed && (
+                                  <a
+                                    href={p.certifiedReportUrl}
+                                    download={p.certifiedReportFileName || "Detailed-Scorecard-Report.pdf"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm font-bold text-emerald-700 hover:underline"
+                                  >
+                                    Detailed PDF
                                   </a>
                                 )}
                               </div>
@@ -661,8 +674,9 @@ export default function CustomerProfilePage() {
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
                   {projects.slice(0, 8).map((p: any) => {
-                    const hasReport = Boolean(p.certifiedReportUrl)
-                    const location = [p.county, p.state].filter(Boolean).join(", ") || "—"
+                    const hasInitial = Boolean(p.initialReportUrl)
+                    const hasDetailed = Boolean(p.certifiedReportUrl)
+                    const location = [p.county, p.state].filter(Boolean).join(", ") || "-"
                     return (
                       <div key={p.id} className="p-4 space-y-2.5 bg-white">
                         <div className="flex items-start justify-between gap-2">
@@ -684,22 +698,33 @@ export default function CustomerProfilePage() {
                         </div>
                         <div className="flex items-center justify-between gap-2 text-xs text-slate-500">
                           <span>Updated {formatDate(p.updatedAt || p.createdAt)}</span>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap justify-end">
                             <Link
                               href={`/projects/${p.id}/intake`}
                               className="font-bold text-[#B5111B]"
                             >
                               Open
                             </Link>
-                            {hasReport && (
+                            {hasInitial && (
                               <a
-                                href={p.certifiedReportUrl}
-                                download={p.certifiedReportFileName || "Certified-Report.pdf"}
+                                href={p.initialReportUrl}
+                                download={p.initialReportFileName || "Initial-Scorecard-Report.pdf"}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-bold text-[#B5111B]"
+                                className="font-bold text-sky-700"
                               >
-                                View PDF
+                                Initial
+                              </a>
+                            )}
+                            {hasDetailed && (
+                              <a
+                                href={p.certifiedReportUrl}
+                                download={p.certifiedReportFileName || "Detailed-Scorecard-Report.pdf"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold text-emerald-700"
+                              >
+                                Detailed
                               </a>
                             )}
                           </div>
@@ -743,7 +768,7 @@ export default function CustomerProfilePage() {
                             {pay.orderNumber}
                           </td>
                           <td className="py-3.5 pr-3 font-semibold text-slate-800">
-                            {pay.packageName || "—"}
+                            {pay.packageName || "-"}
                           </td>
                           <td className="py-3.5 pr-3 text-slate-600">
                             {pay.method || "Card"}
@@ -816,7 +841,7 @@ export default function CustomerProfilePage() {
                       <div className="flex items-center justify-between gap-2 text-xs text-slate-600">
                         <div className="min-w-0">
                           <span className="font-semibold text-slate-800">
-                            {pay.packageName || "—"}
+                            {pay.packageName || "-"}
                           </span>
                           <span className="text-slate-400"> · </span>
                           {pay.method || "Card"}
@@ -853,21 +878,21 @@ export default function CustomerProfilePage() {
             <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-0">
               <p className="text-sm font-black text-[#B5111B] mb-3">Rose Associates</p>
               <InfoRow label="Date" value={formatDate(receiptPay.date)} />
-              <InfoRow label="Order" value={receiptPay.orderNumber || "—"} />
-              <InfoRow label="Package" value={receiptPay.packageName || "—"} />
+              <InfoRow label="Order" value={receiptPay.orderNumber || "-"} />
+              <InfoRow label="Package" value={receiptPay.packageName || "-"} />
               <InfoRow
                 label="Payment method"
                 value={`${receiptPay.method || "Card"}${
                   receiptPay.cardLast4 ? ` •••• ${receiptPay.cardLast4}` : ""
                 }`}
               />
-              <InfoRow label="Reference" value={receiptPay.reference || "—"} />
+              <InfoRow label="Reference" value={receiptPay.reference || "-"} />
               <InfoRow
                 label="Status"
-                value={receiptPay.status === "succeeded" ? "Succeeded" : receiptPay.status || "—"}
+                value={receiptPay.status === "succeeded" ? "Succeeded" : receiptPay.status || "-"}
               />
-              <InfoRow label="Customer" value={currentUser?.name || "—"} />
-              <InfoRow label="Email" value={currentUser?.email || "—"} />
+              <InfoRow label="Customer" value={currentUser?.name || "-"} />
+              <InfoRow label="Email" value={currentUser?.email || "-"} />
               <InfoRow label="Amount paid" value={formatMoney(receiptPay.amount)} />
             </div>
             <p className="text-[11px] text-slate-500 leading-relaxed">

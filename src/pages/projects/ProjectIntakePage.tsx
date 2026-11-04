@@ -11,7 +11,8 @@ import {
   CheckCircleIcon,
   FloppyDiskIcon,
   PaperPlaneRightIcon,
-  InfoIcon
+  InfoIcon,
+  WarningCircleIcon,
 } from "@phosphor-icons/react"
 import { Spinner } from "@/components/ui/loader"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -282,7 +283,16 @@ export default function ProjectIntakePage() {
     }))
   }
 
+  const hasAssignedSections = (project?.assignedSections || []).length > 0
+  const locationConfirmed = project?.locationConfirmed === true
+  // Hard-block only when BOTH prerequisites are missing (all roles).
+  const intakeBlocked = !hasAssignedSections && !locationConfirmed
+
   const handleAutoFillBenchmarks = () => {
+    if (intakeBlocked) {
+      toast.error('Assign at least one section and confirm location before filling the questionnaire.')
+      return
+    }
     const generated = generateProductionIntakeValues(project?.name || '', categories)
     setAnswers((prev) => ({ ...prev, ...generated }))
     const count = Object.keys(generated).length
@@ -290,6 +300,10 @@ export default function ProjectIntakePage() {
   }
 
   const handleSaveDraft = async () => {
+    if (intakeBlocked) {
+      toast.error('Assign at least one section and confirm location before saving the questionnaire.')
+      return
+    }
     setSaving(true)
     try {
       const formattedAnswers: Record<string, any> = {}
@@ -309,6 +323,11 @@ export default function ProjectIntakePage() {
   }
 
   const handleSubmit = async () => {
+    if (intakeBlocked) {
+      toast.error('Assign at least one section and confirm location before submitting the questionnaire.')
+      setIsConfirmOpen(false)
+      return
+    }
     setSubmitting(true)
     try {
       const formattedAnswers: Record<string, any> = {}
@@ -356,6 +375,7 @@ export default function ProjectIntakePage() {
   const progressPct = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0
 
   const isSubmitted = submission?.status === 'SUBMITTED' || project?.status === 'PUBLISHED' || project?.status === 'CALCULATED' || project?.status === 'INTAKE_SUBMITTED'
+  const isLocked = isSubmitted || intakeBlocked
 
   return (
     <div className="space-y-6 pb-16">
@@ -389,26 +409,50 @@ export default function ProjectIntakePage() {
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
               : 'bg-amber-50 text-amber-700 border border-amber-300'
               }`}>
-              {isSubmitted ? 'SUBMITTED' : 'DRAFT IN PROGRESS'}
+              {isSubmitted ? 'SUBMITTED' : intakeBlocked ? 'LOCKED' : 'DRAFT IN PROGRESS'}
             </span>
           </div>
         </div>
       </div>
 
+      {intakeBlocked && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3.5 text-sm text-amber-950 shadow-xs"
+        >
+          <WarningCircleIcon weight="duotone" className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-amber-900">Questionnaire locked</p>
+            <p className="text-xs sm:text-sm text-amber-800/90 leading-relaxed">
+              This project has no assigned sections and the location (state/county) is not confirmed.
+              Assign at least one section and confirm location before filling, saving, or submitting Client Intake.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Action Bar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-slate-600">
           <InfoIcon weight="duotone" className="w-4 h-4 text-[#B5111B] shrink-0" />
-          <span>Fill in the fields below or use Auto-Fill to populate realistic local baseline values. No external APIs are called.</span>
+          <span>
+            {intakeBlocked
+              ? 'Editing is disabled until sections are assigned and location is confirmed.'
+              : 'Fill in the fields below or use Auto-Fill to populate realistic local baseline values. No external APIs are called.'}
+          </span>
         </div>
         <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={handleAutoFillBenchmarks}
-            disabled={isSubmitted}
-            className="flex items-center gap-1.5 text-xs h-9 px-3.5 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 font-semibold cursor-pointer shadow-xs"
-            title="Auto-fill realistic baseline values for all 142 questions locally (no external APIs)"
+            disabled={isLocked}
+            className="flex items-center gap-1.5 text-xs h-9 px-3.5 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 font-semibold cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            title={
+              intakeBlocked
+                ? 'Assign sections and confirm location first'
+                : 'Auto-fill realistic baseline values for all 142 questions locally (no external APIs)'
+            }
           >
             Auto-Fill Benchmarks
           </Button>
@@ -416,8 +460,8 @@ export default function ProjectIntakePage() {
             variant="outline"
             size="sm"
             onClick={handleSaveDraft}
-            disabled={saving || isSubmitted}
-            className="flex items-center gap-1.5 text-xs h-9 px-3.5 border-slate-300 text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+            disabled={saving || isLocked}
+            className="flex items-center gap-1.5 text-xs h-9 px-3.5 border-slate-300 text-slate-700 hover:bg-slate-50 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FloppyDiskIcon weight="duotone" className="w-3.5 h-3.5 text-slate-500" />
             {saving ? 'Saving...' : 'Save Draft'}
@@ -425,8 +469,8 @@ export default function ProjectIntakePage() {
           <Button
             size="sm"
             onClick={() => setIsConfirmOpen(true)}
-            disabled={submitting || isSubmitted}
-            className="bg-[#B5111B] hover:bg-[#9B0F17] text-white flex items-center gap-1.5 text-xs h-9 px-4 font-semibold shadow-xs cursor-pointer disabled:opacity-50"
+            disabled={submitting || isLocked}
+            className="bg-[#B5111B] hover:bg-[#9B0F17] text-white flex items-center gap-1.5 text-xs h-9 px-4 font-semibold shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PaperPlaneRightIcon weight="bold" className="w-3.5 h-3.5" />
             {submitting ? 'Submitting...' : isSubmitted ? 'Intake Submitted' : 'Submit Questionnaire'}
@@ -520,7 +564,7 @@ export default function ProjectIntakePage() {
                                   name={q.key}
                                   checked={val === true}
                                   onChange={() => handleInputChange(q.key, true)}
-                                  disabled={isSubmitted}
+                                  disabled={isLocked}
                                   className="accent-[#B5111B]"
                                 />
                                 Yes (1)
@@ -531,7 +575,7 @@ export default function ProjectIntakePage() {
                                   name={q.key}
                                   checked={val === false}
                                   onChange={() => handleInputChange(q.key, false)}
-                                  disabled={isSubmitted}
+                                  disabled={isLocked}
                                   className="accent-[#B5111B]"
                                 />
                                 No (0)
@@ -543,16 +587,16 @@ export default function ProjectIntakePage() {
                               value={val}
                               placeholder={q.placeholder || 'Enter notes or local observations...'}
                               onChange={(e) => handleInputChange(q.key, e.target.value)}
-                              disabled={isSubmitted}
-                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors"
+                              disabled={isLocked}
+                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors disabled:bg-slate-50 disabled:cursor-not-allowed"
                             />
                           ) : q.type === 'date' ? (
                             <input
                               type="date"
                               value={val ? (typeof val === 'string' && val.includes('T') ? val.split('T')[0] : String(val).slice(0, 10)) : ''}
                               onChange={(e) => handleInputChange(q.key, e.target.value)}
-                              disabled={isSubmitted}
-                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors bg-white text-slate-800"
+                              disabled={isLocked}
+                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors bg-white text-slate-800 disabled:bg-slate-50 disabled:cursor-not-allowed"
                             />
                           ) : q.type === 'number' ? (
                             <input
@@ -560,8 +604,8 @@ export default function ProjectIntakePage() {
                               value={val}
                               placeholder={q.placeholder || '0'}
                               onChange={(e) => handleInputChange(q.key, e.target.value === '' ? '' : Number(e.target.value))}
-                              disabled={isSubmitted}
-                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors"
+                              disabled={isLocked}
+                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors disabled:bg-slate-50 disabled:cursor-not-allowed"
                             />
                           ) : (
                             <input
@@ -569,8 +613,8 @@ export default function ProjectIntakePage() {
                               value={val}
                               placeholder={q.placeholder || 'Enter response...'}
                               onChange={(e) => handleInputChange(q.key, e.target.value)}
-                              disabled={isSubmitted}
-                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors"
+                              disabled={isLocked}
+                              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B5111B]/20 focus:border-[#B5111B] transition-colors disabled:bg-slate-50 disabled:cursor-not-allowed"
                             />
                           )}
                         </div>
@@ -583,8 +627,8 @@ export default function ProjectIntakePage() {
                       variant="outline"
                       size="sm"
                       onClick={handleSaveDraft}
-                      disabled={saving || isSubmitted}
-                      className="text-xs h-8 px-3 border-slate-300 text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                      disabled={saving || isLocked}
+                      className="text-xs h-8 px-3 border-slate-300 text-slate-700 hover:bg-slate-50 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Save Progress
                     </Button>

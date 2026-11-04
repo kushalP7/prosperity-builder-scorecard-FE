@@ -282,10 +282,3 @@ img {
 .leaflet-control-attribution {
   display: none !important;
 }
-
-/* Hide Stripe test-mode floating badge */
-iframe[name^="__privateStripeMetricsController"],
-iframe[src*="js.stripe.com/v3/controller"],
-body > div:has(> a[href*="dashboard.stripe.com"]) {
-  display: none !important;
-}

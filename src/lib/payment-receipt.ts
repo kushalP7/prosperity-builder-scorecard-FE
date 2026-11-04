@@ -43,7 +43,7 @@ export async function downloadPaymentReceiptPdf(pay: PaymentReceiptData) {
   toast.success("Receipt PDF downloaded.")
 }
 
-/** @deprecated Use downloadPaymentReceiptPdf — kept name for call-site compatibility. */
+/** @deprecated Use downloadPaymentReceiptPdf - kept name for call-site compatibility. */
 export async function printPaymentReceipt(
   pay: PaymentReceiptData,
   _customerName?: string,

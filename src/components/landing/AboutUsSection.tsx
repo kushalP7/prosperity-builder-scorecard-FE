@@ -58,7 +58,7 @@ export function AboutUsSection() {
 
               <div className="space-y-4 text-sm text-slate-600 leading-relaxed font-normal">
                 <p className="first-letter:text-4xl first-letter:font-black first-letter:text-[#B5111B] first-letter:mr-2 first-letter:float-left">
-                  Our inspiration lies in a 1967 visit to the World’s Fair (Expo 67) by <strong>Robert E. Rose</strong>, whose calling as a home builder, developer, and master craftsman was transformed by Buckminster Fuller’s iconic geodesic dome. Rose returned home with a revolutionary vision for construction—one that fully considered a structure’s relationship to people and to the land.
+                  Our inspiration lies in a 1967 visit to the World’s Fair (Expo 67) by <strong>Robert E. Rose</strong>, whose calling as a home builder, developer, and master craftsman was transformed by Buckminster Fuller’s iconic geodesic dome. Rose returned home with a revolutionary vision for construction-one that fully considered a structure’s relationship to people and to the land.
                 </p>
                 <p>
                   Since 1992, <strong>Kathleen Rose, CCIM, CRE</strong> has carried forward her father’s vision by building an advisory practice that uniquely integrates real estate strategy, land use planning, and economic development expertise.

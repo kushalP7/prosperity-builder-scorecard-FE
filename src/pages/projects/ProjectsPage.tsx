@@ -890,8 +890,8 @@ export default function ProjectsPage() {
             {!isCustomer && (
               <p className="text-[11px] text-muted-foreground font-mono">
                 {isCityMode
-                  ? `Place FIPS ${newProject.stateFips || "—"}-${newProject.placeFips || "—"} · Census ACS place (BLS skipped)`
-                  : `County FIPS ${newProject.stateFips || "—"}-${newProject.countyFips || "—"} · Census ACS / BLS`}
+                  ? `Place FIPS ${newProject.stateFips || "-"}-${newProject.placeFips || "-"} · Census ACS place (BLS skipped)`
+                  : `County FIPS ${newProject.stateFips || "-"}-${newProject.countyFips || "-"} · Census ACS / BLS`}
               </p>
             )}
             <p className="text-[11px] text-muted-foreground">

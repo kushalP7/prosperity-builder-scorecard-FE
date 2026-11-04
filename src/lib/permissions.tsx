@@ -139,9 +139,9 @@ export function isCustomerRole(role: string | undefined | null): boolean {
   return normalizeRole(role) === 'customer';
 }
 
-/** Customer home: Buy package if unpaid, Projects if subscribed. */
+/** Customer home: Checkout if unpaid; Profile once subscribed. */
 export function getCustomerHomePath(subscriptionStatus?: string | null): string {
-  return hasActiveSubscription(subscriptionStatus) ? '/projects' : '/checkout';
+  return hasActiveSubscription(subscriptionStatus) ? '/profile' : '/checkout';
 }
 
 /** Post-login / fallback landing by role. */

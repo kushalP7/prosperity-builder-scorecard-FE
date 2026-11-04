@@ -26,7 +26,7 @@ export function ScorecardCategoriesSection() {
       id: "accessibility",
       title: "Accessibility & Transportation",
       question: "How well can residents, visitors and workers move in and around your community?",
-      description: "Often, we defer to roads to provide a network of transportation. Many communities are car-dependent; however, it is important to explore alternative modes of transportation including rail, bus service, micro-transit, rideshare, and regional transit systems. Universal design integrates both land use and transportation planning for one seamless plan of mobility—ensuring accessibility for all abilities through biking, walking, and multi-use trail networks.",
+      description: "Often, we defer to roads to provide a network of transportation. Many communities are car-dependent; however, it is important to explore alternative modes of transportation including rail, bus service, micro-transit, rideshare, and regional transit systems. Universal design integrates both land use and transportation planning for one seamless plan of mobility-ensuring accessibility for all abilities through biking, walking, and multi-use trail networks.",
       quote: "The reality about transportation is that it's future-oriented. If we're planning for what we have, we're behind the curve.",
       quoteAuthor: "Anthony Foxx, Former U.S. Secretary of Transportation",
       icon: <MapPinIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />,
@@ -106,7 +106,7 @@ export function ScorecardCategoriesSection() {
       id: "housing",
       title: "Population & Housing",
       question: "Is there adequate and affordable housing for all generations?",
-      description: "Shelter is the fundamental physiological requirement of community life. Changing demographics and multigenerational households demand a diverse housing supply—including single-family residences, townhomes, duplexes, apartments, and senior living. Balancing housing affordability with residential pipeline velocity prevents displacement and fuels workforce stability.",
+      description: "Shelter is the fundamental physiological requirement of community life. Changing demographics and multigenerational households demand a diverse housing supply-including single-family residences, townhomes, duplexes, apartments, and senior living. Balancing housing affordability with residential pipeline velocity prevents displacement and fuels workforce stability.",
       quote: "Changing demographics require a diversity of housing choices for all generations.",
       quoteAuthor: "National Association of Realtors (NAR)",
       icon: <HouseLineIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />,
@@ -204,7 +204,7 @@ export function ScorecardCategoriesSection() {
                       "{cat.quote}"
                     </p>
                     <span className="text-[10px] text-slate-400 font-bold block">
-                      — {cat.quoteAuthor}
+                      - {cat.quoteAuthor}
                     </span>
                   </div>
                 )}

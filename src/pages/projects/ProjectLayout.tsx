@@ -490,8 +490,8 @@ export default function ProjectLayout({
                     {' '}
                     &bull;{' '}
                     {String(project.jurisdictionType || '').toUpperCase() === 'CITY'
-                      ? `Place ${project.stateFips || '—'}-${project.placeFips || '—'}`
-                      : `FIPS ${project.stateFips || '—'}-${project.countyFips || '—'}`}
+                      ? `Place ${project.stateFips || '-'}-${project.placeFips || '-'}`
+                      : `FIPS ${project.stateFips || '-'}-${project.countyFips || '-'}`}
                     {project.locationConfirmed === true ? (
                       <span className="text-emerald-700 font-semibold"> · location confirmed</span>
                     ) : (
@@ -502,18 +502,31 @@ export default function ProjectLayout({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            {project.initialReportUrl && (
+              <a
+                href={project.initialReportUrl}
+                download={project.initialReportFileName || 'Initial-Scorecard-Report.pdf'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center h-9 px-3 rounded-md border border-sky-200 bg-sky-50 text-sky-900 text-xs font-bold hover:bg-sky-100 transition-colors"
+                title="Download initial scorecard report"
+              >
+                <DownloadSimpleIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
+                Initial Report
+              </a>
+            )}
             {project.certifiedReportUrl && (
               <a
                 href={project.certifiedReportUrl}
-                download={project.certifiedReportFileName || 'Certified-Report.pdf'}
+                download={project.certifiedReportFileName || 'Detailed-Scorecard-Report.pdf'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center h-9 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors"
-                title="Download certified project report"
+                title="Download detailed scorecard report"
               >
                 <DownloadSimpleIcon weight="bold" className="h-3.5 w-3.5 mr-1.5" />
-                Download Report
+                Detailed Report
               </a>
             )}
             <Button
@@ -746,7 +759,7 @@ export default function ProjectLayout({
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
             {isCustomer
-              ? "Choose from Rose Associates’ published section catalog to add to your project. Section structure is fixed — you cannot edit formulas or templates."
+              ? "Choose from Rose Associates’ published section catalog to add to your project. Section structure is fixed - you cannot edit formulas or templates."
               : "Select global sections to clone into this project. You can select multiple sections and assign them simultaneously without delays."}
           </p>
 
@@ -931,16 +944,16 @@ export default function ProjectLayout({
                   <div className="text-[10px] font-medium text-slate-500 mt-0.5">Staged metrics</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center">
-                  <div className="text-base font-black text-slate-900">{syncSummary.populatedMatrixCount ?? '—'}</div>
+                  <div className="text-base font-black text-slate-900">{syncSummary.populatedMatrixCount ?? '-'}</div>
                   <div className="text-[10px] font-medium text-slate-500 mt-0.5">Matrix rows filled</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center">
-                  <div className="text-base font-black text-slate-900">{syncSummary.calculatedRows ?? '—'}</div>
+                  <div className="text-base font-black text-slate-900">{syncSummary.calculatedRows ?? '-'}</div>
                   <div className="text-[10px] font-medium text-slate-500 mt-0.5">Rows calculated</div>
                 </div>
                 <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 text-center">
                   <div className="text-base font-black text-[#B5111B]">
-                    {syncSummary.overallScore != null ? `${syncSummary.overallScore}/10` : '—'}
+                    {syncSummary.overallScore != null ? `${syncSummary.overallScore}/10` : '-'}
                   </div>
                   <div className="text-[10px] font-medium text-rose-700/80 mt-0.5">Overall score</div>
                 </div>
@@ -987,7 +1000,7 @@ export default function ProjectLayout({
                               <span className="font-bold text-slate-900">
                                 {item.extractedValue != null && item.extractedValue !== ''
                                   ? String(item.extractedValue)
-                                  : '—'}
+                                  : '-'}
                               </span>
                               {item.unit && (
                                 <span className="text-slate-400 ml-1">{item.unit}</span>

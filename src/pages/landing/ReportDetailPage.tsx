@@ -30,7 +30,7 @@ const FALLBACK_SUMMER_REPORT: LandingReportItem = {
       The Summer 2026 Rose Report provides municipal leaders, economic developers, and planning boards with clear quantitative policy directions. By bridging local demographic indicators with real estate market realities, we outline a 3-phase action roadmap for long-term community prosperity.
     </p>
     <blockquote class="p-4 border-l-4 border-[#B5111B] bg-red-50 text-slate-900 font-serif italic text-base my-6 rounded-r-xl">
-      "No gimmicks, no redundant reports, and no guesswork about where to get the most value for the money you spend." — Kathleen Rose, CCIM, CRE
+      "No gimmicks, no redundant reports, and no guesswork about where to get the most value for the money you spend." - Kathleen Rose, CCIM, CRE
     </blockquote>
   `,
   featured: true,

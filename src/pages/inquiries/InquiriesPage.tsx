@@ -189,7 +189,7 @@ export default function InquiriesPage() {
             <div className="text-xs font-bold text-slate-900">
               {row.original.firstName} {row.original.lastName}
             </div>
-            <div className="text-[11px] text-slate-500">{row.original.jobTitle || "—"}</div>
+            <div className="text-[11px] text-slate-500">{row.original.jobTitle || "-"}</div>
           </div>
         ),
       },
@@ -248,7 +248,7 @@ export default function InquiriesPage() {
           <div className="text-[11px] text-slate-500 whitespace-nowrap">
             {row.original.createdAt
               ? new Date(row.original.createdAt).toLocaleString()
-              : "—"}
+              : "-"}
           </div>
         ),
       },

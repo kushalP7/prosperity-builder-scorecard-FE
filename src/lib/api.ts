@@ -931,10 +931,10 @@ export const apiClient = {
   },
 
   async getPaymentConfig(): Promise<{
-    provider: 'stripe' | 'stub';
-    requested: 'stripe' | 'stub';
-    stripeConfigured: boolean;
-    stubAllowed: boolean;
+    provider: 'invoice';
+    requested: 'invoice';
+    stripeConfigured?: boolean;
+    stubAllowed?: boolean;
     message?: string;
   } | null> {
     try {
@@ -1043,88 +1043,17 @@ export const apiClient = {
     packageType: 'scorecard_only' | 'subscription' | 'combined';
     customerName: string;
     organization?: string;
-    checkoutMethod?: 'card' | 'invoice';
+    checkoutMethod?: 'invoice';
   }): Promise<{ success: boolean; data?: any; message?: string }> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, checkoutMethod: 'invoice' }),
       });
       const json = await res.json();
       if (!res.ok) {
         return { success: false, message: json?.message || json?.error?.message || 'Failed to create order' };
-      }
-      return { success: true, data: json.data ?? json };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Network error' };
-    }
-  },
-
-  async createPaymentIntent(
-    orderId: string,
-  ): Promise<{ success: boolean; data?: { clientSecret: string; paymentIntentId: string; amount?: number }; message?: string }> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/payment-intent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        return {
-          success: false,
-          message: json?.message || json?.error?.message || 'Could not start Stripe payment',
-        };
-      }
-      return { success: true, data: json.data ?? json };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Network error' };
-    }
-  },
-
-  async confirmStripePayment(
-    orderId: string,
-  ): Promise<{ success: boolean; data?: any; message?: string }> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/confirm-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        return {
-          success: false,
-          message: json?.message || json?.error?.message || 'Could not confirm payment',
-          data: json?.data,
-        };
-      }
-      return { success: true, data: json.data ?? json, message: json.message };
-    } catch (err: any) {
-      return { success: false, message: err?.message || 'Network error' };
-    }
-  },
-
-  async stubPayOrder(
-    orderId: string,
-    payload: { cardNumber: string; expiry: string; cvc: string; cardholderName?: string; forceFail?: boolean },
-  ): Promise<{ success: boolean; data?: any; message?: string }> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/orders/${orderId}/pay`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...payload,
-          cardNumber: String(payload.cardNumber || '').replace(/\D/g, ''),
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || json.success === false) {
-        const nested = typeof json?.message === 'object' && json.message ? json.message : null;
-        return {
-          success: false,
-          message: nested?.message || (typeof json?.message === 'string' ? json.message : null) || 'Payment failed',
-          data: nested?.data ?? json?.data,
-        };
       }
       return { success: true, data: json.data ?? json, message: json.message };
     } catch (err: any) {
@@ -1442,23 +1371,50 @@ export const apiClient = {
     }
   },
 
-  async publishScorecard(
-    projectId: string,
-    report: { reportUrl: string; reportPublicId?: string; reportFileName?: string },
-  ): Promise<any> {
+  async publishScorecard(projectId: string): Promise<any> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/calibration/project/${projectId}/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(report),
+        body: JSON.stringify({}),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.message || 'Failed to publish scorecard');
+        throw new Error(err?.message || err?.error?.message || 'Failed to publish scorecard');
       }
       return await unpackJson(res);
     } catch (e) {
       throw e;
+    }
+  },
+
+  async downloadTopLowPerformingPdf(
+    projectId: string,
+  ): Promise<{ success: boolean; blob?: Blob; filename?: string; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(
+        `${API_BASE}/calibration/project/${encodeURIComponent(projectId)}/top-low-pdf`,
+      );
+      if (!res.ok) {
+        let message = 'Could not download Top & Lowest PDF';
+        try {
+          const json = await res.json();
+          message = json?.message || json?.error?.message || message;
+        } catch {
+          /* binary */
+        }
+        return { success: false, message };
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = /filename="?([^";]+)"?/i.exec(disposition);
+      return {
+        success: true,
+        blob,
+        filename: match?.[1] || `Top-Low-Performing-${projectId}.pdf`,
+      };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error' };
     }
   },
 
@@ -1474,7 +1430,7 @@ export const apiClient = {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.message || 'Failed to update certified report');
+        throw new Error(err?.message || err?.error?.message || 'Failed to update detailed report');
       }
       return await unpackJson(res);
     } catch (e) {

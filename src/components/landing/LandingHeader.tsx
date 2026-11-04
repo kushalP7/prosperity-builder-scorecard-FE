@@ -13,6 +13,8 @@ import {
   ChartBarIcon,
 } from "@phosphor-icons/react"
 import { LandingScrollEffects } from "@/components/landing/LandingScrollEffects"
+import { useAppStore } from "@/store"
+import { getPostLoginPath } from "@/lib/permissions"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -21,6 +23,11 @@ export function LandingHeader() {
   const [contactDropdownOpen, setContactDropdownOpen] = React.useState(false)
   const [mobileContactOpen, setMobileContactOpen] = React.useState(false)
   const pathname = usePathname()
+  const isAuthenticated = useAppStore((s) => s.isAuthenticated)
+  const currentUser = useAppStore((s) => s.currentUser)
+  const portalHref = isAuthenticated
+    ? getPostLoginPath(currentUser?.role, currentUser?.subscriptionStatus)
+    : "/login"
 
   const scorecardSubItems = [
     {
@@ -248,10 +255,10 @@ export function LandingHeader() {
         {/* Desktop Action Buttons */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
           <Link
-            href="/login"
+            href={portalHref}
             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white text-sm font-extrabold px-5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
           >
-            Client Portal
+            {isAuthenticated ? "Go to portal" : "Client Portal"}
           </Link>
         </div>
 
@@ -421,11 +428,11 @@ export function LandingHeader() {
 
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">
             <Link
-              href="/login"
+              href={portalHref}
               onClick={() => setMobileMenuOpen(false)}
               className="w-full text-center py-3 text-sm font-extrabold text-white bg-[#B5111B] hover:bg-[#8F0D15] rounded-xl shadow-xs transition-colors"
             >
-              Client Portal
+              {isAuthenticated ? "Go to portal" : "Client Portal"}
             </Link>
           </div>
         </div>

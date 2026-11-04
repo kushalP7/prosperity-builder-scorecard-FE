@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils"
 import { DataTable } from "@/components/ui/data-table"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
 import { apiClient } from "@/lib/api"
-import { FakeCardPaymentForm } from "@/components/payments/FakeCardPaymentForm"
 import { Link } from "@/lib/router-compat"
 import { printPaymentReceipt } from "@/lib/payment-receipt"
 import { createPortal } from "react-dom"
@@ -85,6 +84,8 @@ export interface OrderProjectItem {
   /** Paid order that owns this project slot */
   orderId?: string;
   timelineStep: number;
+  initialReportUrl?: string | null;
+  initialReportFileName?: string | null;
   certifiedReportUrl?: string | null;
   certifiedReportFileName?: string | null;
   isPrimary?: boolean;
@@ -117,14 +118,14 @@ export interface OrderItem {
   packageSlots?: number;
   projectsUsed?: number;
   customerProjects?: OrderProjectItem[];
-  /** stub | stripe | invoice */
+  /** invoice (offline); legacy rows may still show stub | stripe */
   provider?: string;
 }
 
 function formatShortDate(value?: string | Date | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 }
 
@@ -157,6 +158,8 @@ function mapApiOrderToItem(raw: any): OrderItem {
         clientName: p.clientName,
         orderId: p.orderId || raw.id,
         timelineStep: normalizeTimelineStep(Number(p.timelineStep || 1)),
+        initialReportUrl: p.initialReportUrl || null,
+        initialReportFileName: p.initialReportFileName || null,
         certifiedReportUrl: p.certifiedReportUrl || null,
         certifiedReportFileName: p.certifiedReportFileName || null,
         isPrimary: Boolean(p.isPrimary),
@@ -181,14 +184,14 @@ function mapApiOrderToItem(raw: any): OrderItem {
     countyOrState:
       raw.countyOrState ||
       [customerProjects[0]?.county, customerProjects[0]?.state].filter(Boolean).join(", ") ||
-      "—",
+      "-",
     projectName: raw.projectName || customerProjects[0]?.name || raw.packageName || "",
     totalAmount: Number(raw.amountDue || 0),
     paidAmount: Number(raw.amountPaid || 0),
     status,
     paymentStatus: paid ? "full" : "partial",
     orderDate: createdFormatted,
-    paymentOrOrderDate: paid && paidAtFormatted !== "—" ? paidAtFormatted : createdFormatted,
+    paymentOrOrderDate: paid && paidAtFormatted !== "-" ? paidAtFormatted : createdFormatted,
     paymentOrOrderDateLabel: paid && raw.paidAt ? "Paid on" : "Ordered on",
     dueDate: createdFormatted,
     reportSent:
@@ -215,7 +218,7 @@ function mapApiOrderToItem(raw: any): OrderItem {
       amount: Number(a.amount || 0),
       method: a.method || (a.cardLast4 ? `Card •••• ${a.cardLast4}` : "Card (Stub)"),
       status: a.status === "succeeded" ? "completed" : "pending",
-      reference: a.reference || "—",
+      reference: a.reference || "-",
       type: "Full Package Payment" as const,
     })),
   };
@@ -424,15 +427,17 @@ export default function OrdersPage() {
 
   // Modal & Dropdown State
   const [reminderModalOrder, setReminderModalOrder] = React.useState<OrderItem | null>(null);
+  const [markPaidModalOrder, setMarkPaidModalOrder] = React.useState<OrderItem | null>(null);
+  const [refundModalOrder, setRefundModalOrder] = React.useState<OrderItem | null>(null);
   const [reportModalOrder, setReportModalOrder] = React.useState<OrderItem | null>(null);
   const [reportModalProject, setReportModalProject] = React.useState<OrderProjectItem | null>(null);
   const [paymentHistoryModalOrder, setPaymentHistoryModalOrder] = React.useState<OrderItem | null>(null);
   const [roadmapModalOrder, setRoadmapModalOrder] = React.useState<OrderItem | null>(null);
   const [roadmapSelectedProjectId, setRoadmapSelectedProjectId] = React.useState<string | null>(null);
   const [customerProfileModalOrder, setCustomerProfileModalOrder] = React.useState<OrderItem | null>(null);
-  const [payModalOrder, setPayModalOrder] = React.useState<OrderItem | null>(null);
-  const [isPaying, setIsPaying] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
+  const [isMarkingPaid, setIsMarkingPaid] = React.useState(false);
+  const [isRefunding, setIsRefunding] = React.useState(false);
   const [expandedOrderIds, setExpandedOrderIds] = React.useState<Set<string>>(new Set());
   const [activeMenuOrderId, setActiveMenuOrderId] = React.useState<string | null>(null);
   const [actionMenuPos, setActionMenuPos] = React.useState<{ top: number; left: number; openUp: boolean } | null>(null);
@@ -708,54 +713,38 @@ export default function OrdersPage() {
     setReportModalProject(project);
   };
 
-  const collectPayment = (order: OrderItem) => {
-    setActiveMenuOrderId(null);
-    setActionMenuPos(null);
-    setPayModalOrder(order);
-  };
-
-  const handleStubPay = async (payload: {
-    cardNumber: string;
-    expiry: string;
-    cvc: string;
-    cardholderName: string;
-  }) => {
-    if (!payModalOrder) return;
-    setIsPaying(true);
-    const result = await apiClient.stubPayOrder(payModalOrder.id, payload);
-    setIsPaying(false);
-    if (!result.success) {
-      toast.error(typeof result.message === "string" ? result.message : "Payment failed.");
+  const handleConfirmMarkPaid = async () => {
+    if (!markPaidModalOrder) return;
+    setIsMarkingPaid(true);
+    try {
+      const result = await apiClient.markOrderPaid(markPaidModalOrder.id);
+      if (!result.success) {
+        toast.error(result.message || "Could not mark order as paid.");
+        return;
+      }
+      toast.success(result.message || "Payment recorded. Package unlocked.");
+      setMarkPaidModalOrder(null);
       await refreshOrders();
-      return;
+    } finally {
+      setIsMarkingPaid(false);
     }
-    toast.success(result.message || "Full payment received. Project created.");
-    setPayModalOrder(null);
-    await refreshOrders();
   };
 
-  const markOrderPaid = async (order: OrderItem) => {
-    setActiveMenuOrderId(null);
-    setActionMenuPos(null);
-    const result = await apiClient.markOrderPaid(order.id);
-    if (!result.success) {
-      toast.error(result.message || "Could not mark order as paid.");
-      return;
+  const handleConfirmRefund = async () => {
+    if (!refundModalOrder) return;
+    setIsRefunding(true);
+    try {
+      const result = await apiClient.refundOrder(refundModalOrder.id);
+      if (!result.success) {
+        toast.error(result.message || "Refund failed.");
+        return;
+      }
+      toast.success("Order refunded. Customer entitlement updated.");
+      setRefundModalOrder(null);
+      await refreshOrders();
+    } finally {
+      setIsRefunding(false);
     }
-    toast.success(result.message || "Order marked paid. Package unlocked.");
-    await refreshOrders();
-  };
-
-  const refundOrder = async (orderId: string) => {
-    setActiveMenuOrderId(null);
-    setActionMenuPos(null);
-    const result = await apiClient.refundOrder(orderId);
-    if (!result.success) {
-      toast.error(result.message || "Refund failed.");
-      return;
-    }
-    toast.success("Order refunded.");
-    await refreshOrders();
   };
 
   const orderColumns = React.useMemo<ColumnDef<OrderItem>[]>(() => [
@@ -824,9 +813,9 @@ export default function OrdersPage() {
       accessorKey: "packageName",
       header: "Package",
       cell: ({ row }) => {
-        const name = row.original.packageName || "—";
+        const name = row.original.packageName || "-";
         if (!row.original.packageName) {
-          return <span className="text-xs font-semibold text-slate-400">—</span>;
+          return <span className="text-xs font-semibold text-slate-400">-</span>;
         }
         return (
           <span
@@ -1177,32 +1166,28 @@ export default function OrdersPage() {
               </button>
             )}
             {activeMenuOrder.paymentStatus === "partial" ? (
-              activeMenuOrder.provider === "invoice" ? (
-                isSuperAdmin ? (
-                  <button
-                    onClick={() => markOrderPaid(activeMenuOrder)}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
-                  >
-                    <CheckCircleIcon weight="bold" className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Mark as paid</span>
-                  </button>
-                ) : (
-                  <div className="px-3 py-2 text-[11px] text-slate-500 font-medium leading-snug">
-                    Invoice / mail check — only a super admin can mark paid.
-                  </div>
-                )
-              ) : (
+              isSuperAdmin ? (
                 <button
-                  onClick={() => collectPayment(activeMenuOrder)}
+                  onClick={() => {
+                    setMarkPaidModalOrder(activeMenuOrder);
+                    closeOrderActionMenu();
+                  }}
                   className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
-                  <CurrencyDollarIcon weight="bold" className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Collect Full Payment</span>
+                  <CheckCircleIcon weight="bold" className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Mark as paid</span>
                 </button>
+              ) : (
+                <div className="px-3 py-2 text-[11px] text-slate-500 font-medium leading-snug">
+                  Invoice / mail check - only a super admin can mark paid.
+                </div>
               )
             ) : (
               <button
-                onClick={() => refundOrder(activeMenuOrder.id)}
+                onClick={() => {
+                  setRefundModalOrder(activeMenuOrder);
+                  closeOrderActionMenu();
+                }}
                 className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer"
               >
                 <CurrencyDollarIcon weight="bold" className="w-4 h-4 text-rose-600 shrink-0" />
@@ -1263,7 +1248,7 @@ export default function OrdersPage() {
             </button>
             {(() => {
               const { order, project } = activeProjectMenuContext;
-              const canResend = Boolean(project.certifiedReportUrl);
+              const canResend = Boolean(project.certifiedReportUrl || project.initialReportUrl);
               const alreadyReleased = normalizeTimelineStep(project.timelineStep) >= TOTAL_ROADMAP_STEPS;
               return (
                 <button
@@ -1405,7 +1390,7 @@ export default function OrdersPage() {
                           const life = projectLifecycleStatus(p.timelineStep);
                           const countyLabel = p.county || "";
                           const stateLabel = p.state || "";
-                          const locationLine = [countyLabel, stateLabel].filter(Boolean).join(", ") || "—";
+                          const locationLine = [countyLabel, stateLabel].filter(Boolean).join(", ") || "-";
                           return (
                             <tr
                               key={p.id}
@@ -1440,9 +1425,14 @@ export default function OrdersPage() {
                                     </span>
                                   </span>
                                 </div>
+                                {p.initialReportFileName && (
+                                  <div className="mt-1 text-[10px] font-medium text-sky-700 truncate" title={p.initialReportFileName}>
+                                    Initial · {p.initialReportFileName}
+                                  </div>
+                                )}
                                 {p.certifiedReportFileName && (
                                   <div className="mt-1 text-[10px] font-medium text-emerald-700 truncate" title={p.certifiedReportFileName}>
-                                    PDF · {p.certifiedReportFileName}
+                                    Detailed · {p.certifiedReportFileName}
                                   </div>
                                 )}
                               </td>
@@ -1480,6 +1470,170 @@ export default function OrdersPage() {
           emptySubtext={isLoadingOrders ? "Fetching live package orders from the API." : "Try adjusting your search keywords or switching filters."}
         />
       </div>
+
+      {/* MODAL: Mark invoice / mail check as paid */}
+      {markPaidModalOrder && (
+        <Modal
+          isOpen={!!markPaidModalOrder}
+          onClose={() => !isMarkingPaid && setMarkPaidModalOrder(null)}
+          title="Confirm Payment Received"
+          className="max-w-md w-[94%] sm:w-full rounded-2xl sm:rounded-3xl"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3.5 bg-emerald-50 border border-emerald-200/90 rounded-2xl text-emerald-900">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs font-bold">
+                <CheckCircleIcon weight="duotone" className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-900">Record offline payment?</div>
+                <div className="text-xs text-emerald-800 font-semibold">
+                  Invoice / mail check - unlocks the customer package
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Order</span>
+                <span className="font-bold text-slate-900">{markPaidModalOrder.orderNumber}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Customer</span>
+                <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">
+                  {markPaidModalOrder.customerName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Email</span>
+                <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">
+                  {markPaidModalOrder.customerEmail}
+                </span>
+              </div>
+              {markPaidModalOrder.organization ? (
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                  <span className="text-slate-500 font-medium">Organization</span>
+                  <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">
+                    {markPaidModalOrder.organization}
+                  </span>
+                </div>
+              ) : null}
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Package</span>
+                <span className="font-bold text-slate-900">
+                  {markPaidModalOrder.packageName || markPaidModalOrder.projectName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Amount received</span>
+                <span className="font-extrabold text-emerald-700 text-sm">
+                  ${markPaidModalOrder.totalAmount.toLocaleString("en-US")}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 text-center leading-relaxed">
+              Confirm only after the check or invoice payment has cleared. This cannot be undone
+              without a full refund.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isMarkingPaid}
+                onClick={() => setMarkPaidModalOrder(null)}
+                className="text-xs font-bold cursor-pointer rounded-xl border-slate-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmMarkPaid}
+                disabled={isMarkingPaid}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer shadow-xs rounded-xl flex items-center gap-1.5"
+              >
+                <CheckCircleIcon weight="bold" className="w-3.5 h-3.5" />
+                <span>{isMarkingPaid ? "Recording…" : "Confirm payment received"}</span>
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* MODAL: Refund confirmation */}
+      {refundModalOrder && (
+        <Modal
+          isOpen={!!refundModalOrder}
+          onClose={() => !isRefunding && setRefundModalOrder(null)}
+          title="Confirm Full Refund"
+          className="max-w-md w-[94%] sm:w-full rounded-2xl sm:rounded-3xl"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3.5 bg-rose-50 border border-rose-200/90 rounded-2xl text-rose-900">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-[#B5111B] flex items-center justify-center shrink-0 shadow-2xs font-bold">
+                <CurrencyDollarIcon weight="duotone" className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-900">Refund this order?</div>
+                <div className="text-xs text-rose-800 font-semibold">
+                  Revokes package access for this customer
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Order</span>
+                <span className="font-bold text-slate-900">{refundModalOrder.orderNumber}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Customer</span>
+                <span className="font-bold text-slate-900 text-right max-w-[60%] truncate">
+                  {refundModalOrder.customerName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                <span className="text-slate-500 font-medium">Package</span>
+                <span className="font-bold text-slate-900">
+                  {refundModalOrder.packageName || refundModalOrder.projectName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Amount to refund</span>
+                <span className="font-extrabold text-[#B5111B] text-sm">
+                  ${refundModalOrder.paidAmount.toLocaleString("en-US")}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 text-center leading-relaxed">
+              This marks the order refunded in the portal. Process the bank/check refund separately
+              if needed.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isRefunding}
+                onClick={() => setRefundModalOrder(null)}
+                className="text-xs font-bold cursor-pointer rounded-xl border-slate-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmRefund}
+                disabled={isRefunding}
+                className="bg-[#B5111B] hover:bg-[#8C0C14] text-white text-xs font-bold cursor-pointer shadow-xs rounded-xl flex items-center gap-1.5"
+              >
+                <CurrencyDollarIcon weight="bold" className="w-3.5 h-3.5" />
+                <span>{isRefunding ? "Refunding…" : "Confirm full refund"}</span>
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* MODAL 1: Send Reminder Confirmation Popup */}
       {reminderModalOrder && (
@@ -1603,7 +1757,9 @@ export default function OrdersPage() {
                 <span className="font-bold text-emerald-700 flex items-center gap-1 max-w-[60%] justify-end">
                   <CheckCircleIcon weight="duotone" className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span className="truncate">
-                    {reportModalProject.certifiedReportFileName || "Certified Scorecard PDF"}
+                    {reportModalProject.certifiedReportFileName
+                      || reportModalProject.initialReportFileName
+                      || "Scorecard PDF"}
                   </span>
                 </span>
               </div>
@@ -2110,9 +2266,9 @@ export default function OrdersPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                       <div className="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs space-y-0.5">
-                        <span className="text-slate-400 block text-[10px] font-extrabold uppercase tracking-wider">Organization</span>
-                        <span className="font-black text-slate-900 text-xs truncate block" title={customerProfileModalOrder.organization || undefined}>
-                          {customerProfileModalOrder.organization || "—"}
+                        <span className="text-slate-400 block text-[10px] font-extrabold uppercase tracking-wider">Project name</span>
+                        <span className="font-black text-slate-900 text-xs truncate block" title={customerProfileModalOrder.organization || customerProfileModalOrder.projectName || undefined}>
+                          {customerProfileModalOrder.organization || customerProfileModalOrder.projectName || "-"}
                         </span>
                       </div>
                       <div className="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs space-y-0.5">
@@ -2120,12 +2276,6 @@ export default function OrdersPage() {
                         <span className="font-black text-slate-900 text-xs flex items-center gap-1">
                           <MapPinIcon weight="duotone" className="w-3.5 h-3.5 text-slate-400" />
                           {customerProfileModalOrder.countyOrState}
-                        </span>
-                      </div>
-                      <div className="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs space-y-0.5 col-span-2">
-                        <span className="text-slate-400 block text-[10px] font-extrabold uppercase tracking-wider">Project Name</span>
-                        <span className="font-black text-[#B5111B] text-xs truncate block" title={customerProfileModalOrder.projectName}>
-                          {customerProfileModalOrder.projectName}
                         </span>
                       </div>
                     </div>
@@ -2228,21 +2378,6 @@ export default function OrdersPage() {
         );
       })()}
 
-      <Modal
-        isOpen={!!payModalOrder}
-        onClose={() => !isPaying && setPayModalOrder(null)}
-        title={payModalOrder ? `Collect payment — ${payModalOrder.orderNumber}` : "Collect payment"}
-      >
-        {payModalOrder && (
-          <FakeCardPaymentForm
-            amount={payModalOrder.totalAmount}
-            packageName={payModalOrder.packageName}
-            submitting={isPaying}
-            onCancel={() => setPayModalOrder(null)}
-            onSubmit={handleStubPay}
-          />
-        )}
-      </Modal>
     </div>
   );
 }

@@ -39,9 +39,9 @@ export interface AuditTransactionRow {
 const ITEMS_PER_PAGE = 10;
 
 function formatLedgerDate(value?: string | Date | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 }
 
@@ -57,11 +57,11 @@ function mapLedgerRow(raw: any): AuditTransactionRow {
   return {
     id: raw.id,
     orderId: String(raw.orderId || ""),
-    orderNumber: raw.orderNumber || "—",
-    customerName: raw.customerName || "—",
-    customerEmail: raw.customerEmail || "—",
-    projectName: raw.projectName || "—",
-    countyOrState: raw.countyOrState || "—",
+    orderNumber: raw.orderNumber || "-",
+    customerName: raw.customerName || "-",
+    customerEmail: raw.customerEmail || "-",
+    projectName: raw.projectName || "-",
+    countyOrState: raw.countyOrState || "-",
     paymentType: raw.paymentType || "Package",
     paymentMethod: raw.method || (raw.cardLast4 ? `Card •••• ${raw.cardLast4}` : "Card (Stub)"),
     paidAmount: paid ? Number(raw.paidAmount || 0) : 0,

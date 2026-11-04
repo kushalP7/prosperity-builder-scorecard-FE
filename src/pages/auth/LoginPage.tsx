@@ -62,11 +62,21 @@ export default function LoginPage() {
   const redirectAfterAuth = React.useCallback(() => {
     const user = useAppStore.getState().currentUser
     const redirect = safeRedirectPath(searchParams.get("redirect"))
-    // Don't send a newly-paid customer back to checkout from a stale redirect=
-    if (
-      redirect &&
-      !(redirect.startsWith("/checkout") && isCustomerRole(user?.role) && hasActiveSubscription(user?.subscriptionStatus))
-    ) {
+    // Don't send a newly-paid customer back to plain checkout from a stale redirect=
+    // Allow renew / resume-invoice checkout even when subscription is still active.
+    const checkoutRedirectBlocked = (() => {
+      if (!redirect?.startsWith("/checkout")) return false
+      if (!isCustomerRole(user?.role) || !hasActiveSubscription(user?.subscriptionStatus)) return false
+      try {
+        const q = new URL(redirect, "http://local").searchParams
+        if (q.get("renew") === "1") return false
+        if (q.get("orderId") || q.get("pay")) return false
+      } catch {
+        /* treat as plain checkout */
+      }
+      return true
+    })()
+    if (redirect && !checkoutRedirectBlocked) {
       router.push(redirect)
       return
     }

@@ -116,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isRouteAllowed = canAccessRoute(userRole, pathname, subStatus)
   const customerHome = getCustomerHomePath(subStatus)
 
-  // Customers on admin/restricted routes → checkout (no sub) or projects (subscribed)
+  // Customers on admin/restricted routes → checkout (no sub) or profile (subscribed)
   React.useEffect(() => {
     if (!mounted || !isAuthenticated || isPublicPage) return
     if (customer && !isRouteAllowed) {

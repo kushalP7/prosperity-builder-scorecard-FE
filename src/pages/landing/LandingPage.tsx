@@ -1,8 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "@/lib/router-compat"
-import { useAppStore } from "@/store"
 import { ArrowUpIcon } from "@phosphor-icons/react"
 import { RoseLoader } from "@/components/ui/loader"
 
@@ -15,8 +13,6 @@ import { AdvisoryServicesSection } from "@/components/landing/AdvisoryServicesSe
 import { LandingFooter } from "@/components/landing/LandingFooter"
 
 export default function LandingPage() {
-  const router = useRouter()
-  const { isAuthenticated } = useAppStore()
   const [mounted, setMounted] = React.useState(false)
   const [showScrollTop, setShowScrollTop] = React.useState(false)
 
@@ -24,11 +20,8 @@ export default function LandingPage() {
     setMounted(true)
   }, [])
 
-  React.useEffect(() => {
-    if (mounted && isAuthenticated) {
-      router.push("/projects")
-    }
-  }, [mounted, isAuthenticated, router])
+  // Do not auto-redirect authenticated users away from marketing home —
+  // that caused unpaid customers: / → /projects → /checkout bounce loop.
 
   React.useEffect(() => {
     if (mounted) {
