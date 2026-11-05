@@ -27,7 +27,6 @@ export function ReportForm({ reportId }: ReportFormProps) {
   const router = useRouter()
   const [loading, setLoading] = React.useState(!!reportId)
   const [isSaving, setIsSaving] = React.useState(false)
-  const [uploadStatusText, setUploadStatusText] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
 
   const [formState, setFormState] = React.useState<Partial<LandingReportItem>>({
@@ -90,7 +89,6 @@ export function ReportForm({ reportId }: ReportFormProps) {
 
     setIsSaving(true)
     setError(null)
-    setUploadStatusText("Checking staged media...")
 
     const finalStatus = forceStatus || formState.status || "published"
     const rawPayload = {
@@ -100,9 +98,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
 
     try {
       // Defer-upload all staged pending files (cover image, PDF, block media) to storage
-      const cleanPayload = await uploadAllPendingInPayload(rawPayload, (msg) => {
-        setUploadStatusText(msg)
-      })
+      const cleanPayload = await uploadAllPendingInPayload(rawPayload)
 
       // Omit empty optional strings so BE validators don't see "" (esp. slug → auto from title)
       const payload: Record<string, unknown> = { ...cleanPayload }
@@ -122,7 +118,6 @@ export function ReportForm({ reportId }: ReportFormProps) {
         }
       }
 
-      setUploadStatusText("Saving report to database...")
       if (reportId) {
         await reportsApi.updateReport(reportId, payload)
       } else {
@@ -130,7 +125,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
       }
       router.push("/landing-cms")
     } catch (err: any) {
-      console.error("FloppyDiskIcon error:", err)
+      console.error("Save report error:", err)
       let msg = err?.message || 'Failed to save report'
       try {
         if (typeof msg === 'string' && msg.trim().startsWith('{') && msg.trim().endsWith('}')) {
@@ -141,7 +136,6 @@ export function ReportForm({ reportId }: ReportFormProps) {
       setError(msg)
     } finally {
       setIsSaving(false)
-      setUploadStatusText(null)
     }
   }
 
@@ -156,25 +150,16 @@ export function ReportForm({ reportId }: ReportFormProps) {
 
   const isNewsletter = formState.type === "newsletter"
 
-  const publishButtonLabel =
-    uploadStatusText ||
-    (reportId
-      ? isNewsletter
-        ? "Update Newsletter"
-        : "Update Report"
-      : isNewsletter
+  const idlePublishLabel = reportId
+    ? isNewsletter
+      ? "Update Newsletter"
+      : "Update Report"
+    : isNewsletter
       ? "Publish Newsletter"
-      : "Publish Report")
+      : "Publish Report"
 
-  const fullSaveButtonLabel =
-    uploadStatusText ||
-    (reportId
-      ? isNewsletter
-        ? "Update & FloppyDiskIcon Newsletter"
-        : "Update & FloppyDiskIcon Report"
-      : isNewsletter
-      ? "Publish Newsletter"
-      : "Publish Report")
+  const publishButtonLabel = isSaving ? "Saving" : idlePublishLabel
+  const fullSaveButtonLabel = isSaving ? "Saving" : idlePublishLabel
 
   return (
     <div className="space-y-8 w-full pb-20">
@@ -223,7 +208,7 @@ export function ReportForm({ reportId }: ReportFormProps) {
             disabled={isSaving}
             className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all disabled:opacity-50"
           >
-            <span className="hidden xs:inline">FloppyDiskIcon </span>Draft
+            Save Draft
           </button>
 
           <button

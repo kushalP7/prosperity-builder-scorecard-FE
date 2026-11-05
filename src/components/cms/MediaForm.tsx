@@ -248,7 +248,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
       }
       router.push("/landing-cms?tab=media");
     } catch (err: any) {
-      console.error("FloppyDiskIcon error:", err);
+      console.error("Save media error:", err);
       setError(err.message || "Failed to save media item to database.");
     } finally {
       setIsSaving(false);
@@ -304,7 +304,7 @@ export function MediaForm({ mediaId }: MediaFormProps) {
             disabled={isSaving || !!uploadingField}
             className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all disabled:opacity-50"
           >
-            <span className="hidden xs:inline">FloppyDiskIcon </span>Draft
+            Save Draft
           </button>
 
           <button

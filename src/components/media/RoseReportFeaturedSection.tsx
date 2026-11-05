@@ -116,7 +116,7 @@ export function RoseReportFeaturedSection() {
             </div>
 
             <p className="text-sm text-slate-600 leading-relaxed max-w-2xl">
-              Published monthly on LinkedIn by Kathleen Rose, CCIM, CRE®, The Rose Report provides municipal leaders, economic developers, planning boards, and commercial developers with actionable market perspectives and growth strategies.
+              Published quarterly by Kathleen Rose, CCIM, CRE®, The Rose Report and other periodic postings on LinkedIn provide municipal leaders, economic developers, planners, and commercial developers with updates, insights, and actionable market perspectives and growth strategies.
             </p>
 
             {/* Actions */}
