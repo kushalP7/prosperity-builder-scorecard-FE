@@ -104,11 +104,29 @@ export function ReportForm({ reportId }: ReportFormProps) {
         setUploadStatusText(msg)
       })
 
+      // Omit empty optional strings so BE validators don't see "" (esp. slug → auto from title)
+      const payload: Record<string, unknown> = { ...cleanPayload }
+      for (const key of [
+        "slug",
+        "subtitle",
+        "author",
+        "coverImage",
+        "pdfUrl",
+        "externalUrl",
+        "summary",
+        "contentHtml",
+        "publishedAt",
+      ]) {
+        if (typeof payload[key] === "string" && !(payload[key] as string).trim()) {
+          delete payload[key]
+        }
+      }
+
       setUploadStatusText("Saving report to database...")
       if (reportId) {
-        await reportsApi.updateReport(reportId, cleanPayload)
+        await reportsApi.updateReport(reportId, payload)
       } else {
-        await reportsApi.createReport(cleanPayload)
+        await reportsApi.createReport(payload)
       }
       router.push("/landing-cms")
     } catch (err: any) {

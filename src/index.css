@@ -282,3 +282,14 @@ img {
 .leaflet-control-attribution {
   display: none !important;
 }
+
+/* Report body / rich-text links — red + underline (editor + public pages) */
+.prose a {
+  color: #b5111b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+.prose a:hover {
+  color: #8f0d15;
+}
