@@ -67,6 +67,7 @@ export default function SectionMakerPage() {
   const [newGroup, setNewGroup] = React.useState({
     label: "",
     description: "",
+    scoringNotes: "",
     weight: 2,
     highestScore: 4,
     scoringRules: [] as any[],
@@ -399,6 +400,7 @@ export default function SectionMakerPage() {
     const groupPayload = {
       label: newGroup.label,
       description: newGroup.description,
+      scoringNotes: (newGroup.scoringNotes || "").trim() || null,
       weight: finalWeight,
       highestScore: finalHighest,
       scoringRules: (newGroup.scoringRules || []).map((r: any) => ({
@@ -426,7 +428,7 @@ export default function SectionMakerPage() {
     setIsGroupModalOpen(false)
     setEditingGroupId(null)
     setTargetCategoryForGroup(null)
-    setNewGroup({ label: "", description: "", weight: 2, highestScore: 4, scoringRules: [], configuredColumns: [], scoringType: 'value', formula: "Weight * Value", isFormulaOverridden: false })
+    setNewGroup({ label: "", description: "", scoringNotes: "", weight: 2, highestScore: 4, scoringRules: [], configuredColumns: [], scoringType: 'value', formula: "Weight * Value", isFormulaOverridden: false })
   }
 
   const openEditGroup = (sectionId: string, categoryId: string, group: any, e: React.MouseEvent) => {
@@ -455,6 +457,7 @@ export default function SectionMakerPage() {
     setNewGroup({
       label: group.label,
       description: group.description || "",
+      scoringNotes: group.scoringNotes || "",
       weight: group.weight ?? 2,
       highestScore: group.highestScore ?? 4,
       scoringRules: Array.isArray(group.scoringRules) ? group.scoringRules : [],
@@ -681,6 +684,7 @@ export default function SectionMakerPage() {
                             setNewGroup({
                               label: "",
                               description: "",
+                              scoringNotes: "",
                               weight: 2,
                               highestScore: 4,
                               scoringRules: [],
@@ -794,8 +798,9 @@ export default function SectionMakerPage() {
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
               value={newGroup.label}
               onChange={e => setNewGroup({ ...newGroup, label: e.target.value })}
-              placeholder="e.g. US Highway or Interstate Routes"
+              placeholder="e.g. Commute Time (client-facing name only)"
             />
+            <p className="text-xs text-muted-foreground">Keep this clean — clients see this name. Put scoring rules in Scoring Notes below.</p>
           </div>
 
           {/* Indicator Scoring / Input Type Toggle */}
@@ -1113,6 +1118,17 @@ export default function SectionMakerPage() {
               onChange={e => setNewGroup({ ...newGroup, description: e.target.value })}
               placeholder="e.g. STIP route data or benchmark criteria"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Scoring Notes (staff only)</label>
+            <textarea
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm h-20"
+              value={newGroup.scoringNotes}
+              onChange={e => setNewGroup({ ...newGroup, scoringNotes: e.target.value })}
+              placeholder={`e.g. If 'Data' 0-20 = 4; 20.1-30 = 3; 30.1-40 = 2; >40.1 = 1`}
+            />
+            <p className="text-xs text-muted-foreground">Shown to Rose staff on the scorecard. Hidden from client users.</p>
           </div>
 
           {/* Conditional Scoring Rules */}

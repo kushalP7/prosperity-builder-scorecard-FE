@@ -17,11 +17,11 @@ export function AnalyticsShowcaseSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative z-10">
         
         {/* Centered Top Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-2">
+        <div className="text-center mx-auto space-y-2">
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Executive Analytics & <span className="text-[#B5111B]">Scorecard Insights</span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-normal">
+          <p className="text-xs sm:text-sm text-slate-600 font-normal whitespace-nowrap">
             Real-time score speedometers, radar analysis, module insights, and trend visualizations - all in one place.
           </p>
         </div>

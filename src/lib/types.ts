@@ -89,6 +89,8 @@ export const TemplateGroupSchema = z.object({
   id: z.string(),
   label: z.string(),
   description: z.string().optional(),
+  /** Staff-only scoring rule text (e.g. If Data 0-1 = 0…). Not shown to clients. */
+  scoringNotes: z.string().optional().nullable(),
   weight: z.number().optional(),
   highestScore: z.number().optional(),
   scoringRules: z.array(z.any()).optional(),
@@ -103,6 +105,8 @@ export const TemplateCategorySchema = z.object({
   id: z.string(),
   label: z.string(),
   description: z.string().optional(),
+  /** Staff-only scoring rule text. Not shown to clients. */
+  scoringNotes: z.string().optional().nullable(),
   columns: z.array(TemplateColumnSchema).default([]),
   groups: z.array(TemplateGroupSchema).default([]),
 });

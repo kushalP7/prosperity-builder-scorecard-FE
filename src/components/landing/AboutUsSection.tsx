@@ -52,7 +52,7 @@ export function AboutUsSection() {
             <div className="lg:col-span-7 space-y-6">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-snug">
-                  From Buckminster Fuller’s Dome to a 30-Year Advisory Legacy
+                  From Buckminster Fuller’s Dome to a 35-Year Advisory Legacy
                 </h2>
               </div>
 
@@ -71,7 +71,7 @@ export function AboutUsSection() {
               {/* Stat Callouts */}
               <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100">
                 <div className="space-y-0.5">
-                  <div className="text-2xl sm:text-3xl font-black text-[#B5111B]">30+</div>
+                  <div className="text-2xl sm:text-3xl font-black text-[#B5111B]">35+</div>
                   <div className="text-[11px] font-bold text-slate-700">Years Industry Leadership</div>
                 </div>
                 <div className="space-y-0.5">

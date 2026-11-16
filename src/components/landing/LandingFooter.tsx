@@ -5,7 +5,6 @@ import { Link } from "@/lib/router-compat"
 import {
   ShieldCheckIcon,
   CheckCircleIcon,
-  CertificateIcon,
   ArrowsClockwiseIcon,
   CaretRightIcon,
   MapPinIcon,
@@ -18,15 +17,15 @@ export function LandingFooter() {
       {/* 1. TOP TRUST GUARANTEE BANNER (VIBRANT DARK CRIMSON GRADIENT) */}
       <div className="bg-gradient-to-r from-[#4A0A10] via-[#660C14] to-[#4A0A10] border-t border-red-700/30 border-b border-red-950/90 py-7 sm:py-9">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
-            {/* Pillar 1: Verified Data Quality Guarantee */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+            {/* Pillar 1: Verified Data Quality Assurance */}
             <div className="flex items-start gap-3.5 lg:pr-6 lg:border-r lg:border-red-500/20">
               <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
                 <ShieldCheckIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
               </div>
               <div className="space-y-1 min-w-0">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
-                  VERIFIED DATA QUALITY GUARANTEE
+                  VERIFIED DATA QUALITY ASSURANCE
                 </h4>
                 <p className="text-[11.5px] text-rose-100/90 leading-relaxed font-medium">
                   Our data is meticulously collected, validated, and
@@ -51,23 +50,7 @@ export function LandingFooter() {
               </div>
             </div>
 
-            {/* Pillar 3: Rigorous Validation */}
-            <div className="flex items-start gap-3.5 lg:pr-6 lg:border-r lg:border-red-500/20">
-              <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
-                <CertificateIcon weight="duotone" className="w-5.5 h-5.5 text-white" />
-              </div>
-              <div className="space-y-1 min-w-0">
-                <h4 className="text-xs font-black uppercase tracking-wider text-white leading-tight">
-                  RIGOROUS VALIDATION
-                </h4>
-                <p className="text-[11.5px] text-rose-100/90 leading-relaxed font-medium">
-                  Multi-step verification and cross-checking for maximum
-                  precision.
-                </p>
-              </div>
-            </div>
-
-            {/* Pillar 4: Continuous Monitoring */}
+            {/* Pillar 3: Continuous Monitoring */}
             <div className="flex items-start gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 text-white flex items-center justify-center shrink-0 shadow-sm backdrop-blur-xs ring-1 ring-white/10">
                 <ArrowsClockwiseIcon weight="duotone" className="w-5.5 h-5.5 text-white" />

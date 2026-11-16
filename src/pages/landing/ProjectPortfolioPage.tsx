@@ -132,7 +132,7 @@ export default function ProjectPortfolioPage() {
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-4xl mx-auto">
-              Our work includes hundreds of projects over the span of 30 years in dozens of communities throughout the Southeast. Below please find examples of project assignments, separated by project category. Please contact us for more information or a conversation.
+              Our work includes hundreds of projects over the span of 35 years in dozens of communities throughout the Southeast. Below please find examples of project assignments, separated by project category. Please contact us for more information or a conversation.
             </p>
           </div>
         </section>

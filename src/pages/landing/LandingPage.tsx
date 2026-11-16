@@ -6,10 +6,11 @@ import { RoseLoader } from "@/components/ui/loader"
 
 import { LandingHeader } from "@/components/landing/LandingHeader"
 import { HeroSection } from "@/components/landing/HeroSection"
-import { PartnersSection } from "@/components/landing/PartnersSection"
-import { ReportShowcaseDetailedSection } from "@/components/landing/ReportShowcaseDetailedSection"
-import { AnalyticsShowcaseSection } from "@/components/landing/AnalyticsShowcaseSection"
 import { AdvisoryServicesSection } from "@/components/landing/AdvisoryServicesSection"
+import { PartnersSection } from "@/components/landing/PartnersSection"
+import { ReportShowcaseSection } from "@/components/landing/ReportShowcaseSection"
+import { ScorecardAnatomySection } from "@/components/landing/ScorecardAnatomySection"
+import { PublishedReportsCardsSection } from "@/components/landing/PublishedReportsCardsSection"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 
 export default function LandingPage() {
@@ -63,11 +64,19 @@ export default function LandingPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <LandingHeader />
       <main className="flex-1">
+        {/* 1) Main Page */}
         <HeroSection />
-        <PartnersSection />
-        <ReportShowcaseDetailedSection />
-        <AnalyticsShowcaseSection />
+        {/* 2) Our Advisory Services */}
         <AdvisoryServicesSection />
+        {/* 3) Project Partners */}
+        <PartnersSection />
+        {/* 4) Scorecard PDF Design Showcase */}
+        <ReportShowcaseSection />
+        {/* 5) Anatomy of a Prosperity Builder Scorecard */}
+        <ScorecardAnatomySection />
+        {/* 6) Executive Analytics — removed from home; lives under Scorecard nav → /executive-analytics */}
+        {/* 7) Published Reports */}
+        <PublishedReportsCardsSection />
       </main>
       <LandingFooter />
 

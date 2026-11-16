@@ -23,6 +23,8 @@ import { Spinner } from "@/components/ui/loader"
 import { toast } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 import { isAdminEmptyMetric, expectedLicensedProvider, LICENSED_SOURCE_LABELS } from "@/lib/metric-source-policy"
+import { isCustomerRole, hasPermission } from "@/lib/permissions"
+import { lookupNationalBenchmark, stripFormulaText } from "@/lib/nationalBenchmarks"
 
 const getSectionIcon = (label?: string) => {
   const l = (label || '').toLowerCase();
@@ -464,13 +466,22 @@ const SECTION_CATEGORY_ORDER: Record<string, string[]> = {
 export default function ProjectDataPage() {
   const routeParams = useParams<{ id: string }>()
   const id = routeParams.id || ""
-  const { projects, updateProjectData } = useAppStore()
+  const { projects, updateProjectData, currentUser } = useAppStore()
+  const isCustomer = isCustomerRole(currentUser?.role)
+  const canEditData = hasPermission(currentUser?.role, "edit_project_data")
 
   const project = projects.find(p => p.id === id)
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)
   const [viewMode, setViewMode] = React.useState<'summary' | 'detailed'>('summary')
   const [collapsedCategories, setCollapsedCategories] = React.useState<Record<string, boolean>>({})
   const [isAllCollapsed, setIsAllCollapsed] = React.useState(true)
+
+  // Customers never see detailed Weight / Value / formula columns
+  React.useEffect(() => {
+    if (isCustomer && viewMode !== "summary") {
+      setViewMode("summary")
+    }
+  }, [isCustomer, viewMode])
 
   const [isLoadingProject, setIsLoadingProject] = React.useState(true)
   const [isRecalculating, setIsRecalculating] = React.useState(false)
@@ -834,18 +845,20 @@ export default function ProjectDataPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRecalculate}
-                    disabled={isRecalculating}
-                    className="text-xs h-8 rounded-lg px-3 border-slate-300 shadow-xs bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-950 font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                    title="Recalculate scores and update all calculations from backend"
-                  >
-                    <ArrowsClockwiseIcon weight="bold" className={cn("w-3.5 h-3.5 text-primary", isRecalculating && "animate-spin")} />
-                    <span>{isRecalculating ? "Recalculating..." : "Recalculate Scores"}</span>
-                  </Button>
-                  {viewMode === 'detailed' && (
+                  {!isCustomer && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRecalculate}
+                      disabled={isRecalculating}
+                      className="text-xs h-8 rounded-lg px-3 border-slate-300 shadow-xs bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-950 font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                      title="Recalculate scores and update all calculations from backend"
+                    >
+                      <ArrowsClockwiseIcon weight="bold" className={cn("w-3.5 h-3.5 text-primary", isRecalculating && "animate-spin")} />
+                      <span>{isRecalculating ? "Recalculating..." : "Recalculate Scores"}</span>
+                    </Button>
+                  )}
+                  {!isCustomer && viewMode === 'detailed' && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -879,20 +892,34 @@ export default function ProjectDataPage() {
                       <table className="w-full text-left text-sm border-collapse">
                         <thead className="bg-[#E9ECEF] border-b-2 border-border sticky top-0 z-20 shadow-xs">
                         <tr>
-                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[45%]">Category</th>
-                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[15%] text-center">Data</th>
-                          <th className="px-4 py-3 font-bold text-foreground min-w-[240px] w-[40%]">Source</th>
+                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[38%]">
+                            {isCustomer ? "Metric" : "Category"}
+                          </th>
+                          {isCustomer && (
+                            <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[18%] text-center">
+                              Nation
+                            </th>
+                          )}
+                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[15%] text-center">
+                            {isCustomer ? "Local Data" : "Data"}
+                          </th>
+                          <th className="px-4 py-3 font-bold text-foreground min-w-[200px] w-[29%]">Source</th>
                         </tr>
                       </thead>
                       <tbody>
                         <React.Fragment key={activeSection.id}>
                           {/* Section Header Row */}
                           <tr
-                            className="border-b border-border cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setViewMode('detailed')}
+                            className={cn(
+                              "border-b border-border transition-opacity",
+                              !isCustomer && "cursor-pointer hover:opacity-90",
+                            )}
+                            onClick={() => {
+                              if (!isCustomer) setViewMode("detailed")
+                            }}
                           >
                             <td
-                              colSpan={3}
+                              colSpan={isCustomer ? 4 : 3}
                               className="px-4 py-3 font-bold text-white text-base relative"
                               style={{ backgroundColor: '#B5111B' }}
                             >
@@ -901,9 +928,26 @@ export default function ProjectDataPage() {
                                   {React.createElement(getSectionIcon(activeSection.label || (activeSection as any).name), { className: "h-5 w-5" })}
                                   <span>{activeSection.label || (activeSection as any).name}</span>
                                 </div>
-                                <span className="text-xs opacity-90 font-normal hover:underline flex items-center gap-1">
-                                  Click to view custom columns &rarr;
-                                </span>
+                                {isCustomer ? (
+                                  (() => {
+                                    const sectionLabel = activeSection.label || (activeSection as any).name || ""
+                                    const rollupCat = (project as any).rollup?.categoryScores?.find((cs: any) =>
+                                      cs.categoryLabel?.toLowerCase() === sectionLabel.toLowerCase() ||
+                                      sectionLabel.toLowerCase().includes(String(cs.categoryLabel || "").toLowerCase()) ||
+                                      String(cs.categoryLabel || "").toLowerCase().includes(sectionLabel.toLowerCase())
+                                    )
+                                    const score = rollupCat?.scoreTenScale
+                                    return typeof score === "number" && Number.isFinite(score) ? (
+                                      <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-lg">
+                                        Score: {Number(score).toLocaleString(undefined, { maximumFractionDigits: 1 })} / 10
+                                      </span>
+                                    ) : null
+                                  })()
+                                ) : (
+                                  <span className="text-xs opacity-90 font-normal hover:underline flex items-center gap-1">
+                                    Click to view custom columns &rarr;
+                                  </span>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -911,17 +955,32 @@ export default function ProjectDataPage() {
                           {/* Categories and Subcategories */}
                           {activeCategories.length === 0 && (
                             <tr>
-                              <td colSpan={3} className="px-4 py-4 text-center text-muted-foreground bg-muted/10">
+                              <td colSpan={isCustomer ? 4 : 3} className="px-4 py-4 text-center text-muted-foreground bg-muted/10">
                                 No categories defined in this section.
                               </td>
                             </tr>
                           )}
                           {activeCategories.map(category => {
                             const isSingleRow = (!category.groups || category.groups.length === 0);
+                            const summaryColSpan = isCustomer ? 4 : 3;
 
-                            const renderRow = (nodeId: string, label: string, indent: number, isBold: boolean, description?: string) => {
+                            const renderRow = (
+                              nodeId: string,
+                              label: string,
+                              indent: number,
+                              isBold: boolean,
+                              description?: string,
+                              scoringNotes?: string | null,
+                            ) => {
                               const groupData = project.data?.[nodeId] || {}
                               const baseRecord = groupData['__base__'] || { value: '', source: '' }
+                              // Clients only see clean label; stripFormulaText is a legacy safety net
+                              const displayLabel = isCustomer ? (stripFormulaText(label) || label) : label
+                              const displayDescription = isCustomer
+                                ? stripFormulaText(description)
+                                : (description || "")
+                              const staffScoringNotes = !isCustomer ? String(scoringNotes || "").trim() : ""
+                              const nation = lookupNationalBenchmark(`${label} ${description || ""}`)
                               const adminEmptyAwaiting =
                                 isAdminEmptyMetric(label) &&
                                 (baseRecord.value === null ||
@@ -929,6 +988,7 @@ export default function ProjectDataPage() {
                                   String(baseRecord.value).trim() === '')
 
                               const handleBaseChange = (field: 'value' | 'source', val: any) => {
+                                if (!canEditData) return
                                 let finalVal = val;
                                 if (field === 'value') {
                                   if (val === '' || val === null || val === undefined) {
@@ -950,9 +1010,9 @@ export default function ProjectDataPage() {
                                   <td className={`px-4 py-2 border-r border-border align-middle ${indent === 1 ? 'pl-8' : 'pl-12'} ${isBold ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                                     <div className="max-w-[380px] lg:max-w-[460px] 2xl:max-w-[560px]">
                                       <div className={isBold ? "font-semibold text-foreground" : "font-medium text-foreground"}>
-                                        {label}
+                                        {displayLabel}
                                       </div>
-                                      {description && description.trim() && (
+                                      {!isCustomer && description && description.trim() && (
                                         <div
                                           title={description}
                                           className="text-xs text-muted-foreground mt-0.5 font-normal truncate cursor-help"
@@ -960,46 +1020,83 @@ export default function ProjectDataPage() {
                                           {description}
                                         </div>
                                       )}
+                                      {staffScoringNotes && (
+                                        <div
+                                          title={staffScoringNotes}
+                                          className="text-xs text-amber-800/80 mt-0.5 font-normal line-clamp-2 cursor-help"
+                                        >
+                                          {staffScoringNotes}
+                                        </div>
+                                      )}
+                                      {isCustomer && displayDescription && (
+                                        <div
+                                          title={displayDescription}
+                                          className="text-xs text-muted-foreground mt-0.5 font-normal truncate"
+                                        >
+                                          {displayDescription}
+                                        </div>
+                                      )}
                                     </div>
                                   </td>
+                                  {isCustomer && (
+                                    <td className="px-2 py-2 border-r border-border align-middle text-center text-sm text-slate-600 bg-slate-50/50">
+                                      {nation}
+                                    </td>
+                                  )}
                                   <td
                                     className={cn(
-                                      'px-1 py-1 border-r border-border align-middle hover:bg-blue-50/40',
+                                      'px-1 py-1 border-r border-border align-middle',
+                                      canEditData && 'hover:bg-blue-50/40',
                                       adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
                                     )}
                                   >
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      onKeyDown={handleNumberKeyDown}
-                                      onPaste={handleNumberPaste}
-                                      placeholder={
-                                        adminEmptyAwaiting
-                                          ? (expectedLicensedProvider(label)
-                                              ? LICENSED_SOURCE_LABELS[expectedLicensedProvider(label)!]
-                                              : 'Staff enter')
-                                          : '-'
-                                      }
-                                      title={
-                                        adminEmptyAwaiting
-                                          ? 'Master Sources: leave empty until Rose enters licensed/staff data'
-                                          : undefined
-                                      }
-                                      className="w-full h-full min-h-[32px] bg-transparent px-2 text-center text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-colors border-0"
-                                      value={baseRecord.value === null || baseRecord.value === undefined ? '' : String(baseRecord.value)}
-                                      onChange={e => handleBaseChange('value', e.target.value)}
-                                    />
+                                    {canEditData ? (
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        onKeyDown={handleNumberKeyDown}
+                                        onPaste={handleNumberPaste}
+                                        placeholder={
+                                          adminEmptyAwaiting
+                                            ? (expectedLicensedProvider(label)
+                                                ? LICENSED_SOURCE_LABELS[expectedLicensedProvider(label)!]
+                                                : 'Staff enter')
+                                            : '-'
+                                        }
+                                        title={
+                                          adminEmptyAwaiting
+                                            ? 'Master Sources: leave empty until Rose enters licensed/staff data'
+                                            : undefined
+                                        }
+                                        className="w-full h-full min-h-[32px] bg-transparent px-2 text-center text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary transition-colors border-0"
+                                        value={baseRecord.value === null || baseRecord.value === undefined ? '' : String(baseRecord.value)}
+                                        onChange={e => handleBaseChange('value', e.target.value)}
+                                      />
+                                    ) : (
+                                      <div className="min-h-[32px] flex items-center justify-center text-sm font-semibold text-slate-900 px-2">
+                                        {baseRecord.value === null || baseRecord.value === undefined || baseRecord.value === ''
+                                          ? '—'
+                                          : String(baseRecord.value)}
+                                      </div>
+                                    )}
                                   </td>
                                   <td
                                     className={cn(
-                                      'px-2 py-1.5 align-middle min-w-[240px] hover:bg-blue-50/40',
+                                      'px-2 py-1.5 align-middle min-w-[200px]',
+                                      canEditData && 'hover:bg-blue-50/40',
                                       adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
                                     )}
                                   >
-                                    <DataSourceCell
-                                      value={baseRecord.source || ''}
-                                      onChange={val => handleBaseChange('source', val)}
-                                    />
+                                    {canEditData ? (
+                                      <DataSourceCell
+                                        value={baseRecord.source || ''}
+                                        onChange={val => handleBaseChange('source', val)}
+                                      />
+                                    ) : (
+                                      <div className="text-xs text-slate-600 px-1 py-1">
+                                        {baseRecord.source?.trim() ? baseRecord.source : '—'}
+                                      </div>
+                                    )}
                                   </td>
                                 </tr>
                               )
@@ -1009,7 +1106,7 @@ export default function ProjectDataPage() {
                               <React.Fragment key={category.id}>
                                 {isSingleRow ? (
                                   /* Category acts as single data row */
-                                  renderRow(category.id, category.label, 1, true, category.description)
+                                  renderRow(category.id, category.label, 1, true, category.description, category.scoringNotes)
                                 ) : (
                                   /* Category is header, groups are rows */
                                   <React.Fragment>
@@ -1017,12 +1114,12 @@ export default function ProjectDataPage() {
                                       className="border-b border-border bg-muted/5 cursor-pointer hover:bg-muted/10 transition-colors"
                                       onClick={() => toggleCategoryCollapse(category.id)}
                                     >
-                                      <td colSpan={3} className="px-4 py-2 pl-8 font-semibold text-foreground border-r border-border">
+                                      <td colSpan={summaryColSpan} className="px-4 py-2 pl-8 font-semibold text-foreground border-r border-border">
                                         <div className="flex items-center gap-2">
                                           <CaretRightIcon weight="bold" className={`h-4 w-4 text-muted-foreground transition-transform ${isCategoryCollapsed(category.id) ? '' : 'rotate-90'}`} />
-                                          <span>{category.label}</span>
+                                          <span>{isCustomer ? (stripFormulaText(category.label) || category.label) : category.label}</span>
                                         </div>
-                                        {category.description && category.description.trim() && (
+                                        {!isCustomer && category.description && category.description.trim() && (
                                           <div
                                             title={category.description}
                                             className="text-xs text-muted-foreground mt-0.5 ml-6 font-normal max-w-[380px] lg:max-w-[460px] 2xl:max-w-[560px] truncate cursor-help"
@@ -1030,9 +1127,19 @@ export default function ProjectDataPage() {
                                             {category.description}
                                           </div>
                                         )}
+                                        {!isCustomer && category.scoringNotes && String(category.scoringNotes).trim() && (
+                                          <div
+                                            title={String(category.scoringNotes)}
+                                            className="text-xs text-amber-800/80 mt-0.5 ml-6 font-normal max-w-[380px] lg:max-w-[460px] 2xl:max-w-[560px] line-clamp-2 cursor-help"
+                                          >
+                                            {category.scoringNotes}
+                                          </div>
+                                        )}
                                       </td>
                                     </tr>
-                                    {!isCategoryCollapsed(category.id) && category.groups.map(group => renderRow(group.id, group.label, 2, false, group.description))}
+                                    {!isCategoryCollapsed(category.id) && category.groups.map(group =>
+                                      renderRow(group.id, group.label, 2, false, group.description, group.scoringNotes)
+                                    )}
                                   </React.Fragment>
                                 )}
                               </React.Fragment>
@@ -1041,8 +1148,11 @@ export default function ProjectDataPage() {
 
                           {/* Section Total Row (Sticky at bottom of card scroll) */}
                           <tr className="bg-slate-100 border-t-2 border-slate-300 sticky bottom-0 z-20 shadow-md">
-                            <td className="px-4 py-3 font-bold text-slate-700 text-right border-r border-slate-300 pr-8 uppercase tracking-wider text-xs bg-slate-100">
-                              TOTAL
+                            <td
+                              colSpan={isCustomer ? 2 : 1}
+                              className="px-4 py-3 font-bold text-slate-700 text-right border-r border-slate-300 pr-8 uppercase tracking-wider text-xs bg-slate-100"
+                            >
+                              {isCustomer ? "CATEGORY DATA TOTAL" : "TOTAL"}
                             </td>
                             <td className="px-2 py-3 font-black text-red-600 text-center border-r border-slate-300 bg-blue-50/90 text-base">
                               {activeCategories.reduce((acc, category) => {
@@ -1060,8 +1170,12 @@ export default function ProjectDataPage() {
                     </table>
                   </div>
                 </div>
+                ) : isCustomer ? (
+                  <div className="bg-background rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-600">
+                    Detailed scoring columns are not available on the client view.
+                  </div>
                 ) : (
-                  /* DETAILED SECTION VIEW (CUSTOM COLUMNS) */
+                  /* DETAILED SECTION VIEW (CUSTOM COLUMNS) — staff only */
                   <div className="bg-background rounded-xl border border-slate-300/90 shadow-sm flex flex-col flex-1 h-full min-h-0 overflow-hidden">
                     {activeCategories.length === 0 ? (
                       <div className="text-center text-muted-foreground p-8 bg-background">
@@ -1129,6 +1243,14 @@ export default function ProjectDataPage() {
                                               className="text-xs text-muted-foreground mt-0.5 ml-6 font-normal max-w-[320px] lg:max-w-[420px] 2xl:max-w-[500px] truncate cursor-help"
                                             >
                                               {category.description}
+                                            </div>
+                                          )}
+                                          {category.scoringNotes && String(category.scoringNotes).trim() && (
+                                            <div
+                                              title={String(category.scoringNotes)}
+                                              className="text-xs text-amber-800/80 mt-0.5 ml-6 font-normal max-w-[320px] lg:max-w-[420px] 2xl:max-w-[500px] line-clamp-2 cursor-help"
+                                            >
+                                              {category.scoringNotes}
                                             </div>
                                           )}
                                         </td>
@@ -1384,6 +1506,14 @@ export default function ProjectDataPage() {
                                                 className="text-xs text-muted-foreground mt-0.5 font-normal truncate cursor-help"
                                               >
                                                 {rowNode.description}
+                                              </div>
+                                            )}
+                                            {rowNode.scoringNotes && String(rowNode.scoringNotes).trim() && (
+                                              <div
+                                                title={String(rowNode.scoringNotes)}
+                                                className="text-xs text-amber-800/80 mt-0.5 font-normal line-clamp-2 cursor-help"
+                                              >
+                                                {rowNode.scoringNotes}
                                               </div>
                                             )}
                                           </div>

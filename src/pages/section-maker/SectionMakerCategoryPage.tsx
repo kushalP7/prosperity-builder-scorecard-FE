@@ -31,7 +31,7 @@ export default function SectionMakerCategoryPage() {
   const [editingGroupId, setEditingGroupId] = React.useState<string | null>(null)
   const [editingColumnId, setEditingColumnId] = React.useState<string | null>(null)
 
-  const [newGroup, setNewGroup] = React.useState({ label: "", description: "" })
+  const [newGroup, setNewGroup] = React.useState({ label: "", description: "", scoringNotes: "" })
   const [targetGroupId, setTargetGroupId] = React.useState<string | null>(null)
 
   const [newColumn, setNewColumn] = React.useState<any>({
@@ -180,11 +180,15 @@ export default function SectionMakerCategoryPage() {
     }
     setIsGroupModalOpen(false)
     setEditingGroupId(null)
-    setNewGroup({ label: "", description: "" })
+    setNewGroup({ label: "", description: "", scoringNotes: "" })
   }
 
   const openEditGroup = (group: any) => {
-    setNewGroup({ label: group.label, description: group.description || "" })
+    setNewGroup({
+      label: group.label,
+      description: group.description || "",
+      scoringNotes: group.scoringNotes || "",
+    })
     setEditingGroupId(group.id)
     setIsGroupModalOpen(true)
   }
@@ -381,6 +385,16 @@ export default function SectionMakerCategoryPage() {
               value={newGroup.description}
               onChange={e => setNewGroup({ ...newGroup, description: e.target.value })}
             />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Scoring Notes (staff only)</label>
+            <textarea
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm h-20"
+              value={newGroup.scoringNotes}
+              onChange={e => setNewGroup({ ...newGroup, scoringNotes: e.target.value })}
+              placeholder={`e.g. If 'Data' 0-20 = 4; 20.1-30 = 3; …`}
+            />
+            <p className="text-xs text-muted-foreground">Hidden from client users. Keep Name clean.</p>
           </div>
           <div className="pt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsGroupModalOpen(false)}>Cancel</Button>

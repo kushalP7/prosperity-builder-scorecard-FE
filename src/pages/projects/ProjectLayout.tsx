@@ -429,8 +429,12 @@ export default function ProjectLayout({
   const uniqueTemplates = Array.from(uniqueTemplatesMap.values());
 
   // Find assigned section keys (matching by normalized label or ID)
+  // Guard null entries (bad JSONB patches can leave nulls in assignedSections)
+  const safeAssignedSections = (project.assignedSections || []).filter(
+    (as): as is NonNullable<typeof as> => as != null && typeof as === 'object'
+  );
   const assignedKeys = new Set(
-    (project.assignedSections || []).map(as => (as.label || as.id || '').trim().toLowerCase())
+    safeAssignedSections.map(as => (as.label || as.id || '').trim().toLowerCase())
   );
 
   // Available templates are unique templates that are NOT assigned to this project
@@ -441,7 +445,7 @@ export default function ProjectLayout({
 
   // Deduplicate assigned sections display
   const uniqueAssignedSectionsMap = new Map<string, typeof project.assignedSections[0]>();
-  (project.assignedSections || []).forEach(s => {
+  safeAssignedSections.forEach(s => {
     const key = (s.label || s.id || '').trim().toLowerCase();
     if (key && !uniqueAssignedSectionsMap.has(key)) {
       uniqueAssignedSectionsMap.set(key, s);

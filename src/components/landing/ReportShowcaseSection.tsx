@@ -121,7 +121,7 @@ export function ReportShowcaseSection() {
               </h4>
               <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 1 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
-                Lee County, NC 2025 Prosperity Building guide with Kathleen Rose CCIM/CRE seal.
+                NC 2025 Prosperity Building guide with Kathleen Rose CCIM/CRE seal.
               </p>
             </div>
             <svg viewBox="0 0 160 70" className="w-24 md:w-28 lg:w-32 xl:w-36 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible ml-4 lg:ml-6">
@@ -195,12 +195,12 @@ export function ReportShowcaseSection() {
                   <GaugeIcon weight="duotone" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 </span>
                 <span className={activeFannedPage === 2 ? "text-slate-900 font-extrabold text-xs lg:text-sm" : "text-slate-700 font-bold text-[11px] lg:text-xs"}>
-                  Quality of Life Score Dial
+                  Prosperity Score Dial
                 </span>
               </h4>
               <p className={`text-[9.5px] lg:text-[10.5px] xl:text-[11px] leading-tight pt-1.5 pl-0.5 ${activeFannedPage === 2 ? "text-slate-700 font-semibold" : "text-slate-500 font-medium"
                 }`}>
-                Aggregated 74/100 community prosperity index with Poor/Average/Good/Excellent bands.
+                Aggregated community prosperity index with Poor/Average/Good/Excellent bands.
               </p>
 
               <svg viewBox="0 0 140 80" className="w-24 md:w-28 lg:w-30 xl:w-32 h-11 md:h-12 lg:h-14 xl:h-16 overflow-visible absolute -right-[75px] md:-right-[85px] lg:-right-[95px] xl:-right-[105px] -top-10 lg:-top-12 xl:-top-14 pointer-events-none z-40">

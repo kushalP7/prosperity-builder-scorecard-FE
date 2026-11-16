@@ -1162,7 +1162,7 @@ export function AnalyticsDashboard({ projectId }: { projectId: string }) {
           {/* ROW 3+: Category Section Charts Grid (Grouped by Category: Value Overview then Score Breakdown) */}
           {groupedCategoryCharts.length > 0 && (
             <div className="grid grid-cols-12 gap-6 mt-2">
-              {groupedCategoryCharts.map(({ widget, data }) => {
+              {groupedCategoryCharts.map(({ widget }) => {
                 return (
                   <div
                     key={widget.id}

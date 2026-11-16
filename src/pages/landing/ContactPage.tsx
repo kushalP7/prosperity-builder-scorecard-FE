@@ -416,10 +416,10 @@ export default function ContactPage() {
                     <div>
                       <div className="font-semibold text-slate-500">Phone</div>
                       <a
-                        href="tel:7048960391"
+                        href="tel:7048960094"
                         className="text-slate-900 hover:text-[#B5111B] font-medium transition"
                       >
-                        (704) 896-0391
+                        (704) 896-0094
                       </a>
                     </div>
                   </div>
@@ -430,22 +430,9 @@ export default function ContactPage() {
                       <MapPinIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-500">Location</div>
+                      <div className="font-semibold text-slate-500">Mailing Address</div>
                       <span className="text-slate-800">
-                        P.O. Box 4140, Davidson, NC 28036
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Office Hours */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-red-50/80 border border-red-200/60 text-[#B5111B] flex items-center justify-center shrink-0 shadow-2xs">
-                      <ClockIcon weight="duotone" className="w-5 h-5 text-[#B5111B]" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-slate-500">Office Hours</div>
-                      <span className="text-slate-800">
-                        Monday – Friday, 8:30 AM – 5:00 PM EST
+                        P.O. Box 910, Davidson, NC 28036
                       </span>
                     </div>
                   </div>
