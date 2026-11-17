@@ -302,7 +302,12 @@ export default function ProjectCalibrationPage() {
     )
   }
 
-  const categoryScores = rollup?.categoryScores || []
+  // Highest 10-scale score first (matches Rank #1 → #12)
+  const categoryScores = [...(rollup?.categoryScores || [])].sort((a: any, b: any) => {
+    const byScore = (Number(b.scoreTenScale) || 0) - (Number(a.scoreTenScale) || 0)
+    if (byScore !== 0) return byScore
+    return (Number(a.rank) || 999) - (Number(b.rank) || 999)
+  })
   const isPublished = project?.status === 'PUBLISHED'
   const initialReportUrl = project?.initialReportUrl || null
   const initialReportFileName = project?.initialReportFileName || 'Initial Scorecard Report.pdf'
