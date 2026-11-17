@@ -42,7 +42,7 @@ export function CategoryNationLocalTable({
                 Nation
               </th>
               <th className={`px-3 py-2.5 font-bold text-center ${showSource ? "border-r border-red-800/40 w-[20%]" : "w-[35%]"}`}>
-                Local Data
+                Score
               </th>
               {showSource && (
                 <th className="px-3 py-2.5 font-bold w-[30%]">Source</th>

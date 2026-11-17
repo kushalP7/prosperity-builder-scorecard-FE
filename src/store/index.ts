@@ -94,27 +94,6 @@ interface AppState {
 }
 
 // Helper to sync all template changes to projects that have them assigned
-const syncProjectsWithTemplates = (templates: TemplateSection[] = [], projects: Project[] = []) => {
-  let updated = false;
-  const safeProjects = projects || [];
-  const safeTemplates = templates || [];
-  const newProjects = safeProjects.map(p => {
-    let projectUpdated = false;
-    const assigned = p.assignedSections || [];
-    const newAssigned = assigned.map(pSec => {
-      const template = safeTemplates.find(t => t.id === pSec.id);
-      if (template) {
-        projectUpdated = true;
-        return JSON.parse(JSON.stringify(template));
-      }
-      return pSec;
-    });
-    if (projectUpdated) updated = true;
-    return projectUpdated ? { ...p, assignedSections: newAssigned } : p;
-  });
-  return { newProjects, updated };
-};
-
 const defaultSettings: AppSettings = {
   companyProfile: {
     name: 'Rose Associates',
@@ -487,7 +466,6 @@ export const useAppStore = create<AppState>((set, get) => {
     assignSectionsToProject: async (projectId, sectionIds) => {
       if (!sectionIds || sectionIds.length === 0) return;
 
-      // First try backend API batch assignment
       try {
         const updatedProject = await apiClient.assignSections(projectId, sectionIds);
         if (updatedProject && updatedProject.id) {
@@ -506,43 +484,11 @@ export const useAppStore = create<AppState>((set, get) => {
           window.dispatchEvent(new CustomEvent('project-section-assigned', { detail: { projectId, sectionIds, project: updatedProject } }));
           return;
         }
-      } catch (err) {
+        toast.error('Failed to assign sections. The project may already have these sections pinned.');
+      } catch (err: any) {
         console.error('Failed to assign sections on backend:', err);
+        toast.error(err?.message || 'Failed to assign sections. Existing project sections were not upgraded.');
       }
-
-      // Local optimistic update fallback
-      const templates = get().templates.filter(t => sectionIds.includes(t.id));
-      if (templates.length === 0) return;
-      const projects = get().projects;
-      const project = projects.find(p => p.id === projectId);
-      if (!project) return;
-
-      const currentSections = [...(project.assignedSections || [])];
-      for (const t of templates) {
-        const clonedSection = JSON.parse(JSON.stringify(t)) as TemplateSection;
-        const existingIndex = currentSections.findIndex(
-          s => s.id === clonedSection.id ||
-               (clonedSection.versionGroupId && s.versionGroupId === clonedSection.versionGroupId) ||
-               (s.label && clonedSection.label && s.label.trim().toLowerCase() === clonedSection.label.trim().toLowerCase())
-        );
-        if (existingIndex >= 0) {
-          currentSections[existingIndex] = clonedSection;
-        } else {
-          currentSections.push(clonedSection);
-        }
-      }
-
-      const updatedProject = {
-        ...project,
-        assignedSections: currentSections,
-      };
-
-      set({
-        projects: projects.map(p => p.id === projectId ? updatedProject : p),
-        activeProject: updatedProject,
-      });
-      toast.success(`Assigned ${templates.length} section(s)!`);
-      window.dispatchEvent(new CustomEvent('project-section-assigned', { detail: { projectId, sectionIds, project: updatedProject } }));
     },
 
     assignSectionToProject: async (projectId, sectionId) => {
@@ -593,9 +539,7 @@ export const useAppStore = create<AppState>((set, get) => {
       const section = templates.find(s => s.id === id);
       if (section) {
         Object.assign(section, updates);
-        const projects = get().projects;
-        const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-        set({ templates: [...templates], projects: updated ? newProjects : projects });
+        set({ templates: [...templates] });
         toast.success("Section updated!");
         await apiClient.updateSection(id, updates);
       }
@@ -662,9 +606,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success(`Category "${newCategory.label}" created!`);
 
       const created = await apiClient.createCategory(sectionId, categoryData);
@@ -685,9 +627,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success("Category updated!");
       await apiClient.updateCategory(categoryId, updates);
     },
@@ -704,9 +644,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success("Category deleted!");
       await apiClient.deleteCategory(categoryId);
     },
@@ -738,9 +676,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success(`Subcategory "${newGroup.label}" created!`);
 
       const created = await apiClient.createGroup(categoryId, groupData);
@@ -786,9 +722,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success("Subcategory updated!");
       await apiClient.updateGroup(groupId, updates);
     },
@@ -813,9 +747,7 @@ export const useAppStore = create<AppState>((set, get) => {
         return s;
       });
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(updatedTemplates, projects);
-      set({ templates: updatedTemplates, projects: updated ? newProjects : projects });
+      set({ templates: updatedTemplates });
       toast.success("Subcategory deleted!");
       await apiClient.deleteGroup(groupId);
     },
@@ -841,9 +773,7 @@ export const useAppStore = create<AppState>((set, get) => {
         category.columns.push(newColumn);
       }
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-      set({ templates: [...templates], projects: updated ? newProjects : projects });
+      set({ templates: [...templates] });
       toast.success(`Column "${newColumn.name}" created!`);
 
       const created = await apiClient.createColumn(sectionId, groupId, columnData);
@@ -871,9 +801,7 @@ export const useAppStore = create<AppState>((set, get) => {
         if (catCol) Object.assign(catCol, updates);
       }
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-      set({ templates: [...templates], projects: updated ? newProjects : projects });
+      set({ templates: [...templates] });
       await apiClient.updateColumn(columnId, updates);
     },
 
@@ -891,9 +819,7 @@ export const useAppStore = create<AppState>((set, get) => {
         category.columns = category.columns.filter(c => c.id !== columnId);
       }
 
-      const projects = get().projects;
-      const { newProjects, updated } = syncProjectsWithTemplates(templates, projects);
-      set({ templates: [...templates], projects: updated ? newProjects : projects });
+      set({ templates: [...templates] });
       await apiClient.deleteColumn(columnId);
     }
   };

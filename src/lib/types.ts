@@ -112,6 +112,22 @@ export const TemplateCategorySchema = z.object({
 });
 export type TemplateCategory = z.infer<typeof TemplateCategorySchema>;
 
+export const SectionDiffChangeSchema = z.object({
+  path: z.string(),
+  field: z.string().optional(),
+  before: z.any().optional(),
+  after: z.any().optional(),
+});
+
+export const SectionDiffSummarySchema = z.object({
+  fromVersion: z.number().optional(),
+  toVersion: z.number().optional(),
+  added: z.array(z.string()).default([]),
+  removed: z.array(z.string()).default([]),
+  changed: z.array(SectionDiffChangeSchema).default([]),
+});
+export type SectionDiffSummary = z.infer<typeof SectionDiffSummarySchema>;
+
 export const TemplateSectionSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -121,6 +137,7 @@ export const TemplateSectionSchema = z.object({
   status: z.string().optional(),
   versionGroupId: z.string().optional(),
   changelog: z.string().optional(),
+  diffSummary: SectionDiffSummarySchema.optional().nullable(),
   columns: z.array(TemplateColumnSchema).optional(),
   categories: z.array(TemplateCategorySchema).default([]),
 });

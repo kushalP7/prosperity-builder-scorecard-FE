@@ -567,18 +567,22 @@ export const apiClient = {
   },
 
   async assignSections(projectId: string, sectionIds: string[]): Promise<any> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/sections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sectionIds }),
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      return json.data || null;
-    } catch {
-      return null;
+    const res = await fetchWithTimeout(`${API_BASE}/projects/${projectId}/sections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sectionIds }),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const message =
+        json?.error?.message ||
+        json?.message ||
+        (res.status === 409
+          ? 'Section(s) already assigned; project keeps its pinned version.'
+          : 'Failed to assign sections');
+      throw new Error(message);
     }
+    return json?.data || null;
   },
 
   async assignSection(projectId: string, sectionId: string): Promise<any> {
@@ -715,6 +719,45 @@ export const apiClient = {
   async getSectionVersions(id: string): Promise<TemplateSection[] | null> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/templates/sections/${id}/versions`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async compareSectionVersions(
+    id: string,
+    fromVersion?: number,
+    toVersion?: number,
+  ): Promise<{
+    fromVersion: number;
+    toVersion: number;
+    changelog?: string;
+    diff: {
+      fromVersion?: number;
+      toVersion?: number;
+      added: string[];
+      removed: string[];
+      changed: Array<{ path: string; field?: string; before?: unknown; after?: unknown }>;
+    };
+    storedDiffSummary?: {
+      fromVersion?: number;
+      toVersion?: number;
+      added: string[];
+      removed: string[];
+      changed: Array<{ path: string; field?: string; before?: unknown; after?: unknown }>;
+    } | null;
+  } | null> {
+    try {
+      const params = new URLSearchParams();
+      if (fromVersion != null) params.set('fromVersion', String(fromVersion));
+      if (toVersion != null) params.set('toVersion', String(toVersion));
+      const qs = params.toString();
+      const res = await fetchWithTimeout(
+        `${API_BASE}/templates/sections/${id}/versions/compare${qs ? `?${qs}` : ''}`,
+      );
       if (!res.ok) return null;
       const json = await res.json();
       return json.data || null;

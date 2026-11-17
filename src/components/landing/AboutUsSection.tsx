@@ -232,7 +232,7 @@ export function AboutUsSection() {
                       &ldquo;Chief Problem Solver&rdquo;
                     </div>
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                      30+ Years Advisory Experience
+                      35+ Years Advisory Experience
                     </div>
                   </div>
 

@@ -51,10 +51,22 @@ export default function SectionMakerPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = React.useState(false)
   const [isPublishVersionModalOpen, setIsPublishVersionModalOpen] = React.useState(false)
   const [isVersionHistoryModalOpen, setIsVersionHistoryModalOpen] = React.useState(false)
+  const [isVersionCompareModalOpen, setIsVersionCompareModalOpen] = React.useState(false)
   const [versionChangelog, setVersionChangelog] = React.useState("")
   const [isPublishingVersion, setIsPublishingVersion] = React.useState(false)
   const [sectionVersions, setSectionVersions] = React.useState<any[]>([])
   const [isLoadingVersions, setIsLoadingVersions] = React.useState(false)
+  const [versionCompare, setVersionCompare] = React.useState<{
+    fromVersion: number
+    toVersion: number
+    changelog?: string
+    diff: {
+      added: string[]
+      removed: string[]
+      changed: Array<{ path: string; field?: string; before?: unknown; after?: unknown }>
+    }
+  } | null>(null)
+  const [isLoadingCompare, setIsLoadingCompare] = React.useState(false)
   const [isGroupModalOpen, setIsGroupModalOpen] = React.useState(false)
 
   const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null)
@@ -317,6 +329,52 @@ export default function SectionMakerPage() {
     setNewSection({ label: "", description: "" })
   }
 
+  const formatDiffValue = (value: unknown) => {
+    if (value == null || value === "") return "—"
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      return String(value)
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return String(value)
+    }
+  }
+
+  const openVersionCompare = async (
+    sectionId: string,
+    fromVersion?: number,
+    toVersion?: number,
+  ) => {
+    setIsLoadingCompare(true)
+    setIsVersionCompareModalOpen(true)
+    const comparison = await apiClient.compareSectionVersions(sectionId, fromVersion, toVersion)
+    if (comparison) {
+      const live = comparison.diff
+      const stored = comparison.storedDiffSummary
+      const liveEmpty =
+        !live?.added?.length && !live?.removed?.length && !live?.changed?.length
+      const storedHas =
+        !!stored &&
+        ((stored.added?.length || 0) > 0 ||
+          (stored.removed?.length || 0) > 0 ||
+          (stored.changed?.length || 0) > 0)
+      setVersionCompare({
+        fromVersion: comparison.fromVersion,
+        toVersion: comparison.toVersion,
+        changelog: comparison.changelog,
+        diff:
+          liveEmpty && storedHas
+            ? stored!
+            : live || stored || { added: [], removed: [], changed: [] },
+      })
+    } else {
+      setVersionCompare(null)
+      toast.error("Could not load version comparison.")
+    }
+    setIsLoadingCompare(false)
+  }
+
   const handleOpenVersionHistory = async () => {
     if (!activeSection) return
     setIsLoadingVersions(true)
@@ -328,6 +386,7 @@ export default function SectionMakerPage() {
 
   const handlePublishVersion = async () => {
     if (!activeSection) return
+    const previousVersion = activeSection.version || 1
     setIsPublishingVersion(true)
     try {
       const newVer = await publishNewSectionVersion(activeSection.id, versionChangelog.trim() || undefined)
@@ -335,6 +394,23 @@ export default function SectionMakerPage() {
         setSelectedSectionId(newVer.id)
         setIsPublishVersionModalOpen(false)
         setVersionChangelog("")
+        const stored = (newVer as any).diffSummary
+        if (
+          stored &&
+          ((stored.added?.length || 0) > 0 ||
+            (stored.removed?.length || 0) > 0 ||
+            (stored.changed?.length || 0) > 0)
+        ) {
+          setIsVersionCompareModalOpen(true)
+          setVersionCompare({
+            fromVersion: stored.fromVersion ?? previousVersion,
+            toVersion: stored.toVersion ?? newVer.version ?? previousVersion + 1,
+            changelog: newVer.changelog,
+            diff: stored,
+          })
+        } else {
+          await openVersionCompare(newVer.id, previousVersion, newVer.version)
+        }
       }
     } finally {
       setIsPublishingVersion(false)
@@ -574,6 +650,9 @@ export default function SectionMakerPage() {
                 {activeSection.description && (
                   <p className="text-sm text-muted-foreground">{activeSection.description}</p>
                 )}
+                <p className="text-[11px] text-slate-500">
+                  Edits update this latest template for future assigns. Existing projects keep their pinned snapshot. Use Publish to create a new version.
+                </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <Button
@@ -1336,11 +1415,14 @@ export default function SectionMakerPage() {
               <span>v{activeSection?.version || 1} &rarr; v{(activeSection?.version || 1) + 1}</span>
             </div>
             <p className="leading-relaxed">
-              This will snapshot and clone the current section ({sortedCategories.length} categories, {activeSection?.columns?.length || 0} table columns) into a new active version.
+              This freezes the current template and publishes Version {(activeSection?.version || 1) + 1}
+              ({sortedCategories.length} categories, {activeSection?.columns?.length || 0} table columns).
+              You will see previous vs current changes after publishing.
             </p>
             <div className="text-[11.5px] text-emerald-900/90 font-medium space-y-1 bg-white/60 p-2.5 rounded-lg border border-emerald-100">
-              <div>&bull; <strong>Existing completed projects:</strong> Remain safely locked to their historical version without breaking.</div>
-              <div>&bull; <strong>New projects:</strong> Will automatically use Version {(activeSection?.version || 1) + 1}.</div>
+              <div>&bull; <strong>Existing projects:</strong> Keep their assigned snapshot; they are not upgraded.</div>
+              <div>&bull; <strong>New projects:</strong> Get Version {(activeSection?.version || 1) + 1} when sections are assigned.</div>
+              <div>&bull; <strong>Daily saves:</strong> Edit this latest version freely until you publish again.</div>
             </div>
           </div>
 
@@ -1427,18 +1509,33 @@ export default function SectionMakerPage() {
                     {v.changelog || "Base section snapshot"}
                   </p>
 
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                    <span>{(v.categories || []).length} categories</span>
-                    <span>&bull;</span>
-                    <span>
-                      {(v.categories || []).reduce(
-                        (acc: number, cat: any) => acc + (cat.groups || []).length,
-                        0
-                      )}{" "}
-                      sub-categories
-                    </span>
-                    <span>&bull;</span>
-                    <span>{(v.columns || []).length} table columns</span>
+                  <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                      <span>{(v.categories || []).length} categories</span>
+                      <span>&bull;</span>
+                      <span>
+                        {(v.categories || []).reduce(
+                          (acc: number, cat: any) => acc + (cat.groups || []).length,
+                          0
+                        )}{" "}
+                        sub-categories
+                      </span>
+                      <span>&bull;</span>
+                      <span>{(v.columns || []).length} table columns</span>
+                    </div>
+                    {v.version > 1 && activeSection && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[11px] cursor-pointer"
+                        onClick={() =>
+                          openVersionCompare(activeSection.id, Number(v.version) - 1, Number(v.version))
+                        }
+                      >
+                        Compare to v{Number(v.version) - 1}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )
@@ -1447,6 +1544,132 @@ export default function SectionMakerPage() {
 
           <div className="pt-2 flex justify-end">
             <Button variant="outline" onClick={() => setIsVersionHistoryModalOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* VERSION COMPARE MODAL */}
+      <Modal
+        isOpen={isVersionCompareModalOpen}
+        onClose={() => {
+          setIsVersionCompareModalOpen(false)
+          setVersionCompare(null)
+        }}
+        title={
+          versionCompare
+            ? `Changes: v${versionCompare.fromVersion} → v${versionCompare.toVersion}`
+            : "Version comparison"
+        }
+        className="max-w-2xl"
+      >
+        <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+          {isLoadingCompare ? (
+            <div className="p-8 text-center text-xs text-muted-foreground">Loading comparison...</div>
+          ) : !versionCompare ? (
+            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
+              No comparison data available.
+            </div>
+          ) : (
+            <>
+              {versionCompare.changelog && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    Changelog
+                  </div>
+                  {versionCompare.changelog}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1.5">
+                    Added ({versionCompare.diff.added.length})
+                  </h5>
+                  {versionCompare.diff.added.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">None</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {versionCompare.diff.added.map((item) => (
+                        <li
+                          key={`add-${item}`}
+                          className="text-xs rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1.5 text-emerald-950"
+                        >
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1.5">
+                    Changed ({versionCompare.diff.changed.length})
+                  </h5>
+                  {versionCompare.diff.changed.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">None</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {versionCompare.diff.changed.map((item, idx) => (
+                        <li
+                          key={`chg-${item.path}-${item.field}-${idx}`}
+                          className="text-xs rounded-lg border border-amber-200 bg-amber-50/70 px-2.5 py-1.5 text-amber-950"
+                        >
+                          <div className="font-semibold">
+                            {item.path}
+                            {item.field ? ` · ${item.field}` : ""}
+                          </div>
+                          <div className="mt-0.5 text-[11px] text-amber-900/90 break-all">
+                            <span className="line-through opacity-70">{formatDiffValue(item.before)}</span>
+                            <span className="mx-1.5">→</span>
+                            <span className="font-medium">{formatDiffValue(item.after)}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-rose-700 mb-1.5">
+                    Removed ({versionCompare.diff.removed.length})
+                  </h5>
+                  {versionCompare.diff.removed.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">None</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {versionCompare.diff.removed.map((item) => (
+                        <li
+                          key={`rem-${item}`}
+                          className="text-xs rounded-lg border border-rose-200 bg-rose-50/70 px-2.5 py-1.5 text-rose-950"
+                        >
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {versionCompare.diff.added.length === 0 &&
+                versionCompare.diff.removed.length === 0 &&
+                versionCompare.diff.changed.length === 0 && (
+                  <p className="text-xs text-muted-foreground border border-dashed rounded-xl p-3">
+                    No structural differences detected between these versions (content may match the prior snapshot).
+                  </p>
+                )}
+            </>
+          )}
+
+          <div className="pt-2 flex justify-end border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsVersionCompareModalOpen(false)
+                setVersionCompare(null)
+              }}
+            >
               Close
             </Button>
           </div>

@@ -61,7 +61,7 @@ export function HeroSection() {
               className="text-xs sm:text-sm lg:text-xs xl:text-sm 2xl:text-base text-rose-100/90 leading-relaxed font-normal max-w-xl hero-reveal-item"
               style={{ ["--hero-delay" as string]: "240ms" }}
             >
-              Rose Associates is a real estate and economic development advisory firm providing comprehensive services for private, institutional and municipal clients. Our 30+ years of experience in both urban and rural communities throughout the Carolinas and Southeast will guide you on a path toward prosperity. <strong className="text-[#E11D48] font-bold">Problem. Solved.</strong>
+              Rose Associates is a real estate and economic development advisory firm providing comprehensive services for private, institutional and municipal clients. Our 35+ years of experience in both urban and rural communities throughout the Carolinas and Southeast will guide you on a path toward prosperity. <strong className="text-[#E11D48] font-bold">Problem. Solved.</strong>
             </p>
 
             {/* Divider Line */}

@@ -422,7 +422,15 @@ export default function ProjectLayout({
   const uniqueTemplatesMap = new Map<string, typeof templates[0]>();
   catalogTemplates.forEach(t => {
     const key = (t.label || t.id || '').trim().toLowerCase();
-    if (key && !uniqueTemplatesMap.has(key)) {
+    if (!key) return;
+    const existing = uniqueTemplatesMap.get(key);
+    if (!existing) {
+      uniqueTemplatesMap.set(key, t);
+      return;
+    }
+    const tVer = t.version ?? 1;
+    const existVer = existing.version ?? 1;
+    if (t.isLatest || (!existing.isLatest && tVer > existVer)) {
       uniqueTemplatesMap.set(key, t);
     }
   });
@@ -764,7 +772,7 @@ export default function ProjectLayout({
           <p className="text-sm text-muted-foreground leading-relaxed">
             {isCustomer
               ? "Choose from Rose Associates’ published section catalog to add to your project. Section structure is fixed - you cannot edit formulas or templates."
-              : "Select global sections to clone into this project. You can select multiple sections and assign them simultaneously without delays."}
+              : "Select global sections to clone into this project. Already assigned sections stay pinned to their version and cannot be upgraded from this dialog."}
           </p>
 
           <div className="max-h-[60vh] overflow-y-auto pr-1.5 space-y-5">
@@ -918,7 +926,10 @@ export default function ProjectLayout({
                       className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-50/50 border border-emerald-200/60 text-xs font-semibold text-emerald-950"
                     >
                       <CheckCircleIcon weight="duotone" className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span className="truncate">{s.label}</span>
+                      <span className="truncate flex-1 min-w-0">{s.label}</span>
+                      <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-emerald-700/80 bg-emerald-100/80 px-1.5 py-0.5 rounded">
+                        v{s.version || 1}
+                      </span>
                     </div>
                   ))}
                 </div>

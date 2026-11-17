@@ -900,10 +900,15 @@ export default function ProjectDataPage() {
                               Nation
                             </th>
                           )}
-                          <th className="px-4 py-3 font-bold text-foreground border-r border-border w-[15%] text-center">
-                            {isCustomer ? "Local Data" : "Data"}
+                          <th className={cn(
+                            "px-4 py-3 font-bold text-foreground text-center",
+                            isCustomer ? "w-[22%]" : "border-r border-border w-[15%]",
+                          )}>
+                            {isCustomer ? "Score" : "Data"}
                           </th>
-                          <th className="px-4 py-3 font-bold text-foreground min-w-[200px] w-[29%]">Source</th>
+                          {!isCustomer && (
+                            <th className="px-4 py-3 font-bold text-foreground min-w-[200px] w-[29%]">Source</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
@@ -919,7 +924,7 @@ export default function ProjectDataPage() {
                             }}
                           >
                             <td
-                              colSpan={isCustomer ? 4 : 3}
+                              colSpan={3}
                               className="px-4 py-3 font-bold text-white text-base relative"
                               style={{ backgroundColor: '#B5111B' }}
                             >
@@ -955,14 +960,14 @@ export default function ProjectDataPage() {
                           {/* Categories and Subcategories */}
                           {activeCategories.length === 0 && (
                             <tr>
-                              <td colSpan={isCustomer ? 4 : 3} className="px-4 py-4 text-center text-muted-foreground bg-muted/10">
+                              <td colSpan={3} className="px-4 py-4 text-center text-muted-foreground bg-muted/10">
                                 No categories defined in this section.
                               </td>
                             </tr>
                           )}
                           {activeCategories.map(category => {
                             const isSingleRow = (!category.groups || category.groups.length === 0);
-                            const summaryColSpan = isCustomer ? 4 : 3;
+                            const summaryColSpan = 3;
 
                             const renderRow = (
                               nodeId: string,
@@ -1045,7 +1050,8 @@ export default function ProjectDataPage() {
                                   )}
                                   <td
                                     className={cn(
-                                      'px-1 py-1 border-r border-border align-middle',
+                                      'px-1 py-1 align-middle',
+                                      !isCustomer && 'border-r border-border',
                                       canEditData && 'hover:bg-blue-50/40',
                                       adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
                                     )}
@@ -1080,24 +1086,26 @@ export default function ProjectDataPage() {
                                       </div>
                                     )}
                                   </td>
-                                  <td
-                                    className={cn(
-                                      'px-2 py-1.5 align-middle min-w-[200px]',
-                                      canEditData && 'hover:bg-blue-50/40',
-                                      adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
-                                    )}
-                                  >
-                                    {canEditData ? (
-                                      <DataSourceCell
-                                        value={baseRecord.source || ''}
-                                        onChange={val => handleBaseChange('source', val)}
-                                      />
-                                    ) : (
-                                      <div className="text-xs text-slate-600 px-1 py-1">
-                                        {baseRecord.source?.trim() ? baseRecord.source : '—'}
-                                      </div>
-                                    )}
-                                  </td>
+                                  {!isCustomer && (
+                                    <td
+                                      className={cn(
+                                        'px-2 py-1.5 align-middle min-w-[200px]',
+                                        canEditData && 'hover:bg-blue-50/40',
+                                        adminEmptyAwaiting ? 'bg-amber-50/70' : 'bg-blue-50/20',
+                                      )}
+                                    >
+                                      {canEditData ? (
+                                        <DataSourceCell
+                                          value={baseRecord.source || ''}
+                                          onChange={val => handleBaseChange('source', val)}
+                                        />
+                                      ) : (
+                                        <div className="text-xs text-slate-600 px-1 py-1">
+                                          {baseRecord.source?.trim() ? baseRecord.source : '—'}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
                                 </tr>
                               )
                             }
@@ -1154,7 +1162,10 @@ export default function ProjectDataPage() {
                             >
                               {isCustomer ? "CATEGORY DATA TOTAL" : "TOTAL"}
                             </td>
-                            <td className="px-2 py-3 font-black text-red-600 text-center border-r border-slate-300 bg-blue-50/90 text-base">
+                            <td className={cn(
+                              "px-2 py-3 font-black text-red-600 text-center bg-blue-50/90 text-base",
+                              !isCustomer && "border-r border-slate-300",
+                            )}>
                               {activeCategories.reduce((acc, category) => {
                                 const nodes = Array.isArray(category.groups) && category.groups.length > 0 ? category.groups : [category];
                                 return acc + nodes.reduce((sum, node) => {
@@ -1163,7 +1174,7 @@ export default function ProjectDataPage() {
                                 }, 0);
                               }, 0).toLocaleString(undefined, { maximumFractionDigits: 1 })}
                             </td>
-                            <td className="px-4 py-3 bg-slate-100"></td>
+                            {!isCustomer && <td className="px-4 py-3 bg-slate-100"></td>}
                           </tr>
                         </React.Fragment>
                       </tbody>

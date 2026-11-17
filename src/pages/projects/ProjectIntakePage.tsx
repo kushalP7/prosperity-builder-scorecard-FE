@@ -438,10 +438,11 @@ export default function ProjectIntakePage() {
           <span>
             {intakeBlocked
               ? 'Editing is disabled until sections are assigned and location is confirmed.'
-              : 'Fill in the fields below or use Auto-Fill to populate realistic local baseline values. No external APIs are called.'}
+              : 'Fill in the fields below. No external APIs are called.'}
           </span>
         </div>
         <div className="flex items-center gap-2.5">
+          {/* Hidden for now — local benchmark autofill
           <Button
             variant="outline"
             size="sm"
@@ -456,6 +457,7 @@ export default function ProjectIntakePage() {
           >
             Auto-Fill Benchmarks
           </Button>
+          */}
           <Button
             variant="outline"
             size="sm"
