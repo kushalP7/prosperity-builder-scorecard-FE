@@ -284,7 +284,7 @@ export function AboutUsSection() {
                   </div>
 
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    Over three decades of commercial real estate and economic development leadership. Serves on the Board of Directors for the Counselors of Real Estate (CRE), CCIM Life Member & Faculty, and active ULI Carolinas WLI Champion. Recipient of Charlotte Business Journal&apos;s Top 25 Women in Business award.
+                    Over three decades of commercial real estate and economic development leadership. CCIM (Certified Commercial Investment Institute) Life Member and former Faculty, CRE® (Counselors of Real Estate) Leadership Team and Board of Directors, and active ULI Carolinas WLI Champion. Recipient of Charlotte Business Journal&apos;s Top 25 Women in Business award.
                   </p>
                 </div>
 
@@ -295,8 +295,8 @@ export function AboutUsSection() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      "CCIM (Certified Commercial Investment Member) Life Faculty",
-                      "CRE (Counselors of Real Estate) Board of Directors",
+                      "CCIM (Certified Commercial Investment Institute) Life Member and former Faculty",
+                      "CRE® (Counselors of Real Estate) Leadership Team and Board of Directors",
                       "NC Downtown Development Association Board",
                       "ULI Carolinas WLI Champion",
                       "Charlotte Business Journal Top 25 Women in Business"

@@ -13,6 +13,7 @@ import {
   PowerIcon,
   ClockIcon,
   WarningCircleIcon,
+  EnvelopeSimpleIcon,
   XIcon
 } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
@@ -258,7 +259,7 @@ export default function UsersPage() {
   // Form States for Add/Edit
   const [formName, setFormName] = React.useState<string>("");
   const [formEmail, setFormEmail] = React.useState<string>("");
-  const [formPassword, setFormPassword] = React.useState<string>("TempSecret123!");
+  const [formPassword, setFormPassword] = React.useState<string>("RoseAssociates123!");
   const [formRole, setFormRole] = React.useState<UserRole>("assessment_specialist");
   const [formDepartment, setFormDepartment] = React.useState<string>(DEPARTMENTS[0]);
   const [formStatus, setFormStatus] = React.useState<UserStatus>("active");
@@ -309,7 +310,7 @@ export default function UsersPage() {
     }
     setFormName("");
     setFormEmail("");
-    setFormPassword("SecurePass123!");
+    setFormPassword("RoseAssociates123!");
     setFormRole("assessment_specialist");
     setFormDepartment(DEPARTMENTS[0]);
     setFormStatus("active");
@@ -643,6 +644,36 @@ export default function UsersPage() {
             >
               <PencilSimpleIcon weight="duotone" className="w-4 h-4 text-slate-500 shrink-0" />
               <span>Edit Details</span>
+            </button>
+            <button
+              onClick={async () => {
+                if (!isSuperAdmin) {
+                  toast.error("Only Super Admins can send set-password emails.");
+                  closeActionMenu();
+                  return;
+                }
+                if (activeMenuUser.status === "suspended") {
+                  toast.error("Activate the user before sending a set-password email.");
+                  closeActionMenu();
+                  return;
+                }
+                closeActionMenu();
+                const res = await apiClient.sendUserSetPassword(activeMenuUser.id);
+                if (res.success) toast.success(res.message || "Set-password email sent");
+                else toast.error(res.message || "Failed to send set-password email");
+              }}
+              disabled={!isSuperAdmin || activeMenuUser.status === "suspended"}
+              className={cn(
+                "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center gap-2.5 transition-colors",
+                isSuperAdmin && activeMenuUser.status !== "suspended"
+                  ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
+                  : "text-slate-300 cursor-not-allowed",
+              )}
+            >
+              <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4 text-[#B5111B] shrink-0" />
+              <span>
+                {activeMenuUser.status === "pending" ? "Send set-password email" : "Send password reset email"}
+              </span>
             </button>
             <button
               onClick={() => {

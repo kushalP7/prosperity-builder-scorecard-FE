@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import {
   ColumnDef,
   SortingState,
@@ -10,6 +11,8 @@ import {
   XIcon,
   SpinnerGapIcon,
   EnvelopeSimpleIcon,
+  DotsThreeVerticalIcon,
+  SignInIcon,
 } from "@phosphor-icons/react"
 import { DataTable } from "@/components/ui/data-table"
 import { Dropdown } from "@/components/ui/dropdown"
@@ -69,8 +72,45 @@ export default function InquiriesPage() {
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "createdAt", desc: true }])
   const [mounted, setMounted] = React.useState(false)
   const isFirstSearchDebounce = React.useRef(true)
+  const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null)
+  const [actionMenuPos, setActionMenuPos] = React.useState<{
+    top: number
+    left: number
+    openUp: boolean
+  } | null>(null)
+  const actionButtonRefs = React.useRef<Record<string, HTMLButtonElement | null>>({})
 
   const isSuperAdmin = currentUser?.role === "super_admin"
+
+  const closeActionMenu = React.useCallback(() => {
+    setActiveMenuId(null)
+    setActionMenuPos(null)
+  }, [])
+
+  const openActionMenu = React.useCallback(
+    (id: string) => {
+      if (activeMenuId === id) {
+        closeActionMenu()
+        return
+      }
+      const btn = actionButtonRefs.current[id]
+      if (!btn) {
+        setActiveMenuId(id)
+        return
+      }
+      const rect = btn.getBoundingClientRect()
+      const menuHeight = 160
+      const spaceBelow = window.innerHeight - rect.bottom
+      const openUp = spaceBelow < menuHeight + 12
+      setActionMenuPos({
+        top: openUp ? rect.top - 8 : rect.bottom + 8,
+        left: Math.max(12, rect.right - 224),
+        openUp,
+      })
+      setActiveMenuId(id)
+    },
+    [activeMenuId, closeActionMenu],
+  )
 
   React.useEffect(() => {
     setMounted(true)
@@ -179,6 +219,21 @@ export default function InquiriesPage() {
     }
   }
 
+  const handleSendSetPassword = async (row: InquiryRow) => {
+    setActionId(row.id)
+    try {
+      const res = await apiClient.sendInquirySetPassword(row.id)
+      if (res.success) {
+        toast.success(res.message || "Set-password email sent")
+        await fetchInquiries()
+      } else {
+        toast.error(res.message || "Failed")
+      }
+    } finally {
+      setActionId(null)
+    }
+  }
+
   const columns = React.useMemo<ColumnDef<InquiryRow>[]>(
     () => [
       {
@@ -256,6 +311,7 @@ export default function InquiriesPage() {
         id: "actions",
         header: "Actions",
         enableSorting: false,
+        meta: { align: "right", cellClassName: "w-[72px]" },
         cell: ({ row }) => {
           const r = row.original
           const gov = r.leadRole === "county" || r.leadRole === "city"
@@ -263,53 +319,35 @@ export default function InquiriesPage() {
           if (!gov) {
             return <span className="text-[11px] text-slate-400">No portal invite</span>
           }
-          const isRegistered = r.status === "registered"
-          const displayName = [r.firstName, r.lastName].filter(Boolean).join(" ").trim() || "user"
-          if (isRegistered) {
-            return (
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() => handleResendLogin(r)}
-                className="h-7 px-2.5 rounded-lg text-[11px] font-bold bg-white border border-sky-200 text-sky-800 hover:bg-sky-50 cursor-pointer shadow-none"
-                title={`Resend login reminder to ${displayName}`}
-              >
-                {busy ? (
-                  <SpinnerGapIcon className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <EnvelopeSimpleIcon weight="bold" className="w-3.5 h-3.5 mr-1 shrink-0" />
-                    <span className="truncate max-w-[180px]">
-                      Resend login reminder
-                    </span>
-                  </>
-                )}
-              </Button>
-            )
-          }
           return (
             <Button
+              ref={(el) => {
+                actionButtonRefs.current[r.id] = el
+              }}
               type="button"
+              size="sm"
+              variant="ghost"
               disabled={busy}
-              onClick={() => handleSendAccess(r)}
-              className="h-7 px-2.5 rounded-lg text-[11px] font-bold bg-[#7c0d15] hover:bg-[#b5111b] text-white cursor-pointer"
-              title="Send portal access / invite"
+              onClick={() => openActionMenu(r.id)}
+              className="w-7 h-7 p-0 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 inline-flex items-center justify-center cursor-pointer transition-colors"
+              title="Actions"
             >
               {busy ? (
                 <SpinnerGapIcon className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <>
-                  <EnvelopeSimpleIcon weight="bold" className="w-3.5 h-3.5 mr-1 shrink-0" />
-                  Portal access
-                </>
+                <DotsThreeVerticalIcon weight="bold" className="w-3.5 h-3.5" />
               )}
             </Button>
           )
         },
       },
     ],
-    [actionId],
+    [actionId, openActionMenu],
   )
+
+  const activeMenuRow = activeMenuId
+    ? rows.find((r) => r.id === activeMenuId) || null
+    : null
 
   if (!isSuperAdmin) {
     return (
@@ -411,6 +449,82 @@ export default function InquiriesPage() {
           emptyMessage="No inquiries found."
         />
       </div>
+
+      {activeMenuRow && actionMenuPos && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-[60]" onClick={closeActionMenu} />
+          <div
+            className="fixed z-[70] w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 animate-in fade-in zoom-in-95 duration-150"
+            style={{
+              top: actionMenuPos.openUp ? undefined : actionMenuPos.top,
+              bottom: actionMenuPos.openUp ? window.innerHeight - actionMenuPos.top : undefined,
+              left: actionMenuPos.left,
+            }}
+          >
+            <div className="px-3 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
+              Inquiry Actions
+            </div>
+            {activeMenuRow.status === "registered" ? (
+              <>
+                <button
+                  type="button"
+                  disabled={actionId === activeMenuRow.id}
+                  onClick={() => {
+                    closeActionMenu()
+                    void handleSendSetPassword(activeMenuRow)
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4 text-[#B5111B] shrink-0" />
+                  <span>Set password mail</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={actionId === activeMenuRow.id}
+                  onClick={() => {
+                    closeActionMenu()
+                    void handleResendLogin(activeMenuRow)
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <SignInIcon weight="duotone" className="w-4 h-4 text-sky-600 shrink-0" />
+                  <span>Login reminder</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={actionId === activeMenuRow.id}
+                  onClick={() => {
+                    closeActionMenu()
+                    void handleSendAccess(activeMenuRow)
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4 text-[#B5111B] shrink-0" />
+                  <span>Portal access</span>
+                </button>
+                {(activeMenuRow.status === "invited" || activeMenuRow.userId) && (
+                  <button
+                    type="button"
+                    disabled={actionId === activeMenuRow.id}
+                    onClick={() => {
+                      closeActionMenu()
+                      void handleSendSetPassword(activeMenuRow)
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <EnvelopeSimpleIcon weight="duotone" className="w-4 h-4 text-slate-500 shrink-0" />
+                    <span>Set password mail</span>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </>,
+        document.body,
+      )}
     </div>
   )
 }

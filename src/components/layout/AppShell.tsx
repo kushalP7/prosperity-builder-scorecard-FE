@@ -27,8 +27,10 @@ import { RoseLoader } from "@/components/ui/loader"
 import {
   canAccessRoute,
   canAccessModule,
+  customerHasUnpaidInvoice,
   hasActiveSubscription,
   isCustomerRole,
+  isStaffRole,
   getCustomerHomePath,
   AppModule,
 } from "@/lib/permissions"
@@ -112,17 +114,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const userRole = (currentUser?.role || 'customer').toLowerCase()
   const subStatus = currentUser?.subscriptionStatus
   const customer = isCustomerRole(userRole)
+  const staff = isStaffRole(userRole)
   const subscribed = hasActiveSubscription(subStatus)
   const isRouteAllowed = canAccessRoute(userRole, pathname, subStatus)
-  const customerHome = getCustomerHomePath(subStatus)
+  const [hasUnpaidInvoice, setHasUnpaidInvoice] = React.useState(false)
 
-  // Customers on admin/restricted routes → checkout (no sub) or profile (subscribed)
+  React.useEffect(() => {
+    if (!mounted || !isAuthenticated || !customer || subscribed) {
+      setHasUnpaidInvoice(false)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const unpaid = await customerHasUnpaidInvoice()
+      if (!cancelled) setHasUnpaidInvoice(unpaid)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, isAuthenticated, customer, subscribed, currentUser?.id])
+
+  const customerHome = getCustomerHomePath(subStatus, hasUnpaidInvoice)
+
+  // Customers on admin/restricted routes → profile (subscribed/unpaid) or checkout
   React.useEffect(() => {
     if (!mounted || !isAuthenticated || isPublicPage) return
     if (customer && !isRouteAllowed) {
       router.replace(customerHome)
     }
   }, [mounted, isAuthenticated, isPublicPage, customer, isRouteAllowed, customerHome, router])
+
+  // Staff who hit /profile (or other customer-only routes) → projects
+  React.useEffect(() => {
+    if (!mounted || !isAuthenticated || isPublicPage) return
+    if (staff && !isRouteAllowed) {
+      router.replace("/projects")
+    }
+  }, [mounted, isAuthenticated, isPublicPage, staff, isRouteAllowed, router])
 
   // If on public pages (/ or /login), render children standalone without admin sidebar/header
   if (isPublicPage) {
@@ -134,13 +162,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <RoseLoader fullScreen />
   }
 
-  // Avoid flashing Access Restricted while customer redirect runs
-  if (customer && !isRouteAllowed) {
+  // Avoid flashing Access Restricted while customer/staff redirect runs
+  if ((customer || staff) && !isRouteAllowed) {
     return <RoseLoader fullScreen />
   }
 
   // Customer sidebar is a strict whitelist (never inherit admin modules).
   // Staff/admin never see Profile — that module is customer-only.
+  // Unpaid invoice → Profile first (status), not another Buy package CTA as home.
   const navItems: Array<{ href: string; label: string; icon: any; module: AppModule | 'checkout' }> = customer
     ? [
         ...(subscribed
@@ -148,7 +177,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               { href: "/analytics", label: "Dashboard", icon: SquaresFourIcon, module: 'analytics' as const },
               { href: "/projects", label: "Projects", icon: FolderOpenIcon, module: 'projects' as const },
             ]
-          : [{ href: "/checkout", label: "Buy package", icon: ShoppingCartIcon, module: 'checkout' as const }]),
+          : hasUnpaidInvoice
+            ? []
+            : [{ href: "/checkout", label: "Buy package", icon: ShoppingCartIcon, module: 'checkout' as const }]),
         { href: "/profile", label: "Profile", icon: UserCircleIcon, module: 'profile' },
       ]
     : (
@@ -319,8 +350,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <ArrowLeftIcon weight="bold" className="w-4 h-4" />
                   <span>
                     {customer
-                      ? subscribed
-                        ? "Go to Projects"
+                      ? subscribed || hasUnpaidInvoice
+                        ? "Go to Profile"
                         : "Buy package"
                       : "Go to Projects"}
                   </span>

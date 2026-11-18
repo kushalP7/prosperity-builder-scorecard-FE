@@ -322,6 +322,24 @@ export const apiClient = {
     }
   },
 
+  async sendUserSetPassword(userId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/users/${userId}/send-set-password`, {
+        method: 'POST',
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.error?.message || json?.message || 'Failed to send set-password email',
+        };
+      }
+      return { success: true, message: json?.message || json?.data?.message || 'Set-password email sent' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network connection failed' };
+    }
+  },
+
   async setPasswordFromInvite(token: string, password: string): Promise<{ success: boolean; user?: UserProfile; message?: string }> {
     try {
       const res = await fetchWithTimeout(`${API_BASE}/auth/set-password`, {
@@ -411,6 +429,23 @@ export const apiClient = {
       const json = await res.json();
       if (!res.ok) {
         return { success: false, message: json?.error?.message || json?.message || 'Failed to resend login email' };
+      }
+      const data = json.data || json;
+      return { success: true, message: data.message || json.message };
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  },
+
+  async sendInquirySetPassword(id: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/inquiries/${id}/send-set-password`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: json?.error?.message || json?.message || 'Failed to send set-password email',
+        };
       }
       const data = json.data || json;
       return { success: true, message: data.message || json.message };

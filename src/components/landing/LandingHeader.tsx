@@ -14,7 +14,7 @@ import {
 } from "@phosphor-icons/react"
 import { LandingScrollEffects } from "@/components/landing/LandingScrollEffects"
 import { useAppStore } from "@/store"
-import { getPostLoginPath } from "@/lib/permissions"
+import { getPostLoginPath, isCustomerRole, resolvePostLoginPath } from "@/lib/permissions"
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -25,9 +25,32 @@ export function LandingHeader() {
   const pathname = usePathname()
   const isAuthenticated = useAppStore((s) => s.isAuthenticated)
   const currentUser = useAppStore((s) => s.currentUser)
-  const portalHref = isAuthenticated
-    ? getPostLoginPath(currentUser?.role, currentUser?.subscriptionStatus)
-    : "/login"
+  const [portalHref, setPortalHref] = React.useState(
+    isAuthenticated
+      ? getPostLoginPath(currentUser?.role, currentUser?.subscriptionStatus)
+      : "/login",
+  )
+
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      setPortalHref("/login")
+      return
+    }
+    // Sync default for staff; async resolve for customers (unpaid → profile)
+    setPortalHref(getPostLoginPath(currentUser?.role, currentUser?.subscriptionStatus))
+    if (!isCustomerRole(currentUser?.role)) return
+    let cancelled = false
+    ;(async () => {
+      const path = await resolvePostLoginPath(
+        currentUser?.role,
+        currentUser?.subscriptionStatus,
+      )
+      if (!cancelled) setPortalHref(path)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, currentUser?.role, currentUser?.subscriptionStatus])
 
   const scorecardSubItems = [
     {

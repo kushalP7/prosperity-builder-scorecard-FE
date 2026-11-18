@@ -5,18 +5,26 @@ import { useSearchParams, useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api"
 import { useAppStore } from "@/store"
 import { toast } from "@/components/ui/toast"
-import { FormInput } from "@/components/ui/form-input"
-import { SpinnerGapIcon, LockKeyIcon } from "@phosphor-icons/react"
-import { getCustomerHomePath } from "@/lib/permissions"
+import { FormField } from "@/components/ui/form-input"
+import {
+  SpinnerGapIcon,
+  LockKeyIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "@phosphor-icons/react"
+import { resolvePostLoginPath } from "@/lib/permissions"
 
 export default function SetPasswordPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const setCurrentUser = useAppStore((s) => s.setCurrentUser)
   const token = params.get("token") || ""
+  const isReset = params.get("mode") === "reset"
 
   const [password, setPassword] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [showConfirm, setShowConfirm] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -24,7 +32,11 @@ export default function SetPasswordPage() {
     e.preventDefault()
     setError(null)
     if (!token) {
-      setError("Missing invite token. Open the link from your email.")
+      setError("Missing link token. Open the link from your email.")
+      return
+    }
+    if (/\s/.test(password) || /\s/.test(confirm)) {
+      setError("Password cannot contain spaces.")
       return
     }
     if (password.length < 6) {
@@ -48,9 +60,12 @@ export default function SetPasswordPage() {
         localStorage.setItem("rose_auth_user", JSON.stringify(res.user))
       }
       setCurrentUser(res.user as any)
-      toast.success(res.message || "Password set. Welcome!")
-      const home = getCustomerHomePath((res.user as any).subscriptionStatus)
-      navigate(home || "/checkout", { replace: true })
+      toast.success(res.message || (isReset ? "Password updated." : "Password set. Welcome!"))
+      const home = await resolvePostLoginPath(
+        (res.user as any).role,
+        (res.user as any).subscriptionStatus,
+      )
+      navigate(home || "/projects", { replace: true })
     } finally {
       setLoading(false)
     }
@@ -64,14 +79,20 @@ export default function SetPasswordPage() {
             <LockKeyIcon weight="duotone" className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900">Set your password</h1>
-            <p className="text-xs text-slate-500">Complete your Rose Associates portal invite</p>
+            <h1 className="text-lg font-black text-slate-900">
+              {isReset ? "Reset your password" : "Set your password"}
+            </h1>
+            <p className="text-xs text-slate-500">
+              {isReset
+                ? "Choose a new password for your Rose Associates account"
+                : "Complete your Rose Associates portal invite"}
+            </p>
           </div>
         </div>
 
         {!token && (
           <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-medium">
-            This page requires a valid invite link from your email.
+            This page requires a valid link from your email.
           </div>
         )}
 
@@ -81,22 +102,56 @@ export default function SetPasswordPage() {
               {error}
             </div>
           )}
-          <FormInput
-            type="password"
-            label="New password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
-          />
-          <FormInput
-            type="password"
-            label="Confirm password"
-            required
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Repeat password"
-          />
+          <FormField label="New password" required>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value.replace(/\s/g, ""))}
+                placeholder="At least 6 characters (no spaces)"
+                className="w-full px-3.5 pr-10 py-2.5 text-xs sm:text-sm rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon weight="duotone" className="w-4 h-4" />
+                ) : (
+                  <EyeIcon weight="duotone" className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </FormField>
+          <FormField label="Confirm password" required>
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                required
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value.replace(/\s/g, ""))}
+                placeholder="Repeat password"
+                className="w-full px-3.5 pr-10 py-2.5 text-xs sm:text-sm rounded-xl bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#B5111B] focus:ring-1 focus:ring-[#B5111B]/20 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+                aria-label={showConfirm ? "Hide password" : "Show password"}
+              >
+                {showConfirm ? (
+                  <EyeSlashIcon weight="duotone" className="w-4 h-4" />
+                ) : (
+                  <EyeIcon weight="duotone" className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </FormField>
           <button
             type="submit"
             disabled={loading || !token}
@@ -107,6 +162,8 @@ export default function SetPasswordPage() {
                 <SpinnerGapIcon className="w-4 h-4 animate-spin" />
                 Saving...
               </>
+            ) : isReset ? (
+              "Update password & continue"
             ) : (
               "Set password & continue"
             )}
@@ -114,7 +171,9 @@ export default function SetPasswordPage() {
         </form>
 
         <p className="text-[11px] text-slate-400 text-center">
-          After signing in you will complete package checkout before creating projects.
+          {isReset
+            ? "For security, this link expires in 7 days."
+            : "After signing in you will complete package checkout before creating projects."}
         </p>
       </div>
     </div>

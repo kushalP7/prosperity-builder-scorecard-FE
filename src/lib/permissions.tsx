@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useAppStore } from '../store';
+import { apiClient } from './api';
 
 export type UserRole =
   | 'super_admin'
@@ -139,18 +140,60 @@ export function isCustomerRole(role: string | undefined | null): boolean {
   return normalizeRole(role) === 'customer';
 }
 
-/** Customer home: Checkout if unpaid; Profile once subscribed. */
-export function getCustomerHomePath(subscriptionStatus?: string | null): string {
-  return hasActiveSubscription(subscriptionStatus) ? '/profile' : '/checkout';
+export function isStaffRole(role?: string | null): boolean {
+  const r = normalizeRole(role);
+  return r === 'super_admin' || r === 'project_lead' || r === 'assessment_specialist';
 }
 
-/** Post-login / fallback landing by role. */
+export function orderLooksUnpaid(status?: string | null): boolean {
+  const s = String(status || '').toLowerCase();
+  return s === 'pending' || s === 'failed';
+}
+
+/**
+ * Sync customer home when unpaid-invoice state is already known.
+ * - Active subscription → profile
+ * - Unpaid invoice already requested → profile (status on Profile)
+ * - Otherwise → checkout to start a package
+ */
+export function getCustomerHomePath(
+  subscriptionStatus?: string | null,
+  hasUnpaidInvoice?: boolean,
+): string {
+  if (hasActiveSubscription(subscriptionStatus)) return '/profile';
+  if (hasUnpaidInvoice) return '/profile';
+  return '/checkout';
+}
+
+/** Post-login / fallback landing by role (sync; pass hasUnpaidInvoice when known). */
 export function getPostLoginPath(
   role?: string | null,
   subscriptionStatus?: string | null,
+  hasUnpaidInvoice?: boolean,
 ): string {
-  if (isCustomerRole(role)) return getCustomerHomePath(subscriptionStatus);
+  if (isCustomerRole(role)) return getCustomerHomePath(subscriptionStatus, hasUnpaidInvoice);
   return '/projects';
+}
+
+/** True when the customer already has a pending/failed invoice order. */
+export async function customerHasUnpaidInvoice(): Promise<boolean> {
+  try {
+    const orders = await apiClient.getMyOrders();
+    return Array.isArray(orders) && orders.some((o) => orderLooksUnpaid(o?.status));
+  } catch {
+    return false;
+  }
+}
+
+/** Async post-login path — staff → projects; customers with unpaid invoice → profile. */
+export async function resolvePostLoginPath(
+  role?: string | null,
+  subscriptionStatus?: string | null,
+): Promise<string> {
+  if (!isCustomerRole(role)) return '/projects';
+  if (hasActiveSubscription(subscriptionStatus)) return '/profile';
+  const unpaid = await customerHasUnpaidInvoice();
+  return getCustomerHomePath(subscriptionStatus, unpaid);
 }
 
 /**
@@ -189,13 +232,16 @@ export function canAccessRoute(
   const r = normalizeRole(role);
   if (!r) return false;
 
-  if (r === 'super_admin') return true;
-
-  // Profile is customer-only — staff/admin must not use this surface
+  // Profile is customer-only — staff/admin (including super_admin) must not use this surface
   if (pathname.startsWith('/profile')) {
     return r === 'customer';
   }
-  if (pathname.startsWith('/checkout')) return true;
+  // Checkout is a customer purchase flow — staff should not land here
+  if (pathname.startsWith('/checkout')) {
+    return r === 'customer';
+  }
+
+  if (r === 'super_admin') return true;
   if (pathname.startsWith('/users')) return canAccessModule(r, 'users', subscriptionStatus);
   if (pathname.startsWith('/inquiries')) return canAccessModule(r, 'inquiries', subscriptionStatus);
   if (pathname.startsWith('/settings')) return canAccessModule(r, 'settings', subscriptionStatus);

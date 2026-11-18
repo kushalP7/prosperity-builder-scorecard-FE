@@ -14,6 +14,11 @@ import { toast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/store"
+import {
+  customerHasUnpaidInvoice,
+  isCustomerRole,
+  isStaffRole,
+} from "@/lib/permissions"
 
 type PackageType = "scorecard_only" | "subscription" | "combined"
 
@@ -88,14 +93,24 @@ export default function CheckoutPage() {
     navigate(`/login?redirect=${encodeURIComponent(target)}`, { replace: true })
   }, [isAuthenticated, currentUser, navigate, searchParams])
 
+  // Staff/admin must never use customer checkout
+  React.useEffect(() => {
+    if (!isAuthenticated || !currentUser) return
+    if (isStaffRole(currentUser.role)) {
+      navigate("/projects", { replace: true })
+    }
+  }, [isAuthenticated, currentUser, navigate])
+
   React.useEffect(() => {
     if (currentUser?.name) setCustomerName(currentUser.name)
   }, [currentUser?.name])
 
   // Fresh entitlement on load + poll while staying on checkout (admin may mark paid).
   // Skip "already active → profile" when renew=1 or watching an unpaid invoice order.
+  // Customers who already requested an invoice (pending/failed) → profile unless resume/renew.
   React.useEffect(() => {
     if (!isAuthenticated) return
+    if (isStaffRole(currentUser?.role)) return
     let cancelled = false
 
     const syncPaidState = async (opts?: { announce?: boolean }) => {
@@ -141,6 +156,22 @@ export default function CheckoutPage() {
           )
           return true
         }
+
+        // Invoice already requested (any pending/failed order) → profile, not a new checkout
+        if (
+          isCustomerRole((me as any)?.role || currentUser?.role) &&
+          !isRenewFlow &&
+          !resumeOrderId &&
+          !orderPending
+        ) {
+          const unpaid = await customerHasUnpaidInvoice()
+          if (cancelled || redirectedPaid.current) return false
+          if (unpaid) {
+            redirectedPaid.current = true
+            navigate("/profile", { replace: true })
+            return true
+          }
+        }
       } catch {
         /* keep checkout UI */
       }
@@ -157,7 +188,15 @@ export default function CheckoutPage() {
       cancelled = true
       window.clearInterval(intervalId)
     }
-  }, [isAuthenticated, isRenewFlow, setCurrentUser, goToProfilePaid])
+  }, [
+    isAuthenticated,
+    isRenewFlow,
+    resumeOrderId,
+    currentUser?.role,
+    setCurrentUser,
+    goToProfilePaid,
+    navigate,
+  ])
 
   React.useEffect(() => {
     if (!isAuthenticated) return

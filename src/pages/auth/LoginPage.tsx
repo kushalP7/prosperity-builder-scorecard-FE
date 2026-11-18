@@ -19,7 +19,13 @@ import {
   QuestionIcon,
   XIcon,
 } from "@phosphor-icons/react"
-import { getPostLoginPath, hasActiveSubscription, isCustomerRole } from "@/lib/permissions"
+import {
+  customerHasUnpaidInvoice,
+  hasActiveSubscription,
+  isCustomerRole,
+  isStaffRole,
+  resolvePostLoginPath,
+} from "@/lib/permissions"
 import { apiClient } from "@/lib/api"
 
 function safeRedirectPath(raw: string | null): string | null {
@@ -59,28 +65,44 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [showForgotModal, setShowForgotModal] = React.useState(false)
 
-  const redirectAfterAuth = React.useCallback(() => {
+  const redirectAfterAuth = React.useCallback(async () => {
     const user = useAppStore.getState().currentUser
+    // Staff/admin never land on customer checkout/profile via stale ?redirect=
+    if (isStaffRole(user?.role)) {
+      router.push(await resolvePostLoginPath(user?.role, user?.subscriptionStatus))
+      return
+    }
+
     const redirect = safeRedirectPath(searchParams.get("redirect"))
-    // Don't send a newly-paid customer back to plain checkout from a stale redirect=
-    // Allow renew / resume-invoice checkout even when subscription is still active.
-    const checkoutRedirectBlocked = (() => {
-      if (!redirect?.startsWith("/checkout")) return false
-      if (!isCustomerRole(user?.role) || !hasActiveSubscription(user?.subscriptionStatus)) return false
-      try {
-        const q = new URL(redirect, "http://local").searchParams
-        if (q.get("renew") === "1") return false
-        if (q.get("orderId") || q.get("pay")) return false
-      } catch {
-        /* treat as plain checkout */
+    if (redirect?.startsWith("/checkout") && isCustomerRole(user?.role)) {
+      const isResumeOrRenew = (() => {
+        try {
+          const q = new URL(redirect, "http://local").searchParams
+          return q.get("renew") === "1" || !!(q.get("orderId") || q.get("pay"))
+        } catch {
+          return false
+        }
+      })()
+      // Active sub or unpaid invoice → profile (unless resume/renew checkout)
+      if (!isResumeOrRenew) {
+        if (hasActiveSubscription(user?.subscriptionStatus)) {
+          router.push("/profile")
+          return
+        }
+        if (await customerHasUnpaidInvoice()) {
+          router.push("/profile")
+          return
+        }
       }
-      return true
-    })()
-    if (redirect && !checkoutRedirectBlocked) {
       router.push(redirect)
       return
     }
-    router.push(getPostLoginPath(user?.role, user?.subscriptionStatus))
+
+    if (redirect) {
+      router.push(redirect)
+      return
+    }
+    router.push(await resolvePostLoginPath(user?.role, user?.subscriptionStatus))
   }, [router, searchParams])
 
   // Refresh entitlement before auto-redirecting an existing session
@@ -376,7 +398,7 @@ export default function LoginPage() {
                     required
                     autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value.replace(/\s/g, ""))}
                     placeholder="Enter your password"
                     className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-[#B5111B] transition-all shadow-xs"
                   />
@@ -500,8 +522,8 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     required
                     value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Minimum 6 characters"
+                    onChange={(e) => setRegPassword(e.target.value.replace(/\s/g, ""))}
+                    placeholder="Minimum 6 characters (no spaces)"
                     className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-[#B5111B] transition-all shadow-xs"
                   />
                   <button
@@ -576,6 +598,7 @@ export default function LoginPage() {
               <h3 className="text-base font-bold text-slate-900">Credential Recovery</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 For security reasons, password resets are governed by your organizational administrator.
+                Ask a Super Admin to send you a set-password email from Users or Inquiries.
               </p>
             </div>
 
