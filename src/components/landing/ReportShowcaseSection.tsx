@@ -10,11 +10,10 @@ import {
   CaretRightIcon,
   DownloadSimpleIcon,
 } from "@phosphor-icons/react"
-import { EnterpriseContactModal } from "@/components/landing/EnterpriseContactModal"
+import { Link } from "@/lib/router-compat"
 
 export function ReportShowcaseSection() {
   const [activeFannedPage, setActiveFannedPage] = React.useState<number>(2)
-  const [contactModalOpen, setContactModalOpen] = React.useState<boolean>(false)
 
   return (
     <section id="report-showcase" className="scroll-mt-20 py-12 sm:py-16 bg-gradient-to-b from-slate-100 via-white to-slate-50 text-slate-900 border-b border-slate-200/90 relative overflow-hidden">
@@ -712,23 +711,14 @@ export function ReportShowcaseSection() {
         </div>
 
         <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => setContactModalOpen(true)}
+          <Link
+            href="/contact"
             className="bg-[#B5111B] hover:bg-[#8F0D15] text-white font-extrabold text-xs sm:text-sm px-6 py-3.5 rounded-xl shadow-md transition-all inline-flex items-center gap-2 cursor-pointer hover:scale-102"
           >
             <DownloadSimpleIcon weight="bold" className="w-4 h-4 text-white" />
             <span>Buy Subscription to Generate Certified Reports</span>
-          </button>
+          </Link>
         </div>
-
-        {/* Enterprise Contact Modal */}
-        <EnterpriseContactModal
-          isOpen={contactModalOpen}
-          onClose={() => setContactModalOpen(false)}
-          title="Buy Subscription & Certified Reports Inquiry"
-          subtitle="Please fill out your details below to discuss subscription pricing and certified report generation."
-        />
       </div>
     </section>
   )
